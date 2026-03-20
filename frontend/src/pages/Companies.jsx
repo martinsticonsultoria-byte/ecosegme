@@ -88,14 +88,14 @@ export default function Companies() {
               {companies.map(c => (
                 <tr key={c.id}>
                   <td><span className="badge badge-blue">{c.id}</span></td>
-                  <td style={{ fontWeight: 600 }}>{c.razao_social}</td>
-                  <td style={{ color: '#5a6478' }}>{c.endereco || '—'}</td>
                   <td>
-                    <button className="btn btn-secondary btn-sm"
+                    <span style={{ fontWeight: 600, color: '#1a7a3c', cursor: 'pointer', textDecoration: 'underline' }}
                       onClick={() => navigate(`/employees?company_id=${c.id}&company_name=${encodeURIComponent(c.razao_social)}`)}>
-                      👥 Funcionários
-                    </button>
+                      {c.razao_social}
+                    </span>
                   </td>
+                  <td style={{ color: '#5a6478' }}>{c.endereco || '—'}</td>
+                  <td></td>
                 </tr>
               ))}
             </tbody>

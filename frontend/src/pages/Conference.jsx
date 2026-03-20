@@ -36,11 +36,15 @@ export default function Conference() {
   };
 
   const handleDownload = async () => {
-    const res = await api.get(report.download_url, { responseType: 'blob' });
-    const url = window.URL.createObjectURL(res.data);
-    const a = document.createElement('a');
-    a.href = url; a.download = report.filename; a.click();
-    window.URL.revokeObjectURL(url);
+    try {
+      const res = await api.get(report.download_url, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url; a.download = report.filename; a.click();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setError('Erro ao baixar laudo. Tente novamente.');
+    }
   };
 
   const Row = ({ label, value, mono }) => (

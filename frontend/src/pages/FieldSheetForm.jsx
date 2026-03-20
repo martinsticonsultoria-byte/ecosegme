@@ -6,13 +6,14 @@ export default function FieldSheetForm() {
   const navigate = useNavigate();
   const [companies, setCompanies] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [nextNumber, setNextNumber] = useState(null);
   const [form, setForm] = useState({
     company_id: '', employee_id: '', dosimeter_number: '',
     collection_date: '', epi: '', activity: '', machine_noise: '',
-    technician_name: '', technician_name_2: '', signature_date: '', turno: '', codigo_esocial: '',
+    technician_name: '', technician_name_2: '', signature_date: '',
     pre_verificacao_db: '', pos_verificacao_db: '',
   });
 
@@ -24,8 +25,16 @@ export default function FieldSheetForm() {
   const handleCompanyChange = (e) => {
     const company_id = e.target.value;
     setForm({ ...form, company_id, employee_id: '' });
+    setSelectedEmployee(null);
     if (company_id) api.get(`/employees?company_id=${company_id}`).then(res => setEmployees(res.data));
     else setEmployees([]);
+  };
+
+  const handleEmployeeChange = (e) => {
+    const employee_id = e.target.value;
+    setForm({ ...form, employee_id });
+    const emp = employees.find(emp => String(emp.id) === String(employee_id));
+    setSelectedEmployee(emp || null);
   };
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -53,11 +62,18 @@ export default function FieldSheetForm() {
     } finally { setLoading(false); }
   };
 
+  const ReadOnly = ({ label, value }) => (
+    <div className="form-group">
+      <label className="form-label">{label}</label>
+      <input className="form-input" value={value || '—'} disabled style={{ background: '#f1f5f9', color: '#5a6478' }} />
+    </div>
+  );
+
   return (
     <div className="page" style={{ maxWidth: 760 }}>
       <div className="page-header">
         <div>
-          <h1 className="page-title">Nova Ficha de Campo</h1>
+          <h1 className="page-title">Ficha de Campo</h1>
           <p className="page-subtitle">Preencha os dados da coleta de dosimetria</p>
         </div>
       </div>
@@ -74,14 +90,24 @@ export default function FieldSheetForm() {
           </div>
           <div className="form-group">
             <label className="form-label">Funcionário <span>*</span></label>
-            <select name="employee_id" className="form-input" value={form.employee_id} onChange={handleChange} disabled={!form.company_id}>
+            <select name="employee_id" className="form-input" value={form.employee_id} onChange={handleEmployeeChange} disabled={!form.company_id}>
               <option value="">Selecione...</option>
               {employees.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
             </select>
           </div>
+
+          {selectedEmployee && (
+            <>
+              <ReadOnly label="Função" value={selectedEmployee.funcao} />
+              <ReadOnly label="Matrícula" value={selectedEmployee.matricula} />
+              <ReadOnly label="Setor" value={selectedEmployee.setor} />
+              <ReadOnly label="Local" value={selectedEmployee.local} />
+            </>
+          )}
+
           <div className="form-group">
             <label className="form-label">Nº do Laudo</label>
-            <input className="form-input" value={nextNumber ? `#${nextNumber} (gerado automaticamente)` : 'Carregando...'} disabled style={{ background: '#f1f5f9', color: '#8a93a8' }} />
+            <input className="form-input" value={nextNumber ? `#${nextNumber} (automático)` : 'Carregando...'} disabled style={{ background: '#f1f5f9', color: '#8a93a8' }} />
           </div>
           <div className="form-group">
             <label className="form-label">Nº Dosímetro <span>*</span></label>
@@ -90,14 +116,6 @@ export default function FieldSheetForm() {
           <div className="form-group">
             <label className="form-label">Data de Coleta <span>*</span></label>
             <input type="date" name="collection_date" className="form-input" value={form.collection_date} onChange={handleChange} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Turno</label>
-            <input type="text" name="turno" className="form-input" value={form.turno} onChange={handleChange} placeholder="Ex: Manhã" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Código eSocial</label>
-            <input type="text" name="codigo_esocial" className="form-input" value={form.codigo_esocial} onChange={handleChange} placeholder="Ex: 01.01.021" />
           </div>
         </div>
       </div>
@@ -135,7 +153,7 @@ export default function FieldSheetForm() {
           </div>
           <div className="form-group">
             <label className="form-label">2º Técnico (colaborador)</label>
-            <input type="text" name="technician_name_2" className="form-input" value={form.technician_name_2} onChange={handleChange} placeholder="Opcional — assina junto ao laudo" />
+            <input type="text" name="technician_name_2" className="form-input" value={form.technician_name_2} onChange={handleChange} placeholder="Opcional" />
           </div>
           <div className="form-group">
             <label className="form-label">Data de Assinatura <span>*</span></label>

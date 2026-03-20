@@ -6,6 +6,7 @@ export default function Reports() {
   const [selectedCompany, setSelectedCompany] = useState('');
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
 
   useEffect(() => { api.get('/companies').then(res => setCompanies(res.data)); }, []);
 
@@ -21,11 +22,16 @@ export default function Reports() {
   };
 
   const handleDownload = async (report) => {
-    const res = await api.get(report.download_url, { responseType: 'blob' });
-    const url = window.URL.createObjectURL(res.data);
-    const a = document.createElement('a');
-    a.href = url; a.download = report.filename; a.click();
-    window.URL.revokeObjectURL(url);
+    setDownloadError('');
+    try {
+      const res = await api.get(report.download_url, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url; a.download = report.filename; a.click();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setDownloadError('Erro ao baixar laudo. O arquivo pode não estar disponível no servidor.');
+    }
   };
 
   return (
@@ -48,6 +54,8 @@ export default function Reports() {
       {loading && (
         <div style={{ textAlign: 'center', padding: 40, color: '#8a93a8' }}>Carregando laudos...</div>
       )}
+
+      {downloadError && <div className="alert alert-error" style={{ marginBottom: 16 }}>{downloadError}</div>}
 
       {!loading && selectedCompany && reports.length === 0 && (
         <div className="card" style={{ textAlign: 'center', padding: 40 }}>

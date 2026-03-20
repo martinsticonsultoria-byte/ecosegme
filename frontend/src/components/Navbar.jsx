@@ -40,7 +40,7 @@ export default function Navbar() {
           </div>
         </div>
         <NavLink to="/companies" style={linkStyle}>Empresas</NavLink>
-        <NavLink to="/field-sheet/new" style={linkStyle}>Nova Ficha</NavLink>
+        <NavLink to="/field-sheet/new" style={linkStyle}>Ficha de Campo</NavLink>
         <NavLink to="/conference" style={linkStyle}>Conferência</NavLink>
         <NavLink to="/reports" style={linkStyle}>Laudos</NavLink>
         {user?.role === 'admin_staff' && (
