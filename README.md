@@ -2,95 +2,95 @@
 
 <img src="frontend/public/logo.png" alt="Logo" width="180"/>
 
-# Noise Dosimetry Report System
+# Sistema de Laudos de Dosimetria de Ruído
 
-**End-to-end platform for occupational noise dosimetry management**  
-*From field data collection to legally compliant PDF report generation*
+**Plataforma completa para gestão de dosimetria de ruído ocupacional**
+*Da coleta de dados em campo à geração de laudos em PDF conforme NR-15*
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.133-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://postgresql.org)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
-[![Tests](https://img.shields.io/badge/tests-20%20passing-22c55e?style=flat-square)](#tests)
+[![Testes](https://img.shields.io/badge/testes-20%20passando-22c55e?style=flat-square)](#testes)
 
 </div>
 
 ---
 
-## Overview
+## Visão Geral
 
-This system digitizes the occupational noise monitoring workflow for **an occupational health company** based in Brazil, replacing manual paperwork with a structured system that generates audit-ready reports in under 15 minutes.
+Sistema desenvolvido para digitalizar o fluxo de monitoramento de ruído ocupacional, substituindo planilhas e processos manuais por uma plataforma estruturada que gera laudos prontos em menos de 15 minutos.
 
-The system parses raw dosimeter exports (SONUS 2), cross-references them with field data, and produces standardized PDF reports compliant with **NR-15** and **NHO-01** Brazilian regulations.
+O sistema extrai dados brutos do dosímetro (SONUS 2), cruza com os dados da ficha de campo preenchida pelo técnico, e gera laudos em PDF padronizados conforme **NR-15** e **NHO-01**.
 
-**Business impact:** ~80 reports/month, 2 user profiles (Field Technician and Administrative Staff).
-
----
-
-## How It Works
-
-```
-Field Technician         Administrative Staff
-      │                          │
-      ▼                          ▼
- Fill field sheet       Upload SONUS 2 PDF
- (employee, EPI,               │
-  conditions)                  ▼
-      │               Parser extracts data
-      │               (confidence scoring +
-      │                name similarity)
-      └──────────────────────┐
-                             ▼
-                    Data review & validation
-                             │
-                             ▼
-                    Generate PDF report
-                    (WeasyPrint + Jinja2,
-                     SHA-256 hash, immutable)
-                             │
-                             ▼
-                        Download ✓
-```
+**Impacto:** ~80 laudos/mês, 2 perfis de usuário (Técnico de Campo e Administrativo).
 
 ---
 
-## Tech Stack
+## Como Funciona
+
+```
+Técnico de Campo         Administrativo
+      │                       │
+      ▼                       ▼
+ Preenche ficha         Upload do PDF SONUS 2
+ (funcionário, EPI,            │
+  condições)                   ▼
+      │               Parser extrai os dados
+      │               (score de confiança +
+      │                similaridade de nomes)
+      └───────────────────────┐
+                              ▼
+                   Revisão e validação dos dados
+                              │
+                              ▼
+                   Geração do laudo em PDF
+                   (WeasyPrint + Jinja2,
+                    hash SHA-256, imutável)
+                              │
+                              ▼
+                         Download ✓
+```
+
+---
+
+## Stack
 
 **Backend**
-- **FastAPI** — REST API with JWT authentication and role-based access control
-- **SQLAlchemy + PostgreSQL** — relational data model with Alembic migrations
-- **pdfplumber** — text extraction from SONUS 2 dosimeter exports
-- **WeasyPrint + Jinja2** — HTML-to-PDF report generation
-- **pypdf** — PDF protection and SHA-256 integrity verification
+- **FastAPI** — API REST com autenticação JWT e controle de acesso por perfil
+- **SQLAlchemy + PostgreSQL** — modelo relacional com migrações via Alembic
+- **pdfplumber** — extração de texto dos arquivos SONUS 2
+- **WeasyPrint + Jinja2** — geração de PDF a partir de template HTML
+- **pypdf** — proteção do PDF e verificação de integridade via SHA-256
 
 **Frontend**
-- **React 18 + Vite** — single-page application
-- **React Router** — client-side routing with protected routes
-- **Axios** — HTTP client with automatic token injection
+- **React 18 + Vite** — SPA com roteamento protegido por perfil
+- **React Router** — rotas com autenticação
+- **Axios** — cliente HTTP com injeção automática do token
 
 ---
 
-## Key Technical Decisions
+## Decisões Técnicas
 
-### Parser with Confidence Scoring
-The SONUS 2 PDF parser uses a multi-pattern approach with confidence scoring instead of a single rigid regex. Each field has fallback patterns, and the system raises an error only when fewer than 3/6 required fields are found — making it resilient to different firmware versions of the dosimeter.
+### Parser com Score de Confiança
+O parser do SONUS 2 usa múltiplos padrões de regex com score de confiança, em vez de um único padrão rígido. Cada campo tem padrões de fallback, e o sistema só rejeita o arquivo quando menos de 3 dos 6 campos obrigatórios são encontrados — tornando o parser resiliente a diferentes versões de firmware do dosímetro.
 
 ```python
-# Name matching uses difflib similarity, not exact match
-# Handles typos, abbreviations and accent variations
+# Matching de nomes usa similaridade via difflib, não correspondência exata
+# Trata abreviações, acentos e pequenas variações de digitação
 def names_match(name_pdf: str, name_db: str, threshold: float = 0.85) -> bool:
     return name_similarity(name_pdf, name_db) >= threshold
 ```
 
-### Immutable Reports
-Once generated, reports cannot be overridden. Each PDF is SHA-256 hashed and stored with a standardized filename. The audit log records who generated each report and when.
+### Laudos Imutáveis
+Uma vez gerado, o laudo não pode ser substituído. Cada PDF recebe um hash SHA-256 e é armazenado com nome padronizado. O log de auditoria registra quem gerou cada laudo e quando.
 
-### Role-Based Access
-Two roles — `technician` and `admin_staff` — with route-level enforcement on both backend (FastAPI dependency injection) and frontend (protected routes + conditional navbar).
+### Controle de Acesso por Perfil
+Dois perfis — `technician` e `admin_staff` — com validação no backend (dependency injection do FastAPI) e no frontend (rotas protegidas + navbar condicional).
 
 ---
 
-## Project Structure
+## Estrutura do Projeto
 
 ```
 ecosegme/
@@ -98,26 +98,26 @@ ecosegme/
 │   ├── app/
 │   │   ├── routers/        # auth, companies, employees,
 │   │   │                   # field_sheets, uploads, reports, users
-│   │   ├── models/         # SQLAlchemy ORM models
-│   │   ├── core/           # JWT auth, security, dependencies
-│   │   ├── templates/      # Jinja2 HTML report template
-│   │   ├── parser.py       # SONUS 2 PDF parser
+│   │   ├── models/         # modelos ORM SQLAlchemy
+│   │   ├── core/           # JWT, segurança, dependências
+│   │   ├── templates/      # template HTML do laudo (Jinja2)
+│   │   ├── parser.py       # parser SONUS 2
 │   │   └── pdf_generator.py
-│   ├── alembic/            # database migrations
-│   └── tests/              # pytest (20 tests)
+│   ├── alembic/            # migrações do banco
+│   └── tests/              # pytest (20 testes)
 └── frontend/
     └── src/
-        ├── pages/          # Login, Companies, Employees,
-        │                   # FieldSheetForm, Conference,
-        │                   # Reports, Users
+        ├── pages/          # Login, Empresas, Funcionários,
+        │                   # FichaDeCampo, Conferência,
+        │                   # Laudos, Usuários
         ├── components/     # Navbar, PrivateRoute
         ├── context/        # AuthContext
-        └── api/            # axios instance
+        └── api/            # instância do axios
 ```
 
 ---
 
-## Tests
+## Testes
 
 ```bash
 cd backend
@@ -125,24 +125,24 @@ pytest tests/ -v
 ```
 
 ```
-tests/test_auth.py         5 passed
-tests/test_users.py        6 passed
-tests/test_companies.py    3 passed
-tests/test_parser.py       6 passed
+tests/test_auth.py         5 passando
+tests/test_users.py        6 passando
+tests/test_companies.py    3 passando
+tests/test_parser.py       6 passando
 
-20 passed in 3.24s
+20 passando em ~3s
 ```
 
 ---
 
-## Running Locally
+## Rodando Localmente
 
 **Backend**
 ```bash
 cd backend
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-cp ../.env.example .env   # fill in your values
+cp ../.env.example .env   # preencher os valores
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
@@ -156,20 +156,20 @@ npm run dev
 
 ---
 
-## Environment Variables
+## Variáveis de Ambiente
 
-See [`.env.example`](.env.example) for all required variables.
+Ver [`.env.example`](.env.example) para todas as variáveis necessárias.
 
-| Variable | Description |
+| Variável | Descrição |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `SECRET_KEY` | JWT signing key |
-| `VITE_API_URL` | Backend URL (frontend build) |
+| `DATABASE_URL` | String de conexão PostgreSQL |
+| `SECRET_KEY` | Chave de assinatura JWT |
+| `VITE_API_URL` | URL do backend (build do frontend) |
 
 ---
 
-## Author
+## Autor
 
-**Guilherme Lizardo**  
-Data Analyst & Backend Developer  
-[linkedin.com/in/glizardx](https://linkedin.com/in/glizardx) · glizardo171@gmail.com
+**Guilherme Lizardo**
+Analista de Dados & Desenvolvedor Backend
+[linkedin.com/in/guilherme-lizardo](https://br.linkedin.com/in/guilherme-lizardo) · glizardo171@gmail.com
