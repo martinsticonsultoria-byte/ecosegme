@@ -6,7 +6,7 @@ from jinja2 import Template
 from pypdf import PdfWriter, PdfReader
 
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "templates", "laudo.html")
-OUTPUT_DIR = "storage/laudos"
+OUTPUT_DIR = os.environ.get("STORAGE_DIR", "storage/laudos")
 
 def slugify(text, max_len=20):
     text = text.upper().strip()
