@@ -44,7 +44,12 @@ export default function FieldSheetForm() {
       const res = await api.post('/field-sheets', payload);
       navigate(`/conference?sheet_id=${res.data.id}`);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erro ao salvar ficha');
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        setError(detail.map(e => e.msg).join(', '));
+      } else {
+        setError(detail || err.message || 'Erro ao salvar ficha');
+      }
     } finally { setLoading(false); }
   };
 
