@@ -36,7 +36,6 @@ export default function Login() {
       <div style={{ width: '100%', maxWidth: 420 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img src="/logo.png" alt="EcoSegme" style={{ height: 72, marginBottom: 16, objectFit: 'contain' }} />
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1a1f2e', marginBottom: 4 }}>EcoSegme</h1>
           <p style={{ color: '#5a6478', fontSize: 14 }}>Sistema de Laudos Técnicos</p>
         </div>
 
