@@ -1,6 +1,4 @@
 import os
-import sys
-import traceback
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -58,9 +56,7 @@ def generate_report(field_sheet_id: int, db: Session = Depends(get_db), current_
     try:
         output_path, filename, sha256 = generate_laudo(data)
     except Exception as e:
-        tb = traceback.format_exc()
-        print(f"ERRO generate_laudo:\n{tb}", file=sys.stderr, flush=True)
-        raise HTTPException(status_code=500, detail=f"Erro ao gerar PDF: {tb}")
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar PDF: {str(e)}")
 
     stored_path = output_path
     if supabase_storage.is_configured():
@@ -71,9 +67,7 @@ def generate_report(field_sheet_id: int, db: Session = Depends(get_db), current_
             stored_path = f"supabase://{filename}"
             os.unlink(output_path)
         except Exception as e:
-            tb = traceback.format_exc()
-            print(f"ERRO supabase_upload:\n{tb}", file=sys.stderr, flush=True)
-            raise HTTPException(status_code=500, detail=f"Erro ao salvar PDF no storage: {tb}")
+            raise HTTPException(status_code=500, detail=f"Erro ao salvar PDF no storage: {str(e)}")
 
     report = GeneratedReport(
         field_sheet_id=field_sheet_id,
