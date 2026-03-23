@@ -29,6 +29,13 @@ class FieldSheetOut(BaseModel):
     company_id: int
     employee_id: int
     created_at: datetime
+    employee_nome: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+    @classmethod
+    def from_orm(cls, obj):
+        d = super().from_orm(obj)
+        d.employee_nome = obj.employee.nome if obj.employee else None
+        return d

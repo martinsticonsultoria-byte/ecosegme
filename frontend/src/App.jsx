@@ -4,6 +4,7 @@ import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Companies from './pages/Companies';
+import CompanyDetail from './pages/CompanyDetail';
 import Employees from './pages/Employees';
 import Conference from './pages/Conference';
 import FieldSheetForm from './pages/FieldSheetForm';
@@ -18,6 +19,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/companies" element={<PrivateRoute><Companies /></PrivateRoute>} />
+          <Route path="/companies/:id" element={<PrivateRoute><CompanyDetail /></PrivateRoute>} />
           <Route path="/employees" element={<PrivateRoute><Employees /></PrivateRoute>} />
           <Route path="/field-sheet/new" element={<PrivateRoute><FieldSheetForm /></PrivateRoute>} />
           <Route path="/conference" element={<PrivateRoute><Conference /></PrivateRoute>} />

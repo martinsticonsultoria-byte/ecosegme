@@ -33,3 +33,12 @@ def update_employee(employee_id: int, data: EmployeeCreate, db: Session = Depend
     db.commit()
     db.refresh(employee)
     return employee
+
+@router.delete("/{employee_id}")
+def delete_employee(employee_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):
+    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Funcionário não encontrado")
+    db.delete(employee)
+    db.commit()
+    return {"ok": True}

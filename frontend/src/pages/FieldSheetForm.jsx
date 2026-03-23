@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 
 export default function FieldSheetForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const prefilledCompanyId = searchParams.get('company_id');
   const [companies, setCompanies] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [nextNumber, setNextNumber] = useState(null);
+  const [savedSheet, setSavedSheet] = useState(null);
+  const [downloading, setDownloading] = useState(false);
   const [form, setForm] = useState({
-    company_id: '', employee_id: '', dosimeter_number: '',
+    company_id: prefilledCompanyId || '', employee_id: '', dosimeter_number: '',
     collection_date: '', epi: '', activity: '', machine_noise: '',
     technician_name: '', technician_name_2: '', signature_date: '',
     pre_verificacao_db: '', pos_verificacao_db: '',
@@ -20,6 +24,9 @@ export default function FieldSheetForm() {
   useEffect(() => {
     api.get('/companies').then(res => setCompanies(res.data));
     api.get('/field-sheets/next-number').then(res => setNextNumber(res.data.next_number));
+    if (prefilledCompanyId) {
+      api.get(`/employees?company_id=${prefilledCompanyId}`).then(res => setEmployees(res.data));
+    }
   }, []);
 
   const handleCompanyChange = (e) => {
@@ -51,7 +58,7 @@ export default function FieldSheetForm() {
       payload.employee_id = parseInt(payload.employee_id);
       payload.dosimeter_number = parseInt(payload.dosimeter_number);
       const res = await api.post('/field-sheets', payload);
-      navigate(`/conference?sheet_id=${res.data.id}`);
+      setSavedSheet(res.data);
     } catch (err) {
       const detail = err.response?.data?.detail;
       if (Array.isArray(detail)) {
@@ -61,6 +68,42 @@ export default function FieldSheetForm() {
       }
     } finally { setLoading(false); }
   };
+
+  const handleDownloadFicha = async () => {
+    setDownloading(true);
+    try {
+      const res = await api.get(`/field-sheets/${savedSheet.id}/pdf`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ficha_${String(savedSheet.laudo_number).padStart(4, '0')}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setError('Erro ao baixar ficha PDF.');
+    } finally { setDownloading(false); }
+  };
+
+  if (savedSheet) return (
+    <div className="page" style={{ maxWidth: 760 }}>
+      <div className="card" style={{ textAlign: 'center', padding: 48 }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>✓</div>
+        <h2 style={{ color: '#1f9c74', marginBottom: 8 }}>Ficha salva com sucesso!</h2>
+        <p style={{ color: '#5a6478', marginBottom: 32 }}>Ficha de Campo #{savedSheet.laudo_number} criada.</p>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+          <button className="btn btn-primary" onClick={handleDownloadFicha} disabled={downloading} style={{ padding: '12px 28px' }}>
+            {downloading ? 'Gerando PDF...' : '⬇ Baixar Ficha PDF'}
+          </button>
+          <button className="btn btn-primary" onClick={() => navigate(`/conference?sheet_id=${savedSheet.id}`)} style={{ padding: '12px 28px' }}>
+            Ir para Conferência →
+          </button>
+          <button className="btn btn-secondary" onClick={() => navigate('/companies')} style={{ padding: '12px 28px' }}>
+            Voltar para Empresas
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   const ReadOnly = ({ label, value }) => (
     <div className="form-group">

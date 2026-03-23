@@ -7,9 +7,10 @@ export default function Companies() {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ razao_social: '', endereco: '' });
+  const [form, setForm] = useState({ razao_social: '', cnpj: '', endereco: '' });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState('');
 
   const load = () => {
     api.get('/companies').then(res => setCompanies(res.data)).finally(() => setLoading(false));
@@ -22,7 +23,7 @@ export default function Companies() {
     setSaving(true); setError('');
     try {
       await api.post('/companies', form);
-      setForm({ razao_social: '', endereco: '' });
+      setForm({ razao_social: '', cnpj: '', endereco: '' });
       setShowForm(false);
       load();
     } catch (err) {
@@ -45,12 +46,18 @@ export default function Companies() {
       {showForm && (
         <div className="card" style={{ marginBottom: 24 }}>
           <div className="section-title">Nova Empresa</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
             <div className="form-group">
               <label className="form-label">Razão Social <span>*</span></label>
               <input className="form-input" value={form.razao_social}
                 onChange={e => setForm({ ...form, razao_social: e.target.value })}
                 placeholder="Nome da empresa" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">CNPJ</label>
+              <input className="form-input" value={form.cnpj}
+                onChange={e => setForm({ ...form, cnpj: e.target.value })}
+                placeholder="00.000.000/0000-00" />
             </div>
             <div className="form-group">
               <label className="form-label">Endereço</label>
@@ -65,6 +72,16 @@ export default function Companies() {
           </button>
         </div>
       )}
+
+      <div className="card" style={{ marginBottom: 16, padding: '12px 16px' }}>
+        <input
+          className="form-input"
+          placeholder="Buscar empresa..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{ maxWidth: 360 }}
+        />
+      </div>
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
@@ -85,12 +102,12 @@ export default function Companies() {
               </tr>
             </thead>
             <tbody>
-              {companies.map(c => (
+              {companies.filter(c => c.razao_social.toLowerCase().includes(search.toLowerCase())).map(c => (
                 <tr key={c.id}>
                   <td><span className="badge badge-blue">{c.id}</span></td>
                   <td>
                     <span style={{ fontWeight: 600, color: '#1a7a3c', cursor: 'pointer', textDecoration: 'underline' }}
-                      onClick={() => navigate(`/employees?company_id=${c.id}&company_name=${encodeURIComponent(c.razao_social)}`)}>
+                      onClick={() => navigate(`/companies/${c.id}`)}>
                       {c.razao_social}
                     </span>
                   </td>

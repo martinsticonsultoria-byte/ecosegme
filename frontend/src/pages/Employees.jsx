@@ -11,9 +11,12 @@ export default function Employees() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ nome: '', funcao: '', matricula: '', setor: '', local: '' });
+  const [deleting, setDeleting] = useState(null);
+  const emptyForm = { nome: '', funcao: '', matricula: '', setor: '', local: '' };
+  const [form, setForm] = useState(emptyForm);
 
   const load = () => {
     api.get(`/employees?company_id=${company_id}`)
@@ -27,35 +30,65 @@ export default function Employees() {
     if (!form.nome.trim()) { setError('Nome obrigatório'); return; }
     setSaving(true); setError('');
     try {
-      await api.post('/employees', { ...form, company_id: parseInt(company_id) });
-      setForm({ nome: '', funcao: '', matricula: '', setor: '', local: '' });
+      if (editing) {
+        await api.put(`/employees/${editing.id}`, { ...form, company_id: parseInt(company_id) });
+      } else {
+        await api.post('/employees', { ...form, company_id: parseInt(company_id) });
+      }
+      setForm(emptyForm);
       setShowForm(false);
+      setEditing(null);
       load();
     } catch (err) {
       setError(err.response?.data?.detail || 'Erro ao salvar');
     } finally { setSaving(false); }
   };
 
+  const handleEdit = (e) => {
+    setEditing(e);
+    setForm({ nome: e.nome, funcao: e.funcao || '', matricula: e.matricula || '', setor: e.setor || '', local: e.local || '' });
+    setShowForm(true);
+    setError('');
+  };
+
+  const handleDelete = async (e) => {
+    if (!window.confirm(`Deletar funcionário "${e.nome}"?`)) return;
+    setDeleting(e.id);
+    try {
+      await api.delete(`/employees/${e.id}`);
+      load();
+    } catch {
+      setError('Erro ao deletar funcionário.');
+    } finally { setDeleting(null); }
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditing(null);
+    setForm(emptyForm);
+    setError('');
+  };
+
   return (
     <div className="page">
       <div style={{ marginBottom: 24 }}>
-        <button onClick={() => navigate('/companies')} style={{ background: 'none', border: 'none', color: '#1a7a3c', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 8 }}>
-          ← Voltar para Empresas
+        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#1a7a3c', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 8 }}>
+          ← Voltar
         </button>
         <div className="page-header" style={{ marginBottom: 0 }}>
           <div>
             <h1 className="page-title">Funcionários</h1>
             <p className="page-subtitle">{company_name} · {employees.length} funcionário{employees.length !== 1 ? 's' : ''}</p>
           </div>
-          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setError(''); }}>
-            {showForm ? '✕ Cancelar' : '+ Novo Funcionário'}
+          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditing(null); setForm(emptyForm); setError(''); }}>
+            {showForm && !editing ? '✕ Cancelar' : '+ Novo Funcionário'}
           </button>
         </div>
       </div>
 
       {showForm && (
         <div className="card" style={{ marginBottom: 24 }}>
-          <div className="section-title">Novo Funcionário</div>
+          <div className="section-title">{editing ? 'Editar Funcionário' : 'Novo Funcionário'}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div className="form-group">
               <label className="form-label">Nome <span>*</span></label>
@@ -79,9 +112,12 @@ export default function Employees() {
             </div>
           </div>
           {error && <div className="alert alert-error">{error}</div>}
-          <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
-            {saving ? 'Salvando...' : 'Salvar Funcionário'}
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
+              {saving ? 'Salvando...' : editing ? 'Salvar Alterações' : 'Salvar Funcionário'}
+            </button>
+            <button className="btn btn-secondary" onClick={handleCancel}>Cancelar</button>
+          </div>
         </div>
       )}
 
@@ -102,6 +138,7 @@ export default function Employees() {
                 <th>Matrícula</th>
                 <th>Setor</th>
                 <th>Local</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -112,6 +149,13 @@ export default function Employees() {
                   <td><span className="badge badge-blue">{e.matricula || '—'}</span></td>
                   <td style={{ color: '#5a6478' }}>{e.setor || '—'}</td>
                   <td style={{ color: '#5a6478' }}>{e.local || '—'}</td>
+                  <td style={{ display: 'flex', gap: 6 }}>
+                    <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(e)}>Editar</button>
+                    <button className="btn btn-sm" onClick={() => handleDelete(e)} disabled={deleting === e.id}
+                      style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' }}>
+                      {deleting === e.id ? '...' : 'Deletar'}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

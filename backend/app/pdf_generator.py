@@ -1,6 +1,7 @@
 import os
 import hashlib
 import re
+from datetime import datetime
 from weasyprint import HTML
 from jinja2 import Template
 from pypdf import PdfWriter, PdfReader
@@ -24,7 +25,11 @@ def generate_laudo(data: dict) -> tuple:
     # Nome padronizado: [codigo]_[empresa]_[tipo]_[data].pdf
     codigo = str(data["laudo_number"]).zfill(4)
     empresa = slugify(data["razao_social"])
-    data_coleta = str(data["collection_date"]).replace("-", "")
+    raw_date = str(data["collection_date"])
+    try:
+        data_coleta = datetime.strptime(raw_date, "%d/%m/%Y").strftime("%Y%m%d")
+    except ValueError:
+        data_coleta = raw_date.replace("-", "")
     filename = f"{codigo}_{empresa}_DOSIMETRIA_{data_coleta}.pdf"
 
     temp_path = os.path.join(OUTPUT_DIR, "temp_" + filename)
