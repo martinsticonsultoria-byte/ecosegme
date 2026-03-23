@@ -1,5 +1,6 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.field_sheet import FieldSheet
@@ -9,6 +10,7 @@ from app.core.deps import get_current_user
 from app.models.user import User
 from app.pdf_generator import generate_laudo
 from app.models.audit_log import AuditLog
+from app import supabase_storage
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -55,10 +57,22 @@ def generate_report(field_sheet_id: int, db: Session = Depends(get_db), current_
         output_path, filename, sha256 = generate_laudo(data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao gerar PDF: {str(e)}")
+
+    stored_path = output_path
+    if supabase_storage.is_configured():
+        try:
+            with open(output_path, "rb") as f:
+                pdf_bytes = f.read()
+            supabase_storage.upload_pdf(pdf_bytes, filename)
+            stored_path = f"supabase://{filename}"
+            os.unlink(output_path)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erro ao salvar PDF no storage: {str(e)}")
+
     report = GeneratedReport(
         field_sheet_id=field_sheet_id,
         sonus_upload_id=upload.id,
-        output_path=output_path,
+        output_path=stored_path,
         output_filename=filename,
         sha256_output=sha256,
         generated_by=current_user.id
@@ -85,7 +99,22 @@ def download_report(report_id: int, db: Session = Depends(get_db), _=Depends(get
     report = db.query(GeneratedReport).filter(GeneratedReport.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Laudo nao encontrado")
-    return FileResponse(path=report.output_path, filename=report.output_filename, media_type="application/pdf")
+    if report.output_path.startswith("supabase://"):
+        storage_path = report.output_path.removeprefix("supabase://")
+        try:
+            signed_url = supabase_storage.get_signed_url(storage_path)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erro ao gerar link de download: {str(e)}")
+        return RedirectResponse(url=signed_url)
+    if os.path.exists(report.output_path):
+        return FileResponse(path=report.output_path, filename=report.output_filename, media_type="application/pdf")
+    if supabase_storage.is_configured():
+        try:
+            signed_url = supabase_storage.get_signed_url(report.output_filename)
+        except Exception:
+            raise HTTPException(status_code=404, detail="Laudo nao encontrado no storage. Gere novamente.")
+        return RedirectResponse(url=signed_url)
+    raise HTTPException(status_code=404, detail="Arquivo do laudo nao encontrado. Gere novamente.")
 
 @router.get("/list/{company_id}")
 def list_reports(company_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):

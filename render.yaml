@@ -20,6 +20,10 @@ services:
         value: 480
       - key: STORAGE_DIR
         value: /app/storage/laudos
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
 
   - type: web
     name: ecosegme-frontend
