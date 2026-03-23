@@ -39,8 +39,7 @@
 <table>
   <tr><td class="label">Colaborador (a):</td><td>{{ nome_funcionario }}</td><td class="label">Matrícula:</td><td>{{ matricula }}</td></tr>
   <tr><td class="label">Cargo/Função:</td><td>{{ funcao }}</td><td class="label">Setor:</td><td>{{ setor }}</td></tr>
-  <tr><td class="label">Local da Coleta:</td><td>{{ local }}</td><td class="label">Turno:</td><td>{{ turno }}</td></tr>
-  <tr><td class="label">Código eSocial:</td><td colspan="3">{{ codigo_esocial }}</td></tr>
+  <tr><td class="label">Local da Coleta:</td><td colspan="3">{{ local }}</td></tr>
 </table>
 
 <h2>Dados de Campo</h2>
@@ -130,6 +129,7 @@
     Com base nos resultados obtidos, o nível de exposição ao ruído do colaborador <strong>{{ nome_funcionario }}</strong>,
     que exerce a função de <strong>{{ funcao }}</strong>, foi avaliado conforme a NR-15 e NHO-01.
     Dose Diária encontrada: <strong>{{ dose_diaria }}%</strong>, NE: <strong>{{ ne_db }} dB</strong>, NEN: <strong>{{ nen_db }} dB</strong>.
+    O resultado encontra-se <strong>{{ result_status }}</strong> do Limite de Tolerância estabelecido pela NR-15 (85 dB(A)).
   </td></tr>
 </table>
 

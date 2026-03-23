@@ -18,8 +18,23 @@ export default function Companies() {
 
   useEffect(() => { load(); }, []);
 
+  const formatCnpj = (v) => {
+    const d = v.replace(/\D/g, '').slice(0, 14);
+    return d
+      .replace(/^(\d{2})(\d)/, '$1.$2')
+      .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+      .replace(/\.(\d{3})(\d)/, '.$1/$2')
+      .replace(/(\d{4})(\d)/, '$1-$2');
+  };
+
+  const validateCnpj = (cnpj) => {
+    const d = cnpj.replace(/\D/g, '');
+    return d.length === 0 || d.length === 14;
+  };
+
   const handleSubmit = async () => {
     if (!form.razao_social.trim()) { setError('Razão social obrigatória'); return; }
+    if (!validateCnpj(form.cnpj)) { setError('CNPJ inválido — use o formato 00.000.000/0000-00'); return; }
     setSaving(true); setError('');
     try {
       await api.post('/companies', form);
@@ -56,8 +71,8 @@ export default function Companies() {
             <div className="form-group">
               <label className="form-label">CNPJ</label>
               <input className="form-input" value={form.cnpj}
-                onChange={e => setForm({ ...form, cnpj: e.target.value })}
-                placeholder="00.000.000/0000-00" />
+                onChange={e => setForm({ ...form, cnpj: formatCnpj(e.target.value) })}
+                placeholder="00.000.000/0000-00" maxLength={18} />
             </div>
             <div className="form-group">
               <label className="form-label">Endereço</label>
