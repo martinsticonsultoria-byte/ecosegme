@@ -70,7 +70,7 @@ export default function Users() {
       {showForm && (
         <div className="card" style={{ marginBottom: 24 }}>
           <div className="section-title">Novo Usuário</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="grid-2">
             <div className="form-group">
               <label className="form-label">Nome <span style={{ color: '#ef4444' }}>*</span></label>
               <input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Nome completo" />

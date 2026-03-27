@@ -170,3 +170,35 @@ select.form-input { cursor: pointer; }
 
 /* ── Divider ── */
 .divider { border: none; border-top: 1px solid var(--border-light); margin: 24px 0; }
+
+/* ── Mobile navbar ── */
+@media (max-width: 640px) {
+  .nav-links-desktop { display: none !important; }
+  .nav-user-desktop { display: none !important; }
+  .nav-logout-desktop { display: none !important; }
+  .nav-hamburger { display: flex !important; }
+}
+
+/* ── Grid utilitários responsivos ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+
+/* ── Mobile geral ── */
+@media (max-width: 640px) {
+  .page { padding: 20px 16px; max-width: 100%; }
+  .page-title { font-size: 22px; }
+  .page-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+  .card { padding: 18px 16px; }
+
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+
+  .table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table th, .table td { padding: 11px 12px; font-size: 13px; white-space: nowrap; }
+  .table th:last-child, .table td:last-child { text-align: left; }
+
+  .btn { padding: 10px 18px; font-size: 14px; }
+  .btn-sm { padding: 8px 14px; font-size: 13px; }
+
+  .form-input { font-size: 16px; }
+}

@@ -138,7 +138,7 @@ export default function Employees() {
       {showForm && (
         <div className="card" style={{ marginBottom: 24 }}>
           <div className="section-title">{editing ? 'Editar Funcionário' : 'Novo Funcionário'}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="grid-2">
             <div className="form-group">
               <label className="form-label">Nome <span>*</span></label>
               <input className="form-input" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} placeholder="Nome completo" />

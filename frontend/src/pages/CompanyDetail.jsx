@@ -145,7 +145,7 @@ export default function CompanyDetail() {
       {editing && (
         <div className="card" style={{ marginBottom: 24 }}>
           <div className="section-title">Editar Empresa</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+          <div className="grid-3">
             <div className="form-group">
               <label className="form-label">Razão Social <span>*</span></label>
               <input className="form-input" value={editForm.razao_social} onChange={e => setEditForm({ ...editForm, razao_social: e.target.value })} />

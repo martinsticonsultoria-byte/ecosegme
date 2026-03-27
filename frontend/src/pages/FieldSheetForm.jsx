@@ -111,14 +111,14 @@ export default function FieldSheetForm() {
   };
 
   if (savedSheet) return (
-    <div className="page" style={{ maxWidth: 760 }}>
+    <div className="page">
       <div className="card" style={{ textAlign: 'center', padding: 48 }}>
         <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 24, color: '#16a34a' }}>✓</div>
         <h2 style={{ color: '#16a34a', marginBottom: 8 }}>Ficha salva com sucesso!</h2>
         <p style={{ color: '#64748b', marginBottom: 32 }}>
           Ordem de Realização #{savedSheet.laudo_number} — {savedSheet.employee_nome || ''}
         </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', flexDirection: 'column' }}>
           <button className="btn btn-primary" onClick={handleDownloadFicha} disabled={downloading} style={{ padding: '12px 28px' }}>
             {downloading ? 'Gerando PDF...' : 'Baixar Ficha PDF'}
           </button>
@@ -141,7 +141,7 @@ export default function FieldSheetForm() {
   );
 
   return (
-    <div className="page" style={{ maxWidth: 760 }}>
+    <div className="page">
       <div className="page-header">
         <div>
           <h1 className="page-title">Ficha de Campo</h1>
@@ -151,7 +151,7 @@ export default function FieldSheetForm() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="section-title">Identificação</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="grid-2">
 
           <div className="form-group">
             <label className="form-label">Empresa <span>*</span></label>
@@ -263,11 +263,11 @@ export default function FieldSheetForm() {
 
       {error && <div className="alert alert-error">{error}</div>}
 
-      <div style={{ display: 'flex', gap: 12 }}>
-        <button className="btn btn-primary" onClick={handleSubmit} disabled={loading} style={{ padding: '12px 32px', fontSize: 15 }}>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={loading} style={{ padding: '12px 32px', fontSize: 15, flex: 1, justifyContent: 'center' }}>
           {loading ? 'Salvando...' : 'Salvar Ficha'}
         </button>
-        <button className="btn btn-secondary" onClick={() => navigate('/companies')}>
+        <button className="btn btn-secondary" onClick={() => navigate('/companies')} style={{ flex: 1, justifyContent: 'center' }}>
           Cancelar
         </button>
       </div>

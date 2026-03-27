@@ -15,8 +15,8 @@ export default function Login() {
     setLoading(true);
     setError('');
     try {
-      await login(email, password);
-      navigate('/companies');
+      const u = await login(email, password);
+      navigate(u?.role === 'admin_staff' ? '/companies' : '/field-sheet/new');
     } catch {
       setError('Email ou senha incorretos');
     } finally {
