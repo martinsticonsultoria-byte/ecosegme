@@ -1,24 +1,36 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 
 export default function FieldSheetForm() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const prefilledCompanyId = searchParams.get('company_id');
   const [companies, setCompanies] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [employeeInput, setEmployeeInput] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [nextNumber, setNextNumber] = useState(null);
   const [savedSheet, setSavedSheet] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const empInputRef = useRef(null);
+
   const [form, setForm] = useState({
-    company_id: prefilledCompanyId || '', employee_id: '', dosimeter_number: '',
-    collection_date: '', epi: '', activity: '', machine_noise: '',
-    technician_name: '', technician_name_2: '', signature_date: '',
-    pre_verificacao_db: '', pos_verificacao_db: '',
+    company_id: prefilledCompanyId || '',
+    tipo_analise: 'Ruído',
+    dosimeter_number: '',
+    collection_date: new Date().toISOString().split('T')[0],
+    epi: '',
+    activity: '',
+    machine_noise: '',
+    technician_name_2: '',
+    pre_verificacao_db: '114,00',
+    pos_verificacao_db: '',
   });
 
   useEffect(() => {
@@ -31,32 +43,46 @@ export default function FieldSheetForm() {
 
   const handleCompanyChange = (e) => {
     const company_id = e.target.value;
-    setForm({ ...form, company_id, employee_id: '' });
+    setForm({ ...form, company_id });
     setSelectedEmployee(null);
+    setEmployeeInput('');
     if (company_id) api.get(`/employees?company_id=${company_id}`).then(res => setEmployees(res.data));
     else setEmployees([]);
   };
 
-  const handleEmployeeChange = (e) => {
-    const employee_id = e.target.value;
-    setForm({ ...form, employee_id });
-    const emp = employees.find(emp => String(emp.id) === String(employee_id));
-    setSelectedEmployee(emp || null);
+  const filteredEmployees = employees.filter(e =>
+    e.nome.toLowerCase().includes(employeeInput.toLowerCase())
+  );
+
+  const handleEmployeeInputChange = (e) => {
+    setEmployeeInput(e.target.value);
+    setSelectedEmployee(null);
+    setShowSuggestions(true);
+  };
+
+  const handleSelectEmployee = (emp) => {
+    setSelectedEmployee(emp);
+    setEmployeeInput(emp.nome);
+    setShowSuggestions(false);
   };
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async () => {
-    if (!form.company_id || !form.employee_id || !form.dosimeter_number || !form.collection_date || !form.technician_name || !form.signature_date) {
+    if (!form.company_id || !form.dosimeter_number || !form.collection_date || !form.epi || !form.activity || !form.machine_noise) {
       setError('Preencha todos os campos obrigatórios (*)'); return;
     }
     setError(''); setLoading(true);
     try {
-      const payload = { ...form };
+      const payload = {
+        ...form,
+        company_id: parseInt(form.company_id),
+        dosimeter_number: parseInt(form.dosimeter_number),
+        technician_name: user?.name || '',
+        employee_id: selectedEmployee ? selectedEmployee.id : null,
+        employee_name_text: selectedEmployee ? null : employeeInput.trim(),
+      };
       Object.keys(payload).forEach(k => { if (payload[k] === '') payload[k] = null; });
-      payload.company_id = parseInt(payload.company_id);
-      payload.employee_id = parseInt(payload.employee_id);
-      payload.dosimeter_number = parseInt(payload.dosimeter_number);
       const res = await api.post('/field-sheets', payload);
       setSavedSheet(res.data);
     } catch (err) {
@@ -87,15 +113,17 @@ export default function FieldSheetForm() {
   if (savedSheet) return (
     <div className="page" style={{ maxWidth: 760 }}>
       <div className="card" style={{ textAlign: 'center', padding: 48 }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>✓</div>
-        <h2 style={{ color: '#1f9c74', marginBottom: 8 }}>Ficha salva com sucesso!</h2>
-        <p style={{ color: '#5a6478', marginBottom: 32 }}>Ficha de Campo #{savedSheet.laudo_number} criada.</p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+        <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 24, color: '#16a34a' }}>✓</div>
+        <h2 style={{ color: '#16a34a', marginBottom: 8 }}>Ficha salva com sucesso!</h2>
+        <p style={{ color: '#64748b', marginBottom: 32 }}>
+          Ordem de Realização #{savedSheet.laudo_number} — {savedSheet.employee_nome || ''}
+        </p>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={handleDownloadFicha} disabled={downloading} style={{ padding: '12px 28px' }}>
-            {downloading ? 'Gerando PDF...' : '⬇ Baixar Ficha PDF'}
+            {downloading ? 'Gerando PDF...' : 'Baixar Ficha PDF'}
           </button>
-          <button className="btn btn-primary" onClick={() => navigate(`/conference?sheet_id=${savedSheet.id}`)} style={{ padding: '12px 28px' }}>
-            Ir para Conferência →
+          <button className="btn btn-primary" onClick={() => { setSavedSheet(null); setEmployeeInput(''); setSelectedEmployee(null); setNextNumber(n => n + 1); }} style={{ padding: '12px 28px' }}>
+            + Nova Ficha
           </button>
           <button className="btn btn-secondary" onClick={() => navigate('/companies')} style={{ padding: '12px 28px' }}>
             Voltar para Empresas
@@ -108,7 +136,7 @@ export default function FieldSheetForm() {
   const ReadOnly = ({ label, value }) => (
     <div className="form-group">
       <label className="form-label">{label}</label>
-      <input className="form-input" value={value || '—'} disabled style={{ background: '#f1f5f9', color: '#5a6478' }} />
+      <input className="form-input" value={value || '—'} disabled style={{ background: '#f8fafc', color: '#64748b' }} />
     </div>
   );
 
@@ -124,6 +152,7 @@ export default function FieldSheetForm() {
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="section-title">Identificação</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
           <div className="form-group">
             <label className="form-label">Empresa <span>*</span></label>
             <select name="company_id" className="form-input" value={form.company_id} onChange={handleCompanyChange}>
@@ -131,12 +160,39 @@ export default function FieldSheetForm() {
               {companies.map(c => <option key={c.id} value={c.id}>{c.razao_social}</option>)}
             </select>
           </div>
-          <div className="form-group">
+
+          <div className="form-group" style={{ position: 'relative' }}>
             <label className="form-label">Funcionário <span>*</span></label>
-            <select name="employee_id" className="form-input" value={form.employee_id} onChange={handleEmployeeChange} disabled={!form.company_id}>
-              <option value="">Selecione...</option>
-              {employees.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
-            </select>
+            <input
+              ref={empInputRef}
+              className="form-input"
+              value={employeeInput}
+              onChange={handleEmployeeInputChange}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              placeholder={form.company_id ? 'Digite ou selecione o nome...' : 'Selecione a empresa primeiro'}
+              disabled={!form.company_id}
+              autoComplete="off"
+            />
+            {showSuggestions && filteredEmployees.length > 0 && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
+                background: 'white', border: '1px solid #d1d5db', borderRadius: 6,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: 200, overflowY: 'auto'
+              }}>
+                {filteredEmployees.map(e => (
+                  <div key={e.id}
+                    onMouseDown={() => handleSelectEmployee(e)}
+                    style={{ padding: '10px 14px', cursor: 'pointer', fontSize: 14, borderBottom: '1px solid #f1f5f9' }}
+                    onMouseEnter={ev => ev.currentTarget.style.background = '#f0fdf4'}
+                    onMouseLeave={ev => ev.currentTarget.style.background = 'white'}
+                  >
+                    <div style={{ fontWeight: 500 }}>{e.nome}</div>
+                    {e.funcao && <div style={{ fontSize: 12, color: '#94a3b8' }}>{e.funcao} {e.matricula ? `· ${e.matricula}` : ''}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {selectedEmployee && (
@@ -149,59 +205,59 @@ export default function FieldSheetForm() {
           )}
 
           <div className="form-group">
-            <label className="form-label">Nº do Laudo</label>
-            <input className="form-input" value={nextNumber ? `#${nextNumber} (automático)` : 'Carregando...'} disabled style={{ background: '#f1f5f9', color: '#8a93a8' }} />
+            <label className="form-label">Tipo de Análise</label>
+            <select name="tipo_analise" className="form-input" value={form.tipo_analise} onChange={handleChange}>
+              <option value="Ruído">Ruído</option>
+              <option value="Temperatura">Temperatura</option>
+              <option value="Iluminância">Iluminância</option>
+              <option value="Químico">Químico</option>
+              <option value="Outro">Outro</option>
+            </select>
           </div>
+
+          <div className="form-group">
+            <label className="form-label">Ordem de Realização</label>
+            <input className="form-input" value={nextNumber ? `#${nextNumber} (automático)` : 'Carregando...'} disabled style={{ background: '#f8fafc', color: '#94a3b8' }} />
+          </div>
+
           <div className="form-group">
             <label className="form-label">Nº Dosímetro <span>*</span></label>
             <input type="number" name="dosimeter_number" className="form-input" value={form.dosimeter_number} onChange={handleChange} placeholder="Ex: 42" />
           </div>
+
           <div className="form-group">
             <label className="form-label">Data de Coleta <span>*</span></label>
-            <input type="date" name="collection_date" className="form-input" value={form.collection_date} onChange={handleChange} />
+            <input type="date" name="collection_date" className="form-input" value={form.collection_date} disabled style={{ background: '#f8fafc', color: '#64748b' }} />
           </div>
+
         </div>
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="section-title">Condições de Exposição</div>
         <div className="form-group">
-          <label className="form-label">EPI Utilizado</label>
-          <input type="text" name="epi" className="form-input" value={form.epi} onChange={handleChange} placeholder="Ex: Protetor auricular tipo concha" />
+          <label className="form-label">EPI Utilizado <span>*</span></label>
+          <select name="epi" className="form-input" value={form.epi} onChange={handleChange}>
+            <option value="">Selecione o EPI...</option>
+            <option>Protetor Auricular - Plug de Inserção</option>
+            <option>Protetor Auricular - Tipo Concha</option>
+            <option>Protetor Auricular - Semi-auricular</option>
+            <option>Capacete de Segurança</option>
+            <option>Óculos de Proteção</option>
+            <option>Luvas de Proteção</option>
+            <option>Abafador de Ruído</option>
+            <option>Máscara de Proteção Respiratória</option>
+            <option>Calçado de Segurança</option>
+            <option>Ausência de EPI</option>
+          </select>
         </div>
         <div className="form-group">
-          <label className="form-label">Atividade Desenvolvida</label>
+          <label className="form-label">Atividade Desenvolvida <span>*</span></label>
           <textarea name="activity" className="form-input" value={form.activity} onChange={handleChange} placeholder="Descreva a atividade realizada durante a medição" />
         </div>
         <div className="form-group">
-          <label className="form-label">Máquinas/Equipamentos Geradores de Ruído</label>
+          <label className="form-label">Máquinas/Equipamentos Geradores de Ruído <span>*</span></label>
           <textarea name="machine_noise" className="form-input" value={form.machine_noise} onChange={handleChange} placeholder="Liste as máquinas e equipamentos presentes" />
-        </div>
-      </div>
-
-      <div className="card" style={{ marginBottom: 20 }}>
-        <div className="section-title">Calibração e Assinatura</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <div className="form-group">
-            <label className="form-label">Pré Verificação [dB]</label>
-            <input type="text" name="pre_verificacao_db" className="form-input" value={form.pre_verificacao_db} onChange={handleChange} placeholder="Ex: 114,00" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Pós Verificação [dB]</label>
-            <input type="text" name="pos_verificacao_db" className="form-input" value={form.pos_verificacao_db} onChange={handleChange} placeholder="Ex: 114,00" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Técnico Responsável <span>*</span></label>
-            <input type="text" name="technician_name" className="form-input" value={form.technician_name} onChange={handleChange} placeholder="Nome do técnico" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">2º Técnico (colaborador)</label>
-            <input type="text" name="technician_name_2" className="form-input" value={form.technician_name_2} onChange={handleChange} placeholder="Opcional" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Data de Assinatura <span>*</span></label>
-            <input type="date" name="signature_date" className="form-input" value={form.signature_date} onChange={handleChange} />
-          </div>
         </div>
       </div>
 
@@ -209,7 +265,7 @@ export default function FieldSheetForm() {
 
       <div style={{ display: 'flex', gap: 12 }}>
         <button className="btn btn-primary" onClick={handleSubmit} disabled={loading} style={{ padding: '12px 32px', fontSize: 15 }}>
-          {loading ? 'Salvando...' : '✓ Salvar e Ir para Conferência'}
+          {loading ? 'Salvando...' : 'Salvar Ficha'}
         </button>
         <button className="btn btn-secondary" onClick={() => navigate('/companies')}>
           Cancelar

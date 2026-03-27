@@ -20,7 +20,7 @@
 <table class="header-table">
   <tr>
     <td style="vertical-align:middle; font-size:8pt; color:#333;">
-      N. Laudo: <strong>{{ laudo_number }}</strong><br/>
+      Ordem de Realização: <strong>{{ laudo_number }}</strong><br/>
       N. Dosímetro: <strong>{{ dosimeter_number }}</strong><br/>
       Data: <strong>{{ collection_date }}</strong>
     </td>
@@ -51,10 +51,6 @@
   </tr>
   <tr>
     <td class="label">Local da Coleta:</td><td>{{ local }}</td>
-    <td class="label">Turno:</td><td>{{ turno }}</td>
-  </tr>
-  <tr>
-    <td class="label">Código eSocial:</td><td colspan="3">{{ codigo_esocial }}</td>
   </tr>
 </table>
 
@@ -65,13 +61,6 @@
   <tr><td class="label">EPI Utilizado:</td><td>{{ epi }}</td></tr>
 </table>
 
-<h2>Registro de Calibração de Campo</h2>
-<table>
-  <tr>
-    <td class="label">Pré verificação [dB]:</td><td>{{ pre_verificacao_db }}</td>
-    <td class="label">Pós verificação [dB]:</td><td>{{ pos_verificacao_db }}</td>
-  </tr>
-</table>
 
 <h2>Dados de Campo</h2>
 <table>
@@ -81,7 +70,7 @@
   </tr>
   {% if technician_name_2 %}
   <tr>
-    <td class="label">Técnico Responsável 2:</td><td colspan="3">{{ technician_name_2 }}</td>
+    <td class="label">Resp. pelo Acompanhamento:</td><td colspan="3">{{ technician_name_2 }}</td>
   </tr>
   {% endif %}
 </table>
@@ -100,9 +89,6 @@
       Técnico Responsável
     </td>
     {% endif %}
-    <td class="assinatura" style="border:none;">
-      Data: {{ signature_date }}
-    </td>
   </tr>
 </table>
 

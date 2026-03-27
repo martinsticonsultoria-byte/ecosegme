@@ -7,16 +7,19 @@ class FieldSheet(Base):
     __tablename__ = "field_sheets"
     id = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
-    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False)
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=True)
     laudo_number = Column(Integer, nullable=False, unique=True)
     dosimeter_number = Column(Integer, nullable=False)
     collection_date = Column(Date, nullable=False)
     epi = Column(String(200), nullable=True)
     activity = Column(Text, nullable=True)
     machine_noise = Column(Text, nullable=True)
+    tipo_analise = Column(String(50), nullable=True)
+    employee_name_text = Column(String(150), nullable=True)
+    status = Column(String(20), nullable=False, default='pendente')
     technician_name = Column(String(150), nullable=False)
     technician_name_2 = Column(String(150), nullable=True)
-    signature_date = Column(Date, nullable=False)
+    signature_date = Column(Date, nullable=True)
     turno = Column(String(50), nullable=True)
     codigo_esocial = Column(String(50), nullable=True)
     pre_verificacao_db = Column(String(20), nullable=True)
@@ -26,3 +29,11 @@ class FieldSheet(Base):
     company = relationship("Company", back_populates="field_sheets")
     employee = relationship("Employee", back_populates="field_sheets")
     creator = relationship("User")
+
+    @property
+    def company_nome(self):
+        return self.company.razao_social if self.company else None
+
+    @property
+    def employee_nome(self):
+        return self.employee.nome if self.employee else self.employee_name_text

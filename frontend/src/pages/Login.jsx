@@ -27,24 +27,32 @@ export default function Login() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%)',
+      background: '#f8fafc',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       padding: 24,
     }}>
-      <div style={{ width: '100%', maxWidth: 420 }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/logo.png" alt="EcoSegme" style={{ height: 72, marginBottom: 16, objectFit: 'contain' }} />
-          <p style={{ color: '#5a6478', fontSize: 14 }}>Sistema de Laudos Técnicos</p>
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <img src="/logo.png" alt="EcoSegme" style={{ height: 40, objectFit: 'contain' }} />
         </div>
 
+        {/* Card */}
         <div style={{
-          background: 'white', borderRadius: 16, padding: 36,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.10)',
-          border: '1px solid rgba(226,232,240,0.8)',
+          background: 'white',
+          borderRadius: 16,
+          padding: '36px 32px',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 20px rgba(0,0,0,0.06)',
         }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24, color: '#1a1f2e' }}>Entrar na conta</h2>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 6, letterSpacing: '-0.3px' }}>
+            Entrar
+          </h1>
+          <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 28 }}>
+            Sistema de Laudos Técnicos
+          </p>
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -58,7 +66,6 @@ export default function Login() {
                 required
               />
             </div>
-
             <div className="form-group">
               <label className="form-label">Senha</label>
               <input
@@ -77,18 +84,17 @@ export default function Login() {
               type="submit"
               className="btn btn-primary"
               disabled={loading}
-              style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: 15, marginTop: 8 }}
+              style={{ width: '100%', justifyContent: 'center', padding: '11px', fontSize: 14, marginTop: 4 }}
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
         </div>
 
-        <p style={{ textAlign: 'center', color: '#8a93a8', fontSize: 12, marginTop: 24 }}>
+        <p style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 12, marginTop: 28 }}>
           EcoSegme Consultoria Ambiental © 2026
         </p>
       </div>
     </div>
   );
 }
-

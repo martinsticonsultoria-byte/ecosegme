@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page {
+    margin: 15mm 14mm;
+    @top-center {
+      content: element(header);
+      font-size: 7pt;
+    }
+  }
+  @page :first { @top-center { content: none; } }
+
+  body { font-family: Arial, sans-serif; font-size: 9pt; margin: 0; color: #222; }
+
+  #header-running {
+    position: running(header);
+    font-size: 7.5pt;
+    color: #555;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 3px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .page-break { page-break-before: always; }
+
+  /* Capa */
+  .capa {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 220mm;
+    text-align: center;
+  }
+  .capa img { width: 180px; margin-bottom: 24px; }
+  .capa .titulo { font-size: 16pt; font-weight: bold; color: #1a7a3c; margin-bottom: 8px; }
+  .capa .subtitulo { font-size: 11pt; color: #444; margin-bottom: 32px; }
+  .capa table { width: 100%; max-width: 420px; border-collapse: collapse; font-size: 9pt; margin: 0 auto; }
+  .capa td { padding: 5px 10px; border: 1px solid #ccc; }
+  .capa td:first-child { font-weight: bold; background: #f0faf6; white-space: nowrap; }
+  .numeros { margin-top: 28px; font-size: 8pt; color: #666; }
+  .numeros span { display: inline-block; background: #f0faf6; border: 1px solid #c6e6d8; border-radius: 4px; padding: 2px 8px; margin: 2px; }
+
+  /* Seções */
+  h2 {
+    font-size: 10pt;
+    background: #1f9c74;
+    color: white;
+    padding: 4px 8px;
+    margin: 14px 0 6px 0;
+    border-radius: 2px;
+  }
+
+  /* Tabela resumo */
+  table.resumo { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  table.resumo th {
+    background: #1f9c74;
+    color: white;
+    padding: 5px 6px;
+    font-size: 8.5pt;
+    text-align: left;
+    border: 1px solid #167a5a;
+  }
+  table.resumo td {
+    padding: 4px 6px;
+    font-size: 8.5pt;
+    border: 1px solid #ccc;
+    vertical-align: middle;
+  }
+  table.resumo tr:nth-child(even) td { background: #f8fffe; }
+  .badge-ok { background: #dcfce7; color: #166534; font-weight: bold; padding: 2px 8px; border-radius: 10px; font-size: 8pt; }
+  .badge-nc { background: #fee2e2; color: #991b1b; font-weight: bold; padding: 2px 8px; border-radius: 10px; font-size: 8pt; }
+  .badge-nd { background: #f1f5f9; color: #64748b; padding: 2px 8px; border-radius: 10px; font-size: 8pt; }
+
+  /* Ficha individual */
+
+  table.dados { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  table.dados td { border: 1px solid #bbb; padding: 3px 6px; font-size: 8.5pt; vertical-align: top; }
+  table.dados .lbl { font-weight: bold; background: #f0faf6; white-space: nowrap; width: 1%; }
+  table.dados .val { }
+
+  .section-label { font-size: 8pt; font-weight: bold; background: #e8f5f0; color: #1a7a3c; padding: 3px 6px; margin-top: 8px; margin-bottom: 2px; border-left: 3px solid #1f9c74; }
+
+  .resultado-box { display: flex; gap: 10px; margin-top: 8px; }
+  .resultado-item { flex: 1; border: 1px solid #ccc; border-radius: 4px; padding: 6px 10px; text-align: center; }
+  .resultado-item .r-label { font-size: 7.5pt; color: #666; margin-bottom: 2px; }
+  .resultado-item .r-value { font-size: 12pt; font-weight: bold; color: #1a7a3c; }
+  .resultado-item.destaque { border-color: #1f9c74; background: #f0faf6; }
+  .resultado-item.nc { border-color: #dc2626; background: #fff5f5; }
+  .resultado-item.nc .r-value { color: #dc2626; }
+
+  .conclusao-box { margin-top: 10px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 8pt; background: #fafafa; }
+  .conclusao-box .c-titulo { font-weight: bold; margin-bottom: 4px; }
+
+  .assinatura { margin-top: 20px; text-align: center; font-size: 8pt; color: #555; }
+  .assinatura .linha { border-top: 1px solid #888; width: 200px; margin: 0 auto 4px; padding-top: 4px; }
+
+  .eco-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1a7a3c; padding-bottom: 8px; margin-bottom: 14px; }
+  .eco-header img { height: 48px; }
+  .eco-header-info { text-align: right; font-size: 7.5pt; color: #555; line-height: 1.5; }
+  .eco-header-info strong { font-size: 9pt; color: #1a7a3c; display: block; }
+</style>
+</head>
+<body>
+
+<div id="header-running">
+  <span>{{ razao_social }} — Relatório de Dosimetria ({{ tipo_analise }})</span>
+  <span>Período: {{ period }}</span>
+</div>
+
+<!-- CAPA -->
+<div class="capa">
+  <img src="data:image/png;base64,{{ logo_b64 }}" alt="EcoSegme" />
+  <div class="titulo">Relatório de Avaliação de {{ tipo_analise }}</div>
+  <div class="subtitulo">Monitoramento de Ruído Ocupacional</div>
+  <table>
+    <tr><td>Empresa</td><td>{{ razao_social }}</td></tr>
+    {% if cnpj %}<tr><td>CNPJ</td><td>{{ cnpj }}</td></tr>{% endif %}
+    {% if endereco %}<tr><td>Endereço</td><td>{{ endereco }}</td></tr>{% endif %}
+    <tr><td>Período de Avaliação</td><td>{{ period }}</td></tr>
+    <tr><td>Data do Relatório</td><td>{{ report_date }}</td></tr>
+    <tr><td>Total de Avaliações</td><td>{{ fichas|length }}</td></tr>
+  </table>
+  {% if laudo_numbers %}
+  <div class="numeros">
+    <strong>Ordens de Realização:</strong><br/>
+    {% for n in laudo_numbers %}<span>#{{ "%04d"|format(n) }}</span>{% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- RESUMO -->
+<div class="page-break">
+  <h2>Resumo das Doses de Ruído</h2>
+  <table class="resumo">
+    <thead>
+      <tr>
+        <th>Nº</th>
+        <th>Funcionário</th>
+        <th>Cargo/Função</th>
+        <th>Local</th>
+        <th>Setor</th>
+        <th>NE [dB(A)]</th>
+        <th>Limite</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in fichas %}
+      <tr>
+        <td style="text-align:center; font-weight:bold;">#{{ "%04d"|format(f.laudo_number) }}</td>
+        <td>{{ f.employee_nome or '—' }}</td>
+        <td>{{ f.funcao or '—' }}</td>
+        <td>{{ f.local or '—' }}</td>
+        <td>{{ f.setor or '—' }}</td>
+        <td style="text-align:center; font-weight:bold;">{{ f.ne_db or '—' }}</td>
+        <td style="text-align:center;">85 dB(A)</td>
+        <td style="text-align:center;">
+          {% if f.ne_val is not none %}
+            {% if f.ne_val <= 85 %}
+              <span class="badge-ok">OK</span>
+            {% else %}
+              <span class="badge-nc">N.C.</span>
+            {% endif %}
+          {% else %}
+            <span class="badge-nd">Pendente</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- FICHAS INDIVIDUAIS -->
+{% for f in fichas %}
+<div class="page-break">
+  <div class="eco-header">
+    <img src="data:image/png;base64,{{ logo_b64 }}" alt="EcoSegme" />
+    <div class="eco-header-info">
+      <strong>EcoSegme — Relatório de {{ tipo_analise }}</strong>
+      Ordem de Realização: #{{ "%04d"|format(f.laudo_number) }}<br/>
+      Data de Coleta: {{ f.collection_date }}<br/>
+      Empresa: {{ razao_social }}
+    </div>
+  </div>
+
+  <h2>Informações do Colaborador</h2>
+  <table class="dados">
+    <tr>
+      <td class="lbl">Empresa:</td><td class="val" colspan="3">{{ razao_social }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Colaborador:</td><td class="val">{{ f.employee_nome or '—' }}</td>
+      <td class="lbl">Matrícula:</td><td class="val">{{ f.matricula or '—' }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Cargo/Função:</td><td class="val">{{ f.funcao or '—' }}</td>
+      <td class="lbl">Setor:</td><td class="val">{{ f.setor or '—' }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Local da Coleta:</td><td class="val">{{ f.local or '—' }}</td>
+      <td class="lbl">Dosímetro Nº:</td><td class="val">{{ f.dosimeter_number }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Data da Coleta:</td><td class="val">{{ f.collection_date }}</td>
+      <td class="lbl">Técnico:</td><td class="val">{{ f.technician_name }}</td>
+    </tr>
+    {% if f.technician_name_2 %}
+    <tr>
+      <td class="lbl">Resp. Acompanhamento:</td><td class="val" colspan="3">{{ f.technician_name_2 }}</td>
+    </tr>
+    {% endif %}
+  </table>
+
+  <h2>Condições de Exposição</h2>
+  <table class="dados">
+    <tr>
+      <td class="lbl">EPI Utilizado:</td><td class="val" colspan="3">{{ f.epi or '—' }}</td>
+    </tr>
+    <tr>
+      <td class="lbl" style="vertical-align:top;">Atividade:</td>
+      <td class="val" colspan="3">{{ f.activity or '—' }}</td>
+    </tr>
+    <tr>
+      <td class="lbl" style="vertical-align:top;">Máquinas/Equipamentos:</td>
+      <td class="val" colspan="3">{{ f.machine_noise or '—' }}</td>
+    </tr>
+  </table>
+
+  <h2>Calibração</h2>
+  <table class="dados">
+    <tr>
+      <td class="lbl">Pré Verificação [dB]:</td><td class="val">{{ f.pre_verificacao_db or '114,00' }}</td>
+      <td class="lbl">Pós Verificação [dB]:</td><td class="val">{{ f.pos_verificacao_db or '—' }}</td>
+    </tr>
+  </table>
+
+  {% if f.ne_db %}
+  <h2>Resultado Obtido</h2>
+  <div class="resultado-box">
+    {% if f.dose_diaria %}
+    <div class="resultado-item">
+      <div class="r-label">Dose Diária (%)</div>
+      <div class="r-value">{{ f.dose_diaria }}</div>
+    </div>
+    {% endif %}
+    <div class="resultado-item destaque {% if f.ne_val is not none and f.ne_val > 85 %}nc{% endif %}">
+      <div class="r-label">NE [dB(A)]</div>
+      <div class="r-value">{{ f.ne_db }}</div>
+    </div>
+    {% if f.nen_db %}
+    <div class="resultado-item">
+      <div class="r-label">NEN [dB(A)]</div>
+      <div class="r-value">{{ f.nen_db }}</div>
+    </div>
+    {% endif %}
+    {% if f.tempo_medicao %}
+    <div class="resultado-item">
+      <div class="r-label">Tempo de Medição (min)</div>
+      <div class="r-value">{{ f.tempo_medicao }}</div>
+    </div>
+    {% endif %}
+    <div class="resultado-item">
+      <div class="r-label">Limite NR-15</div>
+      <div class="r-value" style="font-size:10pt;">85 dB(A)</div>
+    </div>
+    <div class="resultado-item {% if f.ne_val is not none and f.ne_val > 85 %}nc{% else %}destaque{% endif %}">
+      <div class="r-label">Status</div>
+      <div class="r-value" style="font-size:14pt;">
+        {% if f.ne_val is not none %}
+          {% if f.ne_val <= 85 %}OK{% else %}N.C.{% endif %}
+        {% else %}—{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="conclusao-box">
+    <div class="c-titulo">Conclusão:</div>
+    {% if f.ne_val is not none %}
+      {% if f.ne_val <= 85 %}
+        O nível equivalente de ruído está dentro do limite de tolerância estabelecido no Anexo 1 da NR-15 para uma jornada de 8 horas diárias, não caracterizando exposição excessiva. Recomenda-se manter medidas preventivas para reduzir riscos auditivos.
+      {% else %}
+        O nível equivalente de ruído excede o limite de tolerância do Anexo 1 da NR-15 para uma jornada de 8 horas diárias, exigindo medidas preventivas imediatas. É fundamental minimizar os riscos auditivos e garantir a conformidade com as normas de segurança.
+      {% endif %}
+    {% else %}
+      Resultado pendente de análise laboratorial.
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="assinatura">
+    <div class="linha">{{ f.technician_name }}</div>
+    Técnico Responsável pela Coleta
+  </div>
+</div>
+{% endfor %}
+
+</body>
+</html>

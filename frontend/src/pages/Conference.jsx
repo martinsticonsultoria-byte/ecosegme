@@ -1,142 +1,410 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
-export default function Conference() {
-  const [searchParams] = useSearchParams();
-  const [sheetId, setSheetId] = useState(searchParams.get('sheet_id') || '');
-  const [file, setFile] = useState(null);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [report, setReport] = useState(null);
+// ─── Visão de detalhe: fichas de uma empresa+análise ─────────────────────────
+function ConferenceDetail({ group, onBack, onReload }) {
+  const navigate = useNavigate();
+  const [sheets, setSheets] = useState(group.sheets);
+  const [uploadFile, setUploadFile] = useState({});
+  const [uploading, setUploading] = useState({});
+  const [uploadResult, setUploadResult] = useState({});
+  const [generating, setGenerating] = useState({});
+  const [reports, setReports] = useState({});
+  const [approving, setApproving] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [genBulkPdf, setGenBulkPdf] = useState(false);
+  const [genBulkXls, setGenBulkXls] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const handleUpload = async () => {
-    if (!sheetId || !file) { setError('Preencha o ID da ficha e selecione o PDF'); return; }
-    setLoading(true); setError(''); setResult(null); setReport(null);
+  const StatusBadge = ({ status }) => {
+    const s = status === 'aprovada'
+      ? { bg: '#dcfce7', color: '#166534', label: 'Aprovada' }
+      : { bg: '#fef9c3', color: '#854d0e', label: 'Pendente' };
+    return <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: s.bg, color: s.color }}>{s.label}</span>;
+  };
+
+  const handleApprove = async (sheetId) => {
+    setApproving(a => ({ ...a, [sheetId]: true }));
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await api.post(`/uploads/sonus/${sheetId}`, formData);
-      setResult(res.data);
+      await api.patch(`/field-sheets/${sheetId}/status`, { status: 'aprovada' });
+      setSheets(s => s.map(x => x.id === sheetId ? { ...x, status: 'aprovada' } : x));
+      onReload();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erro ao enviar PDF');
+      setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao aprovar' }));
+    } finally { setApproving(a => ({ ...a, [sheetId]: false })); }
+  };
+
+  const handleDownloadFicha = async (sheet) => {
+    try {
+      const res = await api.get(`/field-sheets/${sheet.id}/pdf`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ficha_${String(sheet.laudo_number).padStart(4, '0')}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch { setErrors(e => ({ ...e, [sheet.id]: 'Erro ao baixar ficha.' })); }
+  };
+
+  const handleUpload = async (sheetId) => {
+    const file = uploadFile[sheetId];
+    if (!file) return;
+    setUploading(u => ({ ...u, [sheetId]: true }));
+    setErrors(e => ({ ...e, [sheetId]: '' }));
+    setUploadResult(r => ({ ...r, [sheetId]: null }));
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await api.post(`/uploads/sonus/${sheetId}`, fd);
+      setUploadResult(r => ({ ...r, [sheetId]: res.data }));
+    } catch (err) {
+      setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao enviar PDF' }));
+    } finally { setUploading(u => ({ ...u, [sheetId]: false })); }
+  };
+
+  const handleGenerate = async (sheetId) => {
+    setGenerating(g => ({ ...g, [sheetId]: true }));
+    setErrors(e => ({ ...e, [sheetId]: '' }));
+    try {
+      const res = await api.post(`/reports/generate/${sheetId}`);
+      setReports(r => ({ ...r, [sheetId]: res.data }));
+      onReload();
+    } catch (err) {
+      setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao gerar laudo' }));
+    } finally { setGenerating(g => ({ ...g, [sheetId]: false })); }
+  };
+
+  const handleDownloadLaudo = async (reportData) => {
+    try {
+      const urlRes = await api.get(`/reports/url/${reportData.id}`);
+      const { url, local, filename } = urlRes.data;
+      if (local) {
+        const res = await api.get(url, { responseType: 'blob' });
+        const blobUrl = window.URL.createObjectURL(res.data);
+        const a = document.createElement('a');
+        a.href = blobUrl; a.download = filename; a.click();
+        window.URL.revokeObjectURL(blobUrl);
+      } else { window.open(url, '_blank'); }
+    } catch { alert('Erro ao baixar laudo.'); }
+  };
+
+  const blobDownload = async (url, filename, setLoading) => {
+    setLoading(true);
+    try {
+      const res = await api.get(url, { responseType: 'blob' });
+      const blobUrl = window.URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = blobUrl; a.download = filename; a.click();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      let msg = 'Erro ao gerar relatório.';
+      if (err.response?.data instanceof Blob) {
+        try { const t = await err.response.data.text(); msg = JSON.parse(t).detail || msg; } catch {}
+      }
+      alert(msg);
     } finally { setLoading(false); }
   };
 
-  const handleGenerate = async () => {
-    setGenerating(true); setError('');
+  const startEdit = (sheet) => {
+    setEditingId(sheet.id);
+    setEditForm({
+      epi: sheet.epi || '',
+      activity: sheet.activity || '',
+      machine_noise: sheet.machine_noise || '',
+      technician_name_2: sheet.technician_name_2 || '',
+      pos_verificacao_db: sheet.pos_verificacao_db || '',
+      dosimeter_number: sheet.dosimeter_number || '',
+    });
+  };
+
+  const handleSaveEdit = async (sheetId) => {
+    setSaving(true);
     try {
-      const res = await api.post(`/reports/generate/${sheetId}`);
-      setReport(res.data);
+      await api.patch(`/field-sheets/${sheetId}/edit`, editForm);
+      setEditingId(null);
+      const res = await api.get('/field-sheets/pending');
+      const updated = res.data.find(s => s.id === sheetId);
+      if (updated) setSheets(s => s.map(x => x.id === sheetId ? updated : x));
+      onReload();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erro ao gerar laudo');
-    } finally { setGenerating(false); }
+      setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao salvar' }));
+    } finally { setSaving(false); }
   };
 
-  const handleDownload = async () => {
-    try {
-      const res = await api.get(report.download_url, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(res.data);
-      const a = document.createElement('a');
-      a.href = url; a.download = report.filename; a.click();
-      window.URL.revokeObjectURL(url);
-    } catch {
-      setError('Erro ao baixar laudo. Tente novamente.');
-    }
-  };
-
-  const Row = ({ label, value, mono }) => (
-    <tr>
-      <td style={{ padding: '10px 16px', fontWeight: 600, color: '#5a6478', fontSize: 13, width: 180, background: '#f8fafb', borderBottom: '1px solid #e2e8f0' }}>{label}</td>
-      <td style={{ padding: '10px 16px', borderBottom: '1px solid #e2e8f0', fontFamily: mono ? 'JetBrains Mono, monospace' : 'inherit', fontSize: mono ? 12 : 14 }}>{value || '—'}</td>
-    </tr>
-  );
+  const params = new URLSearchParams({ company_id: group.company_id, tipo_analise: group.tipo_analise });
 
   return (
-    <div className="page" style={{ maxWidth: 760 }}>
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Tela de Conferência</h1>
-          <p className="page-subtitle">Envie o PDF do SONUS 2 e confira os dados antes de gerar o laudo</p>
-        </div>
-      </div>
-
-      <div className="card" style={{ marginBottom: 24 }}>
-        <div className="section-title">Upload do PDF</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 16, alignItems: 'end' }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">ID da Ficha <span style={{color:'red'}}>*</span></label>
-            <input type="number" className="form-input" value={sheetId}
-              onChange={e => setSheetId(e.target.value)} placeholder="Ex: 1" />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">PDF do SONUS 2 <span style={{color:'red'}}>*</span></label>
-            <input type="file" accept=".pdf" className="form-input"
-              onChange={e => setFile(e.target.files[0])}
-              style={{ padding: '7px 14px', cursor: 'pointer' }} />
-          </div>
-        </div>
-
-        {error && <div className="alert alert-error" style={{ marginTop: 16, marginBottom: 0 }}>{error}</div>}
-
-        <button className="btn btn-primary" onClick={handleUpload} disabled={loading}
-          style={{ marginTop: 20, padding: '10px 28px' }}>
-          {loading ? '⏳ Processando...' : '🔍 Enviar e Conferir'}
+    <div className="page">
+      {/* Cabeçalho */}
+      <div style={{ marginBottom: 20 }}>
+        <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#16a34a', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 8 }}>
+          ← Voltar para Conferência
         </button>
+        <div className="page-header" style={{ marginBottom: 0 }}>
+          <div>
+            <h1 className="page-title">{group.company_nome}</h1>
+            <p className="page-subtitle">{group.tipo_analise} · {sheets.length} ficha{sheets.length !== 1 ? 's' : ''} · {group.tecnicos.join(', ')}</p>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-primary"
+              onClick={() => blobDownload(`/reports/generate-bulk-pdf?${params}`, `relatorio_${group.tipo_analise}_${group.company_nome?.slice(0,20)}.pdf`, setGenBulkPdf)}
+              disabled={genBulkPdf}>
+              {genBulkPdf ? 'Gerando...' : 'Gerar Relatório PDF'}
+            </button>
+            <button className="btn btn-secondary"
+              onClick={() => blobDownload(`/reports/generate-bulk?${params}`, `relatorio_${group.tipo_analise}_${group.company_nome?.slice(0,20)}.xlsx`, setGenBulkXls)}
+              disabled={genBulkXls}>
+              {genBulkXls ? 'Gerando...' : 'Gerar Relatório Excel'}
+            </button>
+            <button className="btn btn-secondary" onClick={() => navigate(`/companies/${group.company_id}`)}>
+              Ver Empresa
+            </button>
+          </div>
+        </div>
       </div>
 
-      {result && (
-        <div>
-          {result.name_alert ? (
-            <div className="alert alert-warning">
-              ⚠️ {result.name_alert}
+      {/* Lista de fichas */}
+      {sheets.map(sheet => (
+        <div key={sheet.id} className="card" style={{ marginBottom: 12, padding: 0, overflow: 'hidden' }}>
+          {/* Linha de cabeçalho da ficha */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: '#f8fafc', borderBottom: editingId === sheet.id || uploadResult[sheet.id] !== undefined ? '1px solid #e2e8f0' : undefined }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span className="badge badge-blue">#{String(sheet.laudo_number).padStart(4, '0')}</span>
+              <span style={{ fontWeight: 600, fontSize: 14 }}>{sheet.employee_nome || <span style={{ color: '#94a3b8' }}>Sem nome</span>}</span>
+              <span style={{ fontSize: 12, color: '#94a3b8' }}>{new Date(sheet.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+              <StatusBadge status={sheet.status} />
             </div>
-          ) : (
-            <div className="alert alert-success">
-              ✅ Nome do funcionário confirmado com o cadastro
+            <div style={{ display: 'flex', gap: 6 }}>
+              {sheet.status === 'pendente' ? (
+                <>
+                  <button className="btn btn-secondary btn-sm"
+                    onClick={() => editingId === sheet.id ? setEditingId(null) : startEdit(sheet)}>
+                    {editingId === sheet.id ? 'Cancelar' : 'Editar'}
+                  </button>
+                  <button className="btn btn-primary btn-sm"
+                    onClick={() => handleApprove(sheet.id)} disabled={approving[sheet.id]}>
+                    {approving[sheet.id] ? '...' : 'Aprovar'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="btn btn-secondary btn-sm" onClick={() => handleDownloadFicha(sheet)}>
+                    Ficha PDF
+                  </button>
+                </>
+              )}
             </div>
-          )}
-
-          <div className="card" style={{ marginBottom: 24, padding: 0, overflow: 'hidden' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0' }}>
-              <div className="section-title" style={{ marginBottom: 0 }}>Dados Extraídos do PDF</div>
-            </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <tbody>
-                <Row label="Funcionário" value={result.parsed_data.funcionario} />
-                <Row label="Início" value={result.parsed_data.inicio} />
-                <Row label="Fim" value={result.parsed_data.fim} />
-                <Row label="Dose Diária [%]" value={result.parsed_data.dose_diaria} />
-                <Row label="NE [dB]" value={result.parsed_data.ne_db} />
-                <Row label="NEN [dB]" value={result.parsed_data.nen_db} />
-                <Row label="SHA-256" value={result.sha256} mono />
-              </tbody>
-            </table>
           </div>
 
-          {!report && (
-            <button className="btn btn-blue" onClick={handleGenerate} disabled={generating}
-              style={{ padding: '12px 32px', fontSize: 15 }}>
-              {generating ? '⏳ Gerando Laudo...' : '📄 Gerar Laudo PDF'}
-            </button>
-          )}
-
-          {report && (
-            <div className="card" style={{ borderLeft: '4px solid #1a7a3c' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: '#1a7a3c', marginBottom: 4 }}>✅ Laudo gerado com sucesso!</div>
-                  <div style={{ fontSize: 13, color: '#5a6478', marginBottom: 2 }}>{report.filename}</div>
-                  <div style={{ fontSize: 11, color: '#8a93a8', fontFamily: 'JetBrains Mono, monospace' }}>SHA-256: {report.sha256}</div>
+          {/* Formulário de edição */}
+          {editingId === sheet.id && (
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5f9' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">EPI Utilizado</label>
+                  <select className="form-input" value={editForm.epi} onChange={e => setEditForm(f => ({ ...f, epi: e.target.value }))}>
+                    <option value="">Selecione...</option>
+                    {['Protetor Auricular - Plug de Inserção','Protetor Auricular - Tipo Concha','Protetor Auricular - Semi-auricular','Capacete de Segurança','Óculos de Proteção','Luvas de Proteção','Abafador de Ruído','Máscara de Proteção Respiratória','Calçado de Segurança','Ausência de EPI'].map(o => <option key={o}>{o}</option>)}
+                  </select>
                 </div>
-                <button className="btn btn-primary" onClick={handleDownload}>
-                  ⬇ Baixar Laudo
-                </button>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Nº Dosímetro</label>
+                  <input className="form-input" type="number" value={editForm.dosimeter_number} onChange={e => setEditForm(f => ({ ...f, dosimeter_number: e.target.value }))} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Atividade Desenvolvida</label>
+                  <textarea className="form-input" rows={2} value={editForm.activity} onChange={e => setEditForm(f => ({ ...f, activity: e.target.value }))} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Máquinas/Equipamentos</label>
+                  <textarea className="form-input" rows={2} value={editForm.machine_noise} onChange={e => setEditForm(f => ({ ...f, machine_noise: e.target.value }))} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Resp. pelo Acompanhamento</label>
+                  <input className="form-input" value={editForm.technician_name_2} onChange={e => setEditForm(f => ({ ...f, technician_name_2: e.target.value }))} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Pós Verificação [dB]</label>
+                  <input className="form-input" value={editForm.pos_verificacao_db} onChange={e => setEditForm(f => ({ ...f, pos_verificacao_db: e.target.value }))} placeholder="Ex: 114,00" />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <button className="btn btn-primary btn-sm" onClick={() => handleSaveEdit(sheet.id)} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</button>
+                <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(null)}>Cancelar</button>
               </div>
             </div>
           )}
+
+          {/* Upload SONUS 2 — só fichas aprovadas */}
+          {sheet.status === 'aprovada' && (
+            <div style={{ padding: '12px 16px' }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>Upload de Laudo (SONUS 2)</div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input type="file" accept=".pdf" className="form-input"
+                  style={{ padding: '6px 10px', cursor: 'pointer', fontSize: 13, flex: 1 }}
+                  onChange={e => setUploadFile(f => ({ ...f, [sheet.id]: e.target.files[0] }))} />
+                <button className="btn btn-primary btn-sm"
+                  onClick={() => handleUpload(sheet.id)}
+                  disabled={uploading[sheet.id] || !uploadFile[sheet.id]}>
+                  {uploading[sheet.id] ? 'Enviando...' : 'Conferir'}
+                </button>
+              </div>
+
+              {errors[sheet.id] && <div className="alert alert-error" style={{ marginTop: 8, marginBottom: 0 }}>{errors[sheet.id]}</div>}
+
+              {uploadResult[sheet.id] && (
+                <div style={{ marginTop: 10 }}>
+                  <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#0f172a', marginBottom: 10 }}>
+                    <span>Início: <b>{uploadResult[sheet.id].parsed_data?.inicio}</b></span>
+                    <span>Fim: <b>{uploadResult[sheet.id].parsed_data?.fim}</b></span>
+                    <span>NE: <b>{uploadResult[sheet.id].parsed_data?.ne_db} dB</b></span>
+                  </div>
+                  {!reports[sheet.id]
+                    ? <button className="btn btn-primary btn-sm" onClick={() => handleGenerate(sheet.id)} disabled={generating[sheet.id]}>
+                        {generating[sheet.id] ? 'Gerando...' : 'Gerar Laudo PDF'}
+                      </button>
+                    : <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <span style={{ color: '#16a34a', fontWeight: 600, fontSize: 13 }}>Laudo gerado</span>
+                        <button className="btn btn-secondary btn-sm" onClick={() => handleDownloadLaudo(reports[sheet.id])}>Baixar</button>
+                      </div>
+                  }
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Visão principal: lista de grupos ────────────────────────────────────────
+export default function Conference() {
+  const [sheets, setSheets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [filtroStatus, setFiltroStatus] = useState('todos');
+
+  const load = () => {
+    setLoading(true);
+    api.get('/field-sheets/pending')
+      .then(res => setSheets(res.data))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  // Agrupa por empresa + tipo_analise
+  const grupos = Object.values(
+    sheets.reduce((acc, s) => {
+      const key = `${s.company_id}||${s.tipo_analise || 'Ruído'}`;
+      if (!acc[key]) acc[key] = {
+        key, company_id: s.company_id, company_nome: s.company_nome,
+        tipo_analise: s.tipo_analise || 'Ruído', sheets: [], tecnicos: new Set(),
+      };
+      acc[key].sheets.push(s);
+      if (s.technician_name) acc[key].tecnicos.add(s.technician_name);
+      return acc;
+    }, {})
+  ).map(g => ({ ...g, tecnicos: [...g.tecnicos] }));
+
+  const statusGrupo = (sheets) => {
+    if (sheets.every(s => s.status === 'aprovada')) return 'aprovada';
+    if (sheets.some(s => s.status === 'aprovada')) return 'parcial';
+    return 'pendente';
+  };
+
+  const StatusBadge = ({ status }) => {
+    const map = {
+      aprovada: { bg: '#dcfce7', color: '#166534', label: 'Aprovada' },
+      parcial:  { bg: '#fef9c3', color: '#854d0e', label: 'Parcial' },
+      pendente: { bg: '#fee2e2', color: '#991b1b', label: 'Pendente' },
+    };
+    const s = map[status] || map.pendente;
+    return <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: s.bg, color: s.color }}>{s.label}</span>;
+  };
+
+  // Se um grupo estiver selecionado, mostra o detalhe
+  if (selectedGroup) {
+    return <ConferenceDetail group={selectedGroup} onBack={() => setSelectedGroup(null)} onReload={load} />;
+  }
+
+  if (loading) return <div className="page"><div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>Carregando...</div></div>;
+
+  const gruposFiltrados = grupos.filter(g => {
+    const st = statusGrupo(g.sheets);
+    if (filtroStatus === 'todos') return true;
+    if (filtroStatus === 'pendente') return st !== 'aprovada';
+    if (filtroStatus === 'aprovada') return st === 'aprovada';
+    return true;
+  });
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Conferência</h1>
+          <p className="page-subtitle">{grupos.length} grupo{grupos.length !== 1 ? 's' : ''} · {sheets.length} ficha{sheets.length !== 1 ? 's' : ''} no total</p>
+        </div>
+        <button className="btn btn-secondary" onClick={load}>Atualizar</button>
+      </div>
+
+      {grupos.length === 0 && (
+        <div className="card" style={{ textAlign: 'center', padding: 48 }}>
+          <p style={{ color: '#6b7280' }}>Nenhuma ficha pendente de conferência.</p>
+        </div>
+      )}
+
+      {grupos.length > 0 && (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          {/* Abas de filtro */}
+          <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
+            {[
+              { key: 'todos',    label: `Todos (${grupos.length})` },
+              { key: 'pendente', label: `Pendentes (${grupos.filter(g => statusGrupo(g.sheets) !== 'aprovada').length})` },
+              { key: 'aprovada', label: `Aprovados (${grupos.filter(g => statusGrupo(g.sheets) === 'aprovada').length})` },
+            ].map(f => (
+              <button key={f.key} onClick={() => setFiltroStatus(f.key)} style={{
+                padding: '10px 20px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                background: filtroStatus === f.key ? 'white' : 'transparent',
+                color: filtroStatus === f.key ? '#1a7a3c' : '#8a93a8',
+                borderBottom: filtroStatus === f.key ? '2px solid #16a34a' : '2px solid transparent',
+                marginBottom: -1,
+              }}>{f.label}</button>
+            ))}
+          </div>
+
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Tipo de Análise</th>
+                <th>Fichas</th>
+                <th>Técnico(s)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {gruposFiltrados.map(group => (
+                <tr key={group.key} style={{ cursor: 'pointer' }} onClick={() => setSelectedGroup(group)}>
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <span style={{ color: '#16a34a', fontWeight: 700, fontSize: 14, textDecoration: 'underline' }}>
+                      {group.company_nome}
+                    </span>
+                  </td>
+                  <td style={{ verticalAlign: 'middle', fontSize: 13 }}>{group.tipo_analise}</td>
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <span className="badge badge-blue">{group.sheets.length}</span>
+                  </td>
+                  <td style={{ verticalAlign: 'middle', color: '#64748b', fontSize: 13 }}>{group.tecnicos.join(', ') || '—'}</td>
+                  <td style={{ verticalAlign: 'middle' }}><StatusBadge status={statusGrupo(group.sheets)} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

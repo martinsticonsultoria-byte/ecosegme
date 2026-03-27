@@ -4,7 +4,9 @@ from typing import Optional
 
 class FieldSheetCreate(BaseModel):
     company_id: int
-    employee_id: int
+    employee_id: Optional[int] = None
+    employee_name_text: Optional[str] = None
+    tipo_analise: Optional[str] = None
     dosimeter_number: int
     collection_date: date
     epi: Optional[str] = None
@@ -12,7 +14,7 @@ class FieldSheetCreate(BaseModel):
     machine_noise: Optional[str] = None
     technician_name: str
     technician_name_2: Optional[str] = None
-    signature_date: date
+    signature_date: Optional[date] = None
     turno: Optional[str] = None
     codigo_esocial: Optional[str] = None
     pre_verificacao_db: Optional[str] = None
@@ -23,19 +25,21 @@ class FieldSheetOut(BaseModel):
     laudo_number: int
     dosimeter_number: int
     collection_date: date
+    tipo_analise: Optional[str] = None
     technician_name: str
     technician_name_2: Optional[str] = None
-    signature_date: date
+    signature_date: Optional[date] = None
+    status: str
     company_id: int
-    employee_id: int
-    created_at: datetime
+    company_nome: Optional[str] = None
+    employee_id: Optional[int] = None
     employee_nome: Optional[str] = None
+    epi: Optional[str] = None
+    activity: Optional[str] = None
+    machine_noise: Optional[str] = None
+    pre_verificacao_db: Optional[str] = None
+    pos_verificacao_db: Optional[str] = None
+    created_at: datetime
 
     class Config:
         from_attributes = True
-
-    @classmethod
-    def from_orm(cls, obj):
-        d = super().from_orm(obj)
-        d.employee_nome = obj.employee.nome if obj.employee else None
-        return d

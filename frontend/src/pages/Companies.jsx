@@ -54,7 +54,7 @@ export default function Companies() {
           <p className="page-subtitle">{companies.length} empresa{companies.length !== 1 ? 's' : ''} cadastrada{companies.length !== 1 ? 's' : ''}</p>
         </div>
         <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setError(''); }}>
-          {showForm ? '✕ Cancelar' : '+ Nova Empresa'}
+          {showForm ? 'Cancelar' : '+ Nova Empresa'}
         </button>
       </div>
 
@@ -100,11 +100,10 @@ export default function Companies() {
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#8a93a8' }}>Carregando...</div>
+          <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Carregando...</div>
         ) : companies.length === 0 ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#8a93a8' }}>
-            <div style={{ fontSize: 32, marginBottom: 8 }}>🏢</div>
-            <p>Nenhuma empresa cadastrada ainda.</p>
+          <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+            <p style={{ color: '#6b7280' }}>Nenhuma empresa cadastrada ainda.</p>
           </div>
         ) : (
           <table className="table">
@@ -121,12 +120,12 @@ export default function Companies() {
                 <tr key={c.id}>
                   <td><span className="badge badge-blue">{c.id}</span></td>
                   <td>
-                    <span style={{ fontWeight: 600, color: '#1a7a3c', cursor: 'pointer', textDecoration: 'underline' }}
+                    <span style={{ fontWeight: 600, color: '#16a34a', cursor: 'pointer', textDecoration: 'underline' }}
                       onClick={() => navigate(`/companies/${c.id}`)}>
                       {c.razao_social}
                     </span>
                   </td>
-                  <td style={{ color: '#5a6478' }}>{c.endereco || '—'}</td>
+                  <td style={{ color: '#64748b' }}>{c.endereco || '—'}</td>
                   <td></td>
                 </tr>
               ))}

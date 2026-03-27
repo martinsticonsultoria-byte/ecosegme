@@ -7,6 +7,15 @@ export default function Users() {
   const [users, setUsers] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'technician' });
+  const [generatedPassword, setGeneratedPassword] = useState('');
+
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
+    let pwd = '';
+    for (let i = 0; i < 10; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+    setForm(f => ({ ...f, password: pwd }));
+    setGeneratedPassword(pwd);
+  };
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetTarget, setResetTarget] = useState(null);
@@ -21,6 +30,7 @@ export default function Users() {
     try {
       await api.post('/users', form);
       setForm({ name: '', email: '', password: '', role: 'technician' });
+      setGeneratedPassword('');
       setShowForm(false);
       load();
     } catch (err) {
@@ -62,19 +72,27 @@ export default function Users() {
           <div className="section-title">Novo Usuário</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div className="form-group">
-              <label className="form-label">Nome <span style={{ color: 'red' }}>*</span></label>
+              <label className="form-label">Nome <span style={{ color: '#ef4444' }}>*</span></label>
               <input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Nome completo" />
             </div>
             <div className="form-group">
-              <label className="form-label">E-mail <span style={{ color: 'red' }}>*</span></label>
+              <label className="form-label">E-mail <span style={{ color: '#ef4444' }}>*</span></label>
               <input className="form-input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com" />
             </div>
             <div className="form-group">
-              <label className="form-label">Senha <span style={{ color: 'red' }}>*</span></label>
-              <input className="form-input" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="Mínimo 6 caracteres" />
+              <label className="form-label">Senha <span style={{ color: '#ef4444' }}>*</span></label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input className="form-input" type="text" value={form.password} onChange={e => { setForm({ ...form, password: e.target.value }); setGeneratedPassword(''); }} placeholder="Mínimo 6 caracteres" style={{ flex: 1 }} />
+                <button type="button" className="btn btn-secondary" onClick={generatePassword} style={{ whiteSpace: 'nowrap' }}>Gerar</button>
+              </div>
+              {generatedPassword && (
+                <div style={{ marginTop: 6, padding: '6px 10px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, fontSize: 13 }}>
+                  Senha gerada: <strong style={{ fontFamily: 'monospace' }}>{generatedPassword}</strong> — anote antes de salvar
+                </div>
+              )}
             </div>
             <div className="form-group">
-              <label className="form-label">Perfil <span style={{ color: 'red' }}>*</span></label>
+              <label className="form-label">Perfil <span style={{ color: '#ef4444' }}>*</span></label>
               <select className="form-input" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
                 <option value="technician">Técnico de Campo</option>
                 <option value="admin_staff">Administrativo</option>
@@ -89,7 +107,7 @@ export default function Users() {
       )}
 
       {resetTarget && (
-        <div className="card" style={{ marginBottom: 24, borderLeft: '4px solid #f59e0b' }}>
+        <div className="card" style={{ marginBottom: 24, borderLeft: '3px solid #f59e0b' }}>
           <div className="section-title">Redefinir Senha</div>
           <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
             <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
@@ -118,10 +136,10 @@ export default function Users() {
             {users.map(u => (
               <tr key={u.id}>
                 <td style={{ fontWeight: 500 }}>{u.name}</td>
-                <td style={{ color: '#5a6478', fontSize: 13 }}>{u.email}</td>
+                <td style={{ color: '#64748b', fontSize: 13 }}>{u.email}</td>
                 <td><span className={`badge ${u.role === 'admin_staff' ? 'badge-blue' : 'badge-green'}`}>{roleLabel(u.role)}</span></td>
                 <td>
-                  <span className={`badge ${u.active ? 'badge-green' : ''}`} style={!u.active ? { background: '#fee2e2', color: '#dc2626' } : {}}>
+                  <span className={`badge ${u.active ? 'badge-green' : ''}`} style={!u.active ? { background: '#fef2f2', color: '#ef4444' } : {}}>
                     {u.active ? 'Ativo' : 'Inativo'}
                   </span>
                 </td>
@@ -131,7 +149,7 @@ export default function Users() {
                   </button>
                   {u.id !== me?.id && (
                     <button className="btn btn-sm" onClick={() => handleToggle(u.id)}
-                      style={{ background: u.active ? '#fee2e2' : '#dcfce7', color: u.active ? '#dc2626' : '#16a34a', border: 'none', borderRadius: 6, padding: '4px 12px', cursor: 'pointer', fontSize: 13 }}>
+                      style={{ background: u.active ? '#fef2f2' : '#f0fdf4', color: u.active ? '#ef4444' : '#16a34a', border: `1px solid ${u.active ? '#fca5a5' : '#bbf7d0'}`, borderRadius: 999, padding: '4px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
                       {u.active ? 'Desativar' : 'Ativar'}
                     </button>
                   )}
