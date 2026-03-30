@@ -37,3 +37,19 @@ class FieldSheet(Base):
     @property
     def employee_nome(self):
         return self.employee.nome if self.employee else self.employee_name_text
+
+    @property
+    def employee_funcao(self):
+        return self.employee.funcao if self.employee else None
+
+    @property
+    def employee_matricula(self):
+        return self.employee.matricula if self.employee else None
+
+    @property
+    def employee_setor(self):
+        return self.employee.setor if self.employee else None
+
+    @property
+    def employee_local(self):
+        return self.employee.local if self.employee else None

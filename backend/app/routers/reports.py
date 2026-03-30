@@ -245,7 +245,42 @@ def generate_bulk_report(
         emp_setor = emp.setor if emp else ""
         emp_local = emp.local if emp else ""
 
-        ws["E1"] = sheet.laudo_number
+        # Formata data de assinatura no padrão "Manaus, DD de MÊS de AAAA."
+        _MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"]
+        sig_date_str = ""
+        if sheet.signature_date:
+            sig_date_str = f"Manaus, {sheet.signature_date.day:02d} de {_MESES[sheet.signature_date.month-1]} de {sheet.signature_date.year}."
+
+        ne_val_sheet = None
+        if upload and upload.ne_db:
+            try:
+                ne_val_sheet = float(upload.ne_db.replace(",", "."))
+            except Exception:
+                ne_val_sheet = None
+
+        conclusao_text = ""
+        if ne_val_sheet is not None:
+            if ne_val_sheet <= 85:
+                conclusao_text = (
+                    "O nível equivalente de ruído está dentro do limite de tolerância estabelecido "
+                    "no Anexo 1 da NR 15 para uma jornada de 8 horas diárias, não caracterizando "
+                    "exposição excessiva. No entanto, é recomendável manter medidas preventivas para "
+                    "reduzir riscos auditivos e garantir a conformidade com as normas de segurança."
+                )
+            else:
+                conclusao_text = (
+                    "O nível equivalente de ruído excede o limite de tolerância do Anexo 1 da NR 15 "
+                    "para uma jornada de 8 horas diárias, exigindo medidas preventivas imediatas. "
+                    "Quando o ruído atinge ou supera o nível de ação, é fundamental minimizar os "
+                    "riscos auditivos e garantir a conformidade com as normas de segurança."
+                )
+        acao_result = ""
+        if ne_val_sheet is not None:
+            acao_result = "ACIMA" if ne_val_sheet > 85 else "ABAIXO"
+
+        ws["E1"] = f"{sheet.laudo_number:04d}-{i+1}/{year}.0"
+        ws["L1"] = sig_date_str
         ws["B2"] = company.razao_social
         ws["B3"] = company.endereco or ""
         ws["B6"] = emp_nome
@@ -265,6 +300,9 @@ def generate_bulk_report(
             ws["C30"] = upload.ne_db or ""
             ws["C31"] = upload.nen_db or ""
             ws["C32"] = upload.tempo_medicao or ""
+            ws["I29"] = acao_result
+        ws["A34"] = conclusao_text
+        ws["A36"] = sig_date_str
 
     del wb["_tpl"]
 
@@ -336,6 +374,13 @@ def generate_bulk_pdf(
     dates = [s.collection_date for s in sheets]
     period = f"{min(dates).strftime('%d/%m/%Y')} à {max(dates).strftime('%d/%m/%Y')}"
 
+    generated_ids = {
+        r.field_sheet_id
+        for r in db.query(GeneratedReport.field_sheet_id).filter(
+            GeneratedReport.field_sheet_id.in_([s.id for s in sheets])
+        ).all()
+    }
+
     fichas = []
     for sheet in sheets:
         upload = uploads.get(sheet.id)
@@ -368,6 +413,10 @@ def generate_bulk_pdf(
             "nen_db": upload.nen_db if upload else "",
             "dose_diaria": upload.dose_diaria if upload else "",
             "tempo_medicao": upload.tempo_medicao if upload else "",
+            "inicio": upload.inicio if upload else "",
+            "fim": upload.fim if upload else "",
+            "signature_date": sheet.signature_date.strftime("%d/%m/%Y") if sheet.signature_date else "",
+            "has_laudo": sheet.id in generated_ids,
         })
 
     import base64
@@ -385,6 +434,7 @@ def generate_bulk_pdf(
         tipo_analise=tipo_analise,
         period=period,
         report_date=datetime.now().strftime("%d/%m/%Y"),
+        year=datetime.now().year,
         laudo_numbers=[s.laudo_number for s in sheets],
         logo_b64=logo_b64,
         fichas=fichas,

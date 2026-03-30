@@ -34,6 +34,10 @@ class FieldSheetOut(BaseModel):
     company_nome: Optional[str] = None
     employee_id: Optional[int] = None
     employee_nome: Optional[str] = None
+    employee_funcao: Optional[str] = None
+    employee_matricula: Optional[str] = None
+    employee_setor: Optional[str] = None
+    employee_local: Optional[str] = None
     epi: Optional[str] = None
     activity: Optional[str] = None
     machine_noise: Optional[str] = None
