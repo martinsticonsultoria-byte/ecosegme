@@ -13,6 +13,7 @@ export default function FieldSheetForm() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [employeeInput, setEmployeeInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [newEmpFields, setNewEmpFields] = useState({ funcao: '', matricula: '', setor: '', local: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [nextNumber, setNextNumber] = useState(null);
@@ -46,6 +47,7 @@ export default function FieldSheetForm() {
     setForm({ ...form, company_id });
     setSelectedEmployee(null);
     setEmployeeInput('');
+    setNewEmpFields({ funcao: '', matricula: '', setor: '', local: '' });
     if (company_id) api.get(`/employees?company_id=${company_id}`).then(res => setEmployees(res.data));
     else setEmployees([]);
   };
@@ -53,6 +55,9 @@ export default function FieldSheetForm() {
   const filteredEmployees = employees.filter(e =>
     e.nome.toLowerCase().includes(employeeInput.toLowerCase())
   );
+
+  // Novo funcionário: quando digitou nome mas não selecionou nenhum existente
+  const isNewEmployee = employeeInput.trim() && !selectedEmployee;
 
   const handleEmployeeInputChange = (e) => {
     setEmployeeInput(e.target.value);
@@ -70,7 +75,12 @@ export default function FieldSheetForm() {
 
   const handleSubmit = async () => {
     if (!form.company_id || !form.dosimeter_number || !form.collection_date || !form.epi || !form.activity || !form.machine_noise) {
-      setError('Preencha todos os campos obrigatórios (*)'); return;
+      setError('Preencha todos os campos obrigatórios (*)');
+      return;
+    }
+    if (!selectedEmployee && !employeeInput.trim()) {
+      setError('Informe o nome do funcionário.');
+      return;
     }
     setError(''); setLoading(true);
     try {
@@ -81,6 +91,10 @@ export default function FieldSheetForm() {
         technician_name: user?.name || '',
         employee_id: selectedEmployee ? selectedEmployee.id : null,
         employee_name_text: selectedEmployee ? null : employeeInput.trim(),
+        employee_funcao: selectedEmployee ? null : (newEmpFields.funcao || null),
+        employee_matricula: selectedEmployee ? null : (newEmpFields.matricula || null),
+        employee_setor: selectedEmployee ? null : (newEmpFields.setor || null),
+        employee_local: selectedEmployee ? null : (newEmpFields.local || null),
       };
       Object.keys(payload).forEach(k => { if (payload[k] === '') payload[k] = null; });
       const res = await api.post('/field-sheets', payload);
@@ -122,7 +136,7 @@ export default function FieldSheetForm() {
           <button className="btn btn-primary" onClick={handleDownloadFicha} disabled={downloading} style={{ padding: '12px 28px' }}>
             {downloading ? 'Gerando PDF...' : 'Baixar Ficha PDF'}
           </button>
-          <button className="btn btn-primary" onClick={() => { setSavedSheet(null); setEmployeeInput(''); setSelectedEmployee(null); setNextNumber(n => n + 1); }} style={{ padding: '12px 28px' }}>
+          <button className="btn btn-primary" onClick={() => { setSavedSheet(null); setEmployeeInput(''); setSelectedEmployee(null); setNewEmpFields({ funcao: '', matricula: '', setor: '', local: '' }); setNextNumber(n => n + 1); }} style={{ padding: '12px 28px' }}>
             + Nova Ficha
           </button>
           <button className="btn btn-secondary" onClick={() => navigate('/companies')} style={{ padding: '12px 28px' }}>
@@ -161,6 +175,7 @@ export default function FieldSheetForm() {
             </select>
           </div>
 
+          {/* Campo funcionário com autocomplete */}
           <div className="form-group" style={{ position: 'relative' }}>
             <label className="form-label">Funcionário <span>*</span></label>
             <input
@@ -170,7 +185,7 @@ export default function FieldSheetForm() {
               onChange={handleEmployeeInputChange}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-              placeholder={form.company_id ? 'Digite ou selecione o nome...' : 'Selecione a empresa primeiro'}
+              placeholder={form.company_id ? 'Digite o nome do funcionário...' : 'Selecione a empresa primeiro'}
               disabled={!form.company_id}
               autoComplete="off"
             />
@@ -195,6 +210,7 @@ export default function FieldSheetForm() {
             )}
           </div>
 
+          {/* Funcionário existente selecionado: exibe dados */}
           {selectedEmployee && (
             <>
               <ReadOnly label="Função" value={selectedEmployee.funcao} />
@@ -202,6 +218,38 @@ export default function FieldSheetForm() {
               <ReadOnly label="Setor" value={selectedEmployee.setor} />
               <ReadOnly label="Local" value={selectedEmployee.local} />
             </>
+          )}
+
+          {/* Novo funcionário: campos extras inline */}
+          {isNewEmployee && (
+            <div style={{ gridColumn: '1 / -1' }}>
+              <div style={{
+                background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8,
+                padding: '14px 16px', marginBottom: 4
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#16a34a', marginBottom: 10 }}>
+                  Novo funcionário — preencha os dados adicionais (opcional)
+                </div>
+                <div className="grid-2">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Função</label>
+                    <input className="form-input" value={newEmpFields.funcao} onChange={e => setNewEmpFields(f => ({ ...f, funcao: e.target.value }))} placeholder="Ex: Operador de Máquina" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Matrícula</label>
+                    <input className="form-input" value={newEmpFields.matricula} onChange={e => setNewEmpFields(f => ({ ...f, matricula: e.target.value }))} placeholder="Ex: 12345" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Setor</label>
+                    <input className="form-input" value={newEmpFields.setor} onChange={e => setNewEmpFields(f => ({ ...f, setor: e.target.value }))} placeholder="Ex: Produção" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Local</label>
+                    <input className="form-input" value={newEmpFields.local} onChange={e => setNewEmpFields(f => ({ ...f, local: e.target.value }))} placeholder="Ex: Linha 02" />
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
           <div className="form-group">
@@ -227,7 +275,7 @@ export default function FieldSheetForm() {
 
           <div className="form-group">
             <label className="form-label">Data de Coleta <span>*</span></label>
-            <input type="date" name="collection_date" className="form-input" value={form.collection_date} disabled style={{ background: '#f8fafc', color: '#64748b' }} />
+            <input type="date" name="collection_date" className="form-input" value={form.collection_date} onChange={handleChange} />
           </div>
 
         </div>

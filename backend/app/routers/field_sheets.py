@@ -54,6 +54,10 @@ def create_field_sheet(data: FieldSheetCreate, db: Session = Depends(get_db), cu
             new_emp = Employee(
                 company_id=data.company_id,
                 nome=data.employee_name_text,
+                funcao=data.employee_funcao,
+                matricula=data.employee_matricula,
+                setor=data.employee_setor,
+                local=data.employee_local,
             )
             db.add(new_emp)
             db.flush()
@@ -66,6 +70,9 @@ def create_field_sheet(data: FieldSheetCreate, db: Session = Depends(get_db), cu
     payload['employee_id'] = employee_id
     payload['laudo_number'] = next_number
     payload['created_by'] = current_user.id
+    # remove campos auxiliares que não existem no modelo
+    for key in ('employee_funcao', 'employee_matricula', 'employee_setor', 'employee_local'):
+        payload.pop(key, None)
 
     sheet = FieldSheet(**payload)
     db.add(sheet)

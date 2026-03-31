@@ -6,6 +6,10 @@ class FieldSheetCreate(BaseModel):
     company_id: int
     employee_id: Optional[int] = None
     employee_name_text: Optional[str] = None
+    employee_funcao: Optional[str] = None
+    employee_matricula: Optional[str] = None
+    employee_setor: Optional[str] = None
+    employee_local: Optional[str] = None
     tipo_analise: Optional[str] = None
     dosimeter_number: int
     collection_date: date
