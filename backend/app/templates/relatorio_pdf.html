@@ -31,13 +31,13 @@
   <table style="border:none; width:100%; height:257mm;">
     <tr>
 
-      <!-- Esquerda: logo/imagem -->
-      <td style="border:none; width:45%; vertical-align:middle; text-align:center;">
-        <img src="data:image/png;base64,{{ logo_b64 }}" style="width:180px;" alt="EcoSegme" />
+      <!-- Esquerda: imagem grande -->
+      <td style="border:none; width:38%; vertical-align:middle; text-align:center; padding-right:4mm;">
+        <img src="data:image/png;base64,{{ capa_img_left_b64 }}" style="width:100%; max-width:68mm; display:block; margin:0 auto;" alt="" />
       </td>
 
-      <!-- Direita: dados -->
-      <td style="border:none; width:55%; vertical-align:top; padding-left:8mm;">
+      <!-- Centro: dados -->
+      <td style="border:none; width:40%; vertical-align:top; padding-left:2mm; padding-right:2mm;">
 
         <!-- Nº Relatório (topo) -->
         <table style="border:none; margin-bottom:0; margin-top:10mm;">
@@ -58,7 +58,7 @@
         </table>
 
         <!-- Espaço -->
-        <div style="height:30mm;"></div>
+        <div style="height:28mm;"></div>
 
         <!-- Empresa / Endereço / CNPJ -->
         <table style="border:none; margin-bottom:0;">
@@ -76,7 +76,7 @@
         </p>
 
         <!-- Espaço -->
-        <div style="height:40mm;"></div>
+        <div style="height:36mm;"></div>
 
         <!-- Data (rodapé) -->
         <table style="border:1px solid #aaa; border-collapse:collapse; width:auto;">
@@ -87,6 +87,13 @@
         </table>
 
       </td>
+
+      <!-- Direita: duas imagens empilhadas -->
+      <td style="border:none; width:22%; vertical-align:middle; text-align:center; padding-left:4mm;">
+        <img src="data:image/png;base64,{{ capa_img_top_right_b64 }}" style="width:100%; max-width:40mm; display:block; margin:0 auto 6mm;" alt="" />
+        <img src="data:image/png;base64,{{ capa_img_bot_right_b64 }}" style="width:100%; max-width:40mm; display:block; margin:0 auto;" alt="" />
+      </td>
+
     </tr>
   </table>
 </div>

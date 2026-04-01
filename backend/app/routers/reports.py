@@ -422,8 +422,15 @@ def generate_bulk_pdf(
     import base64
     tmpl_path = os.path.join(os.path.dirname(__file__), "../templates/relatorio_pdf.html")
     logo_path = os.path.join(os.path.dirname(__file__), "../templates/logo.png")
+    img_dir = os.path.join(os.path.dirname(__file__), "../templates/images")
     with open(logo_path, "rb") as f:
         logo_b64 = base64.b64encode(f.read()).decode()
+    with open(os.path.join(img_dir, "capa_img_left.png"), "rb") as f:
+        capa_img_left_b64 = base64.b64encode(f.read()).decode()
+    with open(os.path.join(img_dir, "capa_img_top_right.png"), "rb") as f:
+        capa_img_top_right_b64 = base64.b64encode(f.read()).decode()
+    with open(os.path.join(img_dir, "capa_img_bot_right.png"), "rb") as f:
+        capa_img_bot_right_b64 = base64.b64encode(f.read()).decode()
     with open(tmpl_path, "r", encoding="utf-8") as f:
         tmpl = Template(f.read())
 
@@ -437,6 +444,9 @@ def generate_bulk_pdf(
         year=datetime.now().year,
         laudo_numbers=[s.laudo_number for s in sheets],
         logo_b64=logo_b64,
+        capa_img_left_b64=capa_img_left_b64,
+        capa_img_top_right_b64=capa_img_top_right_b64,
+        capa_img_bot_right_b64=capa_img_bot_right_b64,
         fichas=fichas,
     )
 
