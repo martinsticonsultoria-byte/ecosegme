@@ -210,7 +210,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
               </tr>
             </thead>
             <tbody>
-              {sheets.map((sheet, idx) => (
+              {sheets.filter(s => s.status !== 'aprovada').map((sheet, idx) => (
                 <>
                   {/* Linha principal da ficha */}
                   <tr key={sheet.id} style={{ background: editingId === sheet.id ? '#f0faf6' : undefined }}>
@@ -358,7 +358,7 @@ export default function Conference() {
   const [sheets, setSheets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [filtroStatus, setFiltroStatus] = useState('todos');
+  const [filtroStatus, setFiltroStatus] = useState('pendente');
 
   const load = () => {
     setLoading(true);
@@ -405,13 +405,7 @@ export default function Conference() {
 
   if (loading) return <div className="page"><div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>Carregando...</div></div>;
 
-  const gruposFiltrados = grupos.filter(g => {
-    const st = statusGrupo(g.sheets);
-    if (filtroStatus === 'todos') return true;
-    if (filtroStatus === 'pendente') return st !== 'aprovada';
-    if (filtroStatus === 'aprovada') return st === 'aprovada';
-    return true;
-  });
+  const gruposFiltrados = grupos.filter(g => statusGrupo(g.sheets) !== 'aprovada');
 
   return (
     <div className="page">
@@ -431,22 +425,6 @@ export default function Conference() {
 
       {grupos.length > 0 && (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
-            {[
-              { key: 'todos',    label: `Todos (${grupos.length})` },
-              { key: 'pendente', label: `Pendentes (${grupos.filter(g => statusGrupo(g.sheets) !== 'aprovada').length})` },
-              { key: 'aprovada', label: `Aprovados (${grupos.filter(g => statusGrupo(g.sheets) === 'aprovada').length})` },
-            ].map(f => (
-              <button key={f.key} onClick={() => setFiltroStatus(f.key)} style={{
-                padding: '10px 20px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                background: filtroStatus === f.key ? 'white' : 'transparent',
-                color: filtroStatus === f.key ? '#1a7a3c' : '#8a93a8',
-                borderBottom: filtroStatus === f.key ? '2px solid #16a34a' : '2px solid transparent',
-                marginBottom: -1,
-              }}>{f.label}</button>
-            ))}
-          </div>
-
           <table className="table">
             <thead>
               <tr>
