@@ -47,6 +47,7 @@ class FieldSheetOut(BaseModel):
     machine_noise: Optional[str] = None
     pre_verificacao_db: Optional[str] = None
     pos_verificacao_db: Optional[str] = None
+    has_sonus: Optional[bool] = False
     created_at: datetime
 
     class Config:

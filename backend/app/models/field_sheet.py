@@ -53,3 +53,12 @@ class FieldSheet(Base):
     @property
     def employee_local(self):
         return self.employee.local if self.employee else None
+
+    @property
+    def has_sonus(self):
+        from app.models.sonus_upload import SonusUpload
+        from sqlalchemy.orm import object_session
+        session = object_session(self)
+        if session is None:
+            return False
+        return session.query(SonusUpload).filter(SonusUpload.field_sheet_id == self.id).first() is not None

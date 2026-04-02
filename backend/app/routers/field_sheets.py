@@ -97,12 +97,17 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
 
 @router.patch("/{sheet_id}/status")
 def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=Depends(get_current_user)):
+    from app.models.sonus_upload import SonusUpload
     sheet = db.query(FieldSheet).filter(FieldSheet.id == sheet_id).first()
     if not sheet:
         raise HTTPException(status_code=404, detail="Ficha nao encontrada")
     new_status = body.get("status")
     if new_status not in ("pendente", "aprovada"):
         raise HTTPException(status_code=400, detail="Status invalido")
+    if new_status == "aprovada":
+        sonus = db.query(SonusUpload).filter(SonusUpload.field_sheet_id == sheet_id).first()
+        if not sonus:
+            raise HTTPException(status_code=400, detail="É necessário enviar o PDF do SONUS 2 antes de aprovar a ficha")
     sheet.status = new_status
     if new_status == "aprovada" and not sheet.signature_date:
         from datetime import date

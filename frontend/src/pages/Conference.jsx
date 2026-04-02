@@ -19,6 +19,9 @@ function ConferenceDetail({ group, onBack, onReload }) {
   const [genBulkPdf, setGenBulkPdf] = useState(false);
   const [genBulkXls, setGenBulkXls] = useState(false);
   const [errors, setErrors] = useState({});
+  const [epiCustom, setEpiCustom] = useState(false);
+
+  const EPI_OPTIONS = ['Protetor Auricular - Plug de Inserção','Protetor Auricular - Tipo Concha','Protetor Auricular - Semi-auricular','Capacete de Segurança','Óculos de Proteção','Luvas de Proteção','Abafador de Ruído','Máscara de Proteção Respiratória','Calçado de Segurança','Ausência de EPI'];
 
   const StatusBadge = ({ status }) => {
     const s = status === 'aprovada'
@@ -108,6 +111,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
   };
 
   const startEdit = (sheet) => {
+    setEpiCustom(!EPI_OPTIONS.includes(sheet.epi || ''));
     setEditingId(sheet.id);
     setEditForm({
       epi: sheet.epi || '',
@@ -187,14 +191,13 @@ function ConferenceDetail({ group, onBack, onReload }) {
       </div>
 
       {/* Tabela de fichas */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
+      <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+        <div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1350, tableLayout: 'auto' }}>
             <thead>
               <tr>
                 <th style={thStyle}>#</th>
                 <th style={thStyle}>Dosímetro</th>
-                <th style={thStyle}>Ordem</th>
                 <th style={thStyle}>Data Coleta</th>
                 <th style={thStyle}>Funcionário</th>
                 <th style={thStyle}>Função</th>
@@ -206,11 +209,11 @@ function ConferenceDetail({ group, onBack, onReload }) {
                 <th style={thStyle}>Máquinas/Equip.</th>
                 <th style={thStyle}>Técnico</th>
                 <th style={thStyle}>Status</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Ações</th>
+                <th style={{ ...thStyle, textAlign: 'right', width: 290, minWidth: 290 }}>Ações</th>
               </tr>
             </thead>
             <tbody>
-              {sheets.filter(s => s.status !== 'aprovada').map((sheet, idx) => (
+              {sheets.map((sheet, idx) => (
                 <>
                   {/* Linha principal da ficha */}
                   <tr key={sheet.id} style={{ background: editingId === sheet.id ? '#f0faf6' : undefined }}>
@@ -218,7 +221,6 @@ function ConferenceDetail({ group, onBack, onReload }) {
                       <span className="badge badge-blue">#{String(sheet.laudo_number).padStart(4, '0')}</span>
                     </td>
                     <td style={tdSmall}>{sheet.dosimeter_number}</td>
-                    <td style={tdSmall}>{idx + 1}</td>
                     <td style={tdSmall}>{new Date(sheet.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                     <td style={{ ...tdStyle, fontWeight: 500 }}>{sheet.employee_nome || <span style={{ color: '#94a3b8' }}>—</span>}</td>
                     <td style={tdSmall}>{sheet.employee_funcao || '—'}</td>
@@ -229,27 +231,30 @@ function ConferenceDetail({ group, onBack, onReload }) {
                     <td style={{ ...tdSmall, maxWidth: 140 }}>{sheet.activity || '—'}</td>
                     <td style={{ ...tdSmall, maxWidth: 140 }}>{sheet.machine_noise || '—'}</td>
                     <td style={tdSmall}>{sheet.technician_name}</td>
-                    <td style={tdStyle}><StatusBadge status={sheet.status} /></td>
-                    <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      {sheet.status === 'pendente' ? (
+                    <td style={{ ...tdStyle, minWidth: 90, whiteSpace: 'nowrap' }}><StatusBadge status={sheet.status} /></td>
+                    <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', width: 290, minWidth: 290 }}>
+                      {sheet.status === 'aprovada' ? (
+                        <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                          <button className="btn btn-secondary btn-sm"
+                            onClick={() => setExpandedUpload(id => id === sheet.id ? null : sheet.id)}>
+                            {expandedUpload === sheet.id ? '▲' : '▼ SONUS'}
+                          </button>
+                        </div>
+                      ) : (
                         <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                           <button className="btn btn-secondary btn-sm"
                             onClick={() => editingId === sheet.id ? setEditingId(null) : startEdit(sheet)}>
                             {editingId === sheet.id ? 'Cancelar' : 'Editar'}
                           </button>
-                          <button className="btn btn-primary btn-sm"
-                            onClick={() => handleApprove(sheet.id)} disabled={approving[sheet.id]}>
-                            {approving[sheet.id] ? '...' : 'Aprovar'}
-                          </button>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                          <button className="btn btn-secondary btn-sm" onClick={() => handleDownloadFicha(sheet)}>
-                            Ficha
-                          </button>
                           <button className="btn btn-secondary btn-sm"
                             onClick={() => setExpandedUpload(id => id === sheet.id ? null : sheet.id)}>
                             {expandedUpload === sheet.id ? '▲' : '▼ SONUS'}
+                          </button>
+                          <button className="btn btn-primary btn-sm"
+                            onClick={() => handleApprove(sheet.id)}
+                            disabled={approving[sheet.id] || !sheet.has_sonus}
+                            title={!sheet.has_sonus ? 'Envie o PDF do SONUS antes de aprovar' : ''}>
+                            {approving[sheet.id] ? '...' : 'Aprovar'}
                           </button>
                         </div>
                       )}
@@ -259,7 +264,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                   {/* Erro inline */}
                   {errors[sheet.id] && (
                     <tr key={`err-${sheet.id}`}>
-                      <td colSpan={15} style={{ padding: '4px 12px', background: '#fff5f5' }}>
+                      <td colSpan={14} style={{ padding: '4px 12px', background: '#fff5f5' }}>
                         <span style={{ color: '#dc2626', fontSize: 12 }}>{errors[sheet.id]}</span>
                       </td>
                     </tr>
@@ -268,14 +273,30 @@ function ConferenceDetail({ group, onBack, onReload }) {
                   {/* Linha de edição expandida */}
                   {editingId === sheet.id && (
                     <tr key={`edit-${sheet.id}`}>
-                      <td colSpan={15} style={{ padding: '14px 16px', background: '#f8fff8', borderBottom: '2px solid #bbf7d0' }}>
+                      <td colSpan={14} style={{ padding: '14px 16px', background: '#f8fff8', borderBottom: '2px solid #bbf7d0' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, maxWidth: 860 }}>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">EPI Utilizado</label>
-                            <select className="form-input" value={editForm.epi} onChange={e => setEditForm(f => ({ ...f, epi: e.target.value }))}>
+                            <select className="form-input"
+                              value={epiCustom ? '__outro__' : (editForm.epi || '')}
+                              onChange={e => {
+                                if (e.target.value === '__outro__') {
+                                  setEpiCustom(true);
+                                  setEditForm(f => ({ ...f, epi: '' }));
+                                } else {
+                                  setEpiCustom(false);
+                                  setEditForm(f => ({ ...f, epi: e.target.value }));
+                                }
+                              }}>
                               <option value="">Selecione...</option>
-                              {['Protetor Auricular - Plug de Inserção','Protetor Auricular - Tipo Concha','Protetor Auricular - Semi-auricular','Capacete de Segurança','Óculos de Proteção','Luvas de Proteção','Abafador de Ruído','Máscara de Proteção Respiratória','Calçado de Segurança','Ausência de EPI'].map(o => <option key={o}>{o}</option>)}
+                              {EPI_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                              <option value="__outro__">Outro...</option>
                             </select>
+                            {epiCustom && (
+                              <input className="form-input" style={{ marginTop: 6 }} placeholder="Digite o EPI utilizado"
+                                value={editForm.epi}
+                                onChange={e => setEditForm(f => ({ ...f, epi: e.target.value }))} />
+                            )}
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Nº Dosímetro</label>
@@ -307,9 +328,9 @@ function ConferenceDetail({ group, onBack, onReload }) {
                   )}
 
                   {/* Upload SONUS expandido */}
-                  {expandedUpload === sheet.id && sheet.status === 'aprovada' && (
+                  {expandedUpload === sheet.id && (
                     <tr key={`upload-${sheet.id}`}>
-                      <td colSpan={15} style={{ padding: '12px 16px', background: '#f0f9ff', borderBottom: '2px solid #bae6fd' }}>
+                      <td colSpan={14} style={{ padding: '12px 16px', background: '#f0f9ff', borderBottom: '2px solid #bae6fd' }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: '#0369a1', marginBottom: 8 }}>Upload de Laudo (SONUS 2)</div>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', maxWidth: 600 }}>
                           <input type="file" accept=".pdf" className="form-input"

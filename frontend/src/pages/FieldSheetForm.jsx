@@ -19,7 +19,10 @@ export default function FieldSheetForm() {
   const [nextNumber, setNextNumber] = useState(null);
   const [savedSheet, setSavedSheet] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const [epiCustom, setEpiCustom] = useState(false);
   const empInputRef = useRef(null);
+
+  const EPI_OPTIONS = ['Protetor Auricular - Plug de Inserção','Protetor Auricular - Tipo Concha','Protetor Auricular - Semi-auricular','Capacete de Segurança','Óculos de Proteção','Luvas de Proteção','Abafador de Ruído','Máscara de Proteção Respiratória','Calçado de Segurança','Ausência de EPI'];
 
   const [form, setForm] = useState({
     company_id: prefilledCompanyId || '',
@@ -285,19 +288,26 @@ export default function FieldSheetForm() {
         <div className="section-title">Condições de Exposição</div>
         <div className="form-group">
           <label className="form-label">EPI Utilizado <span>*</span></label>
-          <select name="epi" className="form-input" value={form.epi} onChange={handleChange}>
+          <select name="epi" className="form-input"
+            value={epiCustom ? '__outro__' : form.epi}
+            onChange={e => {
+              if (e.target.value === '__outro__') {
+                setEpiCustom(true);
+                setForm(f => ({ ...f, epi: '' }));
+              } else {
+                setEpiCustom(false);
+                setForm(f => ({ ...f, epi: e.target.value }));
+              }
+            }}>
             <option value="">Selecione o EPI...</option>
-            <option>Protetor Auricular - Plug de Inserção</option>
-            <option>Protetor Auricular - Tipo Concha</option>
-            <option>Protetor Auricular - Semi-auricular</option>
-            <option>Capacete de Segurança</option>
-            <option>Óculos de Proteção</option>
-            <option>Luvas de Proteção</option>
-            <option>Abafador de Ruído</option>
-            <option>Máscara de Proteção Respiratória</option>
-            <option>Calçado de Segurança</option>
-            <option>Ausência de EPI</option>
+            {EPI_OPTIONS.map(o => <option key={o}>{o}</option>)}
+            <option value="__outro__">Outro...</option>
           </select>
+          {epiCustom && (
+            <input className="form-input" style={{ marginTop: 6 }} placeholder="Digite o EPI utilizado"
+              value={form.epi}
+              onChange={e => setForm(f => ({ ...f, epi: e.target.value }))} />
+          )}
         </div>
         <div className="form-group">
           <label className="form-label">Atividade Desenvolvida <span>*</span></label>
