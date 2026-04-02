@@ -25,6 +25,8 @@ def _validate_upload(file: UploadFile, content: bytes) -> None:
         )
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Apenas arquivos PDF são aceitos")
+    if not content.startswith(b"%PDF"):
+        raise HTTPException(status_code=400, detail="Arquivo não é um PDF válido")
 
 
 @router.post("/sonus/{field_sheet_id}")
@@ -74,8 +76,11 @@ def upload_sonus(
             os.unlink(tmp_path)
 
     os.makedirs(STORAGE_DIR, exist_ok=True)
-    safe_filename = f"{field_sheet_id}_{sha256[:8]}_{file.filename}"
-    storage_path = os.path.join(STORAGE_DIR, safe_filename)
+    safe_filename = f"{field_sheet_id}_{sha256[:8]}.pdf"
+    storage_dir = os.path.realpath(STORAGE_DIR)
+    storage_path = os.path.realpath(os.path.join(storage_dir, safe_filename))
+    if not storage_path.startswith(storage_dir):
+        raise HTTPException(status_code=400, detail="Nome de arquivo inválido")
     with open(storage_path, "wb") as f:
         f.write(content)
 
