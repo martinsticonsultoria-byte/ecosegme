@@ -66,8 +66,8 @@ def toggle_user(user_id: int, db: Session = Depends(get_db), current=Depends(req
 @router.patch("/{user_id}/password")
 def reset_password(user_id: int, body: dict, db: Session = Depends(get_db), _=Depends(require_admin)):
     new_password = body.get("password", "")
-    if len(new_password) < 6:
-        raise HTTPException(status_code=400, detail="Senha deve ter no mínimo 6 caracteres")
+    if len(new_password) < 10:
+        raise HTTPException(status_code=400, detail="Senha deve ter no mínimo 10 caracteres")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")

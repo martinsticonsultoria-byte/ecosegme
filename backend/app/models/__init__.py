@@ -6,3 +6,4 @@ from app.models.sonus_upload import SonusUpload
 from app.models.generated_report import GeneratedReport
 from app.models.audit_log import AuditLog
 from app.models.consolidated_report import ConsolidatedReport
+from app.models.custom_epi import CustomEPI

@@ -19,9 +19,12 @@ function ConferenceDetail({ group, onBack, onReload }) {
   const [genBulkPdf, setGenBulkPdf] = useState(false);
   const [genBulkXls, setGenBulkXls] = useState(false);
   const [errors, setErrors] = useState({});
-  const [epiCustom, setEpiCustom] = useState(false);
+  const [epiOptions, setEpiOptions] = useState([]);
 
-  const EPI_OPTIONS = ['Protetor Auricular - Plug de Inserção','Protetor Auricular - Tipo Concha','Protetor Auricular - Semi-auricular','Capacete de Segurança','Óculos de Proteção','Luvas de Proteção','Abafador de Ruído','Máscara de Proteção Respiratória','Calçado de Segurança','Ausência de EPI'];
+
+  useEffect(() => {
+    api.get('/epis').then(res => setEpiOptions([...res.data.predefined, ...res.data.custom]));
+  }, []);
 
   const StatusBadge = ({ status }) => {
     const s = status === 'aprovada'
@@ -111,7 +114,6 @@ function ConferenceDetail({ group, onBack, onReload }) {
   };
 
   const startEdit = (sheet) => {
-    setEpiCustom(!EPI_OPTIONS.includes(sheet.epi || ''));
     setEditingId(sheet.id);
     setEditForm({
       epi: sheet.epi || '',
@@ -126,6 +128,9 @@ function ConferenceDetail({ group, onBack, onReload }) {
   const handleSaveEdit = async (sheetId) => {
     setSaving(true);
     try {
+      if (editForm.epi) api.post('/epis', { name: editForm.epi }).then(res => {
+        if (res.data.ok) setEpiOptions(prev => prev.includes(editForm.epi) ? prev : [...prev, editForm.epi]);
+      }).catch(() => {});
       await api.patch(`/field-sheets/${sheetId}/edit`, editForm);
       setEditingId(null);
       const res = await api.get('/field-sheets/pending');
@@ -277,26 +282,14 @@ function ConferenceDetail({ group, onBack, onReload }) {
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, maxWidth: 860 }}>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">EPI Utilizado</label>
-                            <select className="form-input"
-                              value={epiCustom ? '__outro__' : (editForm.epi || '')}
-                              onChange={e => {
-                                if (e.target.value === '__outro__') {
-                                  setEpiCustom(true);
-                                  setEditForm(f => ({ ...f, epi: '' }));
-                                } else {
-                                  setEpiCustom(false);
-                                  setEditForm(f => ({ ...f, epi: e.target.value }));
-                                }
-                              }}>
-                              <option value="">Selecione...</option>
-                              {EPI_OPTIONS.map(o => <option key={o}>{o}</option>)}
-                              <option value="__outro__">Outro...</option>
-                            </select>
-                            {epiCustom && (
-                              <input className="form-input" style={{ marginTop: 6 }} placeholder="Digite o EPI utilizado"
-                                value={editForm.epi}
-                                onChange={e => setEditForm(f => ({ ...f, epi: e.target.value }))} />
-                            )}
+                            <input list="epi-list-conf" className="form-input"
+                              placeholder="Digite o EPI utilizado..."
+                              value={editForm.epi || ''}
+                              onChange={e => setEditForm(f => ({ ...f, epi: e.target.value }))}
+                              autoComplete="off" />
+                            <datalist id="epi-list-conf">
+                              {epiOptions.map(o => <option key={o} value={o} />)}
+                            </datalist>
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Nº Dosímetro</label>

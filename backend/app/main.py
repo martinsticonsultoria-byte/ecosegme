@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from app.routers import auth, companies, employees, field_sheets, uploads, reports, setup, users
+from app.routers import auth, companies, employees, field_sheets, uploads, reports, setup, users, epis
 from app.config import settings
 from app.core.limiter import limiter
 
@@ -39,6 +39,7 @@ app.include_router(uploads.router)
 app.include_router(reports.router)
 app.include_router(setup.router)
 app.include_router(users.router)
+app.include_router(epis.router)
 
 @app.get("/health")
 def health():

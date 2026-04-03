@@ -20,9 +20,10 @@ export default function FieldSheetForm() {
   const [savedSheet, setSavedSheet] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [epiCustom, setEpiCustom] = useState(false);
+  const [epiOptions, setEpiOptions] = useState([]);
   const empInputRef = useRef(null);
 
-  const EPI_OPTIONS = ['Protetor Auricular - Plug de Inserção','Protetor Auricular - Tipo Concha','Protetor Auricular - Semi-auricular','Capacete de Segurança','Óculos de Proteção','Luvas de Proteção','Abafador de Ruído','Máscara de Proteção Respiratória','Calçado de Segurança','Ausência de EPI'];
+  const EPI_PREDEFINED = ['Protetor Auricular - Plug de Inserção','Protetor Auricular - Tipo Concha','Protetor Auricular - Semi-auricular','Capacete de Segurança','Óculos de Proteção','Luvas de Proteção','Abafador de Ruído','Máscara de Proteção Respiratória','Calçado de Segurança','Ausência de EPI'];
 
   const [form, setForm] = useState({
     company_id: prefilledCompanyId || '',
@@ -40,6 +41,7 @@ export default function FieldSheetForm() {
   useEffect(() => {
     api.get('/companies').then(res => setCompanies(res.data));
     api.get('/field-sheets/next-number').then(res => setNextNumber(res.data.next_number));
+    api.get('/epis').then(res => setEpiOptions([...res.data.predefined, ...res.data.custom]));
     if (prefilledCompanyId) {
       api.get(`/employees?company_id=${prefilledCompanyId}`).then(res => setEmployees(res.data));
     }
@@ -100,6 +102,9 @@ export default function FieldSheetForm() {
         employee_local: selectedEmployee ? null : (newEmpFields.local || null),
       };
       Object.keys(payload).forEach(k => { if (payload[k] === '') payload[k] = null; });
+      if (form.epi) api.post('/epis', { name: form.epi }).then(res => {
+        if (res.data.ok) setEpiOptions(prev => prev.includes(form.epi) ? prev : [...prev, form.epi]);
+      }).catch(() => {});
       const res = await api.post('/field-sheets', payload);
       setSavedSheet(res.data);
     } catch (err) {
@@ -286,28 +291,16 @@ export default function FieldSheetForm() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="section-title">Condições de Exposição</div>
-        <div className="form-group">
+        <div className="form-group" style={{ position: 'relative' }}>
           <label className="form-label">EPI Utilizado <span>*</span></label>
-          <select name="epi" className="form-input"
-            value={epiCustom ? '__outro__' : form.epi}
-            onChange={e => {
-              if (e.target.value === '__outro__') {
-                setEpiCustom(true);
-                setForm(f => ({ ...f, epi: '' }));
-              } else {
-                setEpiCustom(false);
-                setForm(f => ({ ...f, epi: e.target.value }));
-              }
-            }}>
-            <option value="">Selecione o EPI...</option>
-            {EPI_OPTIONS.map(o => <option key={o}>{o}</option>)}
-            <option value="__outro__">Outro...</option>
-          </select>
-          {epiCustom && (
-            <input className="form-input" style={{ marginTop: 6 }} placeholder="Digite o EPI utilizado"
-              value={form.epi}
-              onChange={e => setForm(f => ({ ...f, epi: e.target.value }))} />
-          )}
+          <input list="epi-list" name="epi" className="form-input"
+            placeholder="Digite o EPI utilizado..."
+            value={form.epi}
+            onChange={e => setForm(f => ({ ...f, epi: e.target.value }))}
+            autoComplete="off" />
+          <datalist id="epi-list">
+            {epiOptions.map(o => <option key={o} value={o} />)}
+          </datalist>
         </div>
         <div className="form-group">
           <label className="form-label">Atividade Desenvolvida <span>*</span></label>

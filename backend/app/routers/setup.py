@@ -15,6 +15,8 @@ def get_db():
 
 @router.post("/setup/seed")
 def run_seed(db: Session = Depends(get_db)):
+    if db.query(User).first():
+        return {"message": "Setup já foi executado", "created": []}
     users = [
         {"name": "Admin EcoSegme", "email": "admin@ecosegme.com", "password": "Admin@2024", "role": "admin_staff"},
         {"name": "Técnico EcoSegme", "email": "tecnico@ecosegme.com", "password": "Tecnico@2024", "role": "technician"},
