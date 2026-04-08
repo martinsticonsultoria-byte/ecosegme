@@ -19,9 +19,9 @@
 
 ## Visão Geral
 
-Sistema desenvolvido para digitalizar o fluxo de monitoramento de ruído ocupacional, substituindo planilhas e processos manuais por uma plataforma estruturada que gera laudos prontos em menos de 15 minutos.
+Sistema desenvolvido para digitalizar o fluxo de monitoramento de ruído ocupacional, substituindo planilhas e processos manuais por uma plataforma estruturada que gera laudos prontos em minutos.
 
-O sistema extrai dados brutos do dosímetro (SONUS 2), cruza com os dados da ficha de campo preenchida pelo técnico, e gera laudos em PDF padronizados conforme **NR-15** e **NHO-01**.
+O sistema extrai dados brutos do dosímetro (SONUS 2), cruza com os dados da ficha de campo preenchida pelo técnico, e gera laudos individuais e relatórios consolidados em PDF/XLSX padronizados conforme **NR-15** e **NHO-01**.
 
 **Impacto:** ~80 laudos/mês, 2 perfis de usuário (Técnico de Campo e Administrativo).
 
@@ -35,7 +35,7 @@ Técnico de Campo         Administrativo
       ▼                       ▼
  Preenche ficha         Upload do PDF SONUS 2
  (funcionário, EPI,            │
-  condições)                   ▼
+  condições, nº ordem)         ▼
       │               Parser extrai os dados
       │               (score de confiança +
       │                similaridade de nomes)
@@ -44,13 +44,34 @@ Técnico de Campo         Administrativo
                    Revisão e validação dos dados
                               │
                               ▼
-                   Geração do laudo em PDF
-                   (WeasyPrint + Jinja2,
-                    hash SHA-256, imutável)
+                   Aprovação da ficha
+                   (bloqueia sem nº de ordem)
+                              │
+                              ▼
+                   Geração do laudo individual em PDF
+                   (hash SHA-256, imutável)
+                              │
+                              ▼
+                   Relatório consolidado por empresa
+                   (PDF ou XLSX com todas as fichas)
                               │
                               ▼
                          Download ✓
 ```
+
+---
+
+## Funcionalidades
+
+- **Ficha de campo digital** — preenchimento com empresa, funcionário, EPI, condições e nº de ordem
+- **Parser SONUS 2** — extração automática de NE, NEN, dose diária, tempo de medição e horários
+- **Conferência de dados** — tela de revisão antes da geração do laudo, com validação do nº de ordem
+- **Laudo individual em PDF** — imutável, com hash SHA-256 e log de auditoria
+- **Relatório consolidado** — PDF ou XLSX agrupando todas as fichas de uma empresa por tipo de análise
+- **Assinatura digital** — assinatura do engenheiro responsável embutida no PDF, com fundo transparente
+- **Data de emissão automática** — registrada no momento da aprovação, no formato "Manaus, DD de mês de AAAA"
+- **Exclusão com reversão** — excluir um laudo reseta a ficha para pendente automaticamente
+- **Histórico por empresa** — laudos individuais e relatórios consolidados acessíveis na página da empresa
 
 ---
 
@@ -61,12 +82,14 @@ Técnico de Campo         Administrativo
 - **SQLAlchemy + PostgreSQL** — modelo relacional com migrações via Alembic
 - **pdfplumber** — extração de texto dos arquivos SONUS 2
 - **WeasyPrint + Jinja2** — geração de PDF a partir de template HTML
-- **pypdf** — proteção do PDF e verificação de integridade via SHA-256
+- **openpyxl** — geração de relatório consolidado em XLSX
+- **Pillow** — processamento da assinatura (remoção de fundo)
+- **Supabase Storage** — armazenamento dos PDFs com signed URLs
 
 **Frontend**
 - **React 18 + Vite** — SPA com roteamento protegido por perfil
 - **React Router** — rotas com autenticação
-- **Axios** — cliente HTTP com injeção automática do token
+- **Axios** — cliente HTTP com injeção automática do token e barra de progresso
 
 ---
 
@@ -83,10 +106,13 @@ def names_match(name_pdf: str, name_db: str, threshold: float = 0.85) -> bool:
 ```
 
 ### Laudos Imutáveis
-Uma vez gerado, o laudo não pode ser substituído. Cada PDF recebe um hash SHA-256 e é armazenado com nome padronizado. O log de auditoria registra quem gerou cada laudo e quando.
+Uma vez gerado, o laudo não pode ser substituído. Cada PDF recebe um hash SHA-256 e é armazenado com nome padronizado. O log de auditoria registra quem gerou cada laudo e quando. A exclusão é possível, mas reseta a ficha para o estado pendente.
 
 ### Controle de Acesso por Perfil
 Dois perfis — `technician` e `admin_staff` — com validação no backend (dependency injection do FastAPI) e no frontend (rotas protegidas + navbar condicional).
+
+### Assinatura Digital
+A assinatura do engenheiro responsável é armazenada como PNG com fundo transparente (processado via Pillow) e embutida em base64 no template HTML, tornando-a imperceptível como imagem inserida.
 
 ---
 
@@ -98,18 +124,21 @@ ecosegme/
 │   ├── app/
 │   │   ├── routers/        # auth, companies, employees,
 │   │   │                   # field_sheets, uploads, reports, users
-│   │   ├── models/         # modelos ORM SQLAlchemy
+│   │   ├── models/         # Company, Employee, FieldSheet, GeneratedReport,
+│   │   │                   # ConsolidatedReport, SonusUpload, AuditLog
 │   │   ├── core/           # JWT, segurança, dependências
-│   │   ├── templates/      # template HTML do laudo (Jinja2)
+│   │   ├── templates/      # relatorio_pdf.html, ficha_campo.html,
+│   │   │                   # logo.png, assinatura_arimar.png, images/
 │   │   ├── parser.py       # parser SONUS 2
-│   │   └── pdf_generator.py
+│   │   ├── pdf_generator.py
+│   │   └── supabase_storage.py
 │   ├── alembic/            # migrações do banco
 │   └── tests/              # pytest (20 testes)
 └── frontend/
     └── src/
-        ├── pages/          # Login, Empresas, Funcionários,
-        │                   # FichaDeCampo, Conferência,
-        │                   # Laudos, Usuários
+        ├── pages/          # Login, Companies, CompanyDetail,
+        │                   # Employees, FieldSheetForm,
+        │                   # Conference, Users
         ├── components/     # Navbar, PrivateRoute
         ├── context/        # AuthContext
         └── api/            # instância do axios
@@ -165,6 +194,9 @@ Ver [`.env.example`](.env.example) para todas as variáveis necessárias.
 | `DATABASE_URL` | String de conexão PostgreSQL |
 | `SECRET_KEY` | Chave de assinatura JWT |
 | `VITE_API_URL` | URL do backend (build do frontend) |
+| `SUPABASE_URL` | URL do projeto Supabase |
+| `SUPABASE_KEY` | Service role key do Supabase |
+| `SUPABASE_BUCKET` | Nome do bucket de armazenamento |
 
 ---
 
