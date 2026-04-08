@@ -455,7 +455,7 @@ def generate_bulk_pdf(
     import base64
     tmpl_path = os.path.join(os.path.dirname(__file__), "../templates/relatorio_pdf.html")
     logo_path = os.path.join(os.path.dirname(__file__), "../templates/logo.png")
-    assinatura_path = os.path.join(os.path.dirname(__file__), "../templates/assinatura_arimar.jpg")
+    assinatura_path = os.path.join(os.path.dirname(__file__), "../templates/assinatura_arimar.png")
     img_dir = os.path.join(os.path.dirname(__file__), "../templates/images")
     with open(logo_path, "rb") as f:
         logo_b64 = base64.b64encode(f.read()).decode()

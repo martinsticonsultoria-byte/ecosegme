@@ -171,15 +171,18 @@
 {% for f in fichas %}
 <div class="page-break">
 
-  <!-- Cabeçalho: logo esquerda + texto direita -->
-  <table style="border:none; margin-bottom:4px; width:100%;">
+  <!-- Cabeçalho: logo esquerda + dados direita -->
+  <table style="border:none; border-bottom:1.5px solid #1f9c74; margin-bottom:6px; width:100%; padding-bottom:4px;">
     <tr>
-      <td style="border:none; vertical-align:middle; width:40%;">
-        <img src="data:image/png;base64,{{ logo_b64 }}" style="height:40px;" alt="EcoSegme" />
+      <td style="border:none; vertical-align:middle; width:38%;">
+        <img src="data:image/png;base64,{{ logo_b64 }}" style="height:38px;" alt="EcoSegme" />
       </td>
-      <td style="border:none; vertical-align:middle; text-align:right; font-size:7.5pt; color:#555; line-height:1.6;">
-        EcoSegme — Serviços em Segurança do Trabalho e Meio Ambiente<br/>
-        CNPJ: 47.252.046/0001-32
+      <td style="border:none; vertical-align:middle; text-align:right; font-size:7pt; color:#333; line-height:1.55;">
+        <strong style="font-size:8pt;">Ecosegme Consultoria Ambiental Ltda</strong><br/>
+        Rua Professor Antônio Giulesse, 354 - Alvorada II<br/>
+        CNPJ: 08.584.308/0001-33 &nbsp;|&nbsp; Fone: (92) 3657-7043<br/>
+        CEP: 69042-060 - Manaus / AM<br/>
+        E-mail: ecosegme@ecosegme.com.br &nbsp;|&nbsp; Página: www.ecosegme.com.br
       </td>
     </tr>
   </table>
@@ -289,14 +292,20 @@
     </td></tr>
   </table>
 
-  <div style="text-align:center; margin-top:18px;">
-    <img src="data:image/jpeg;base64,{{ assinatura_b64 }}" style="height:22mm;" alt="Assinatura" /><br/>
-    <span style="font-size:8pt; font-weight:bold;">Arimar Neves Neto</span><br/>
-    <span style="font-size:7.5pt;">Engenheiro de Segurança do Trabalho — CREA Nº 13726-D/AM</span><br/>
-    {% if f.signature_date %}
-    <span style="font-size:8pt; margin-top:4px; display:block;">{{ f.signature_date }}</span>
-    {% endif %}
-  </div>
+  <table style="border:none; margin-top:18px; width:100%;">
+    <tr>
+      <td style="border:none; text-align:center; vertical-align:bottom; padding-bottom:0;">
+        <img src="data:image/png;base64,{{ assinatura_b64 }}" style="height:20mm; display:block; margin:0 auto;" alt="Assinatura" />
+        <div style="border-top:1px solid #555; width:60%; margin:0 auto; padding-top:4px;">
+          <div style="font-size:8pt; font-weight:bold;">Arimar Neves Neto</div>
+          <div style="font-size:7.5pt;">Engenheiro de Segurança do Trabalho — CREA Nº 13726-D/AM</div>
+          {% if f.signature_date %}
+          <div style="font-size:8pt; margin-top:3px;">{{ f.signature_date }}</div>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+  </table>
 
 </div>
 {% endfor %}
