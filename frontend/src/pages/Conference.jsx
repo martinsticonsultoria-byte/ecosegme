@@ -236,7 +236,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                   {/* Linha principal da ficha */}
                   <tr key={sheet.id} style={{ background: editingId === sheet.id ? '#f0faf6' : undefined }}>
                     <td style={tdStyle}>
-                      <span className="badge badge-blue">#{String(sheet.laudo_number).padStart(4, '0')}</span>
+                      {sheet.laudo_number ? <span className="badge badge-blue">#{String(sheet.laudo_number).padStart(4, '0')}</span> : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}
                     </td>
                     <td style={tdSmall}>{sheet.dosimeter_number}</td>
                     <td style={tdSmall}>{new Date(sheet.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
@@ -270,8 +270,8 @@ function ConferenceDetail({ group, onBack, onReload }) {
                           </button>
                           <button className="btn btn-primary btn-sm"
                             onClick={() => handleApprove(sheet.id)}
-                            disabled={approving[sheet.id] || !sheet.has_sonus}
-                            title={!sheet.has_sonus ? 'Envie o PDF do SONUS antes de aprovar' : ''}>
+                            disabled={approving[sheet.id] || !sheet.has_sonus || !sheet.laudo_number}
+                            title={!sheet.laudo_number ? 'Defina o Nº da Ordem antes de aprovar' : !sheet.has_sonus ? 'Envie o PDF do SONUS antes de aprovar' : ''}>
                             {approving[sheet.id] ? '...' : 'Aprovar'}
                           </button>
                         </div>

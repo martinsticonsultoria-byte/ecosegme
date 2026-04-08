@@ -26,7 +26,7 @@ class FieldSheetCreate(BaseModel):
 
 class FieldSheetOut(BaseModel):
     id: int
-    laudo_number: int
+    laudo_number: Optional[int] = None
     dosimeter_number: int
     collection_date: date
     tipo_analise: Optional[str] = None

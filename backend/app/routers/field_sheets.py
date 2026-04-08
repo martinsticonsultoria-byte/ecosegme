@@ -63,12 +63,9 @@ def create_field_sheet(data: FieldSheetCreate, db: Session = Depends(get_db), cu
             db.flush()
             employee_id = new_emp.id
 
-    last = db.query(FieldSheet).order_by(FieldSheet.laudo_number.desc()).first()
-    next_number = (last.laudo_number + 1) if last else 1
-
     payload = data.dict()
     payload['employee_id'] = employee_id
-    payload['laudo_number'] = next_number
+    payload['laudo_number'] = None
     payload['created_by'] = current_user.id
     # remove campos auxiliares que não existem no modelo
     for key in ('employee_funcao', 'employee_matricula', 'employee_setor', 'employee_local'):
@@ -109,6 +106,8 @@ def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=De
     if new_status not in ("pendente", "aprovada"):
         raise HTTPException(status_code=400, detail="Status invalido")
     if new_status == "aprovada":
+        if not sheet.laudo_number:
+            raise HTTPException(status_code=400, detail="Defina o Nº da Ordem antes de aprovar a ficha")
         sonus = db.query(SonusUpload).filter(SonusUpload.field_sheet_id == sheet_id).first()
         if not sonus:
             raise HTTPException(status_code=400, detail="É necessário enviar o PDF do SONUS 2 antes de aprovar a ficha")

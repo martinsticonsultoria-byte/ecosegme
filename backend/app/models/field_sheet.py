@@ -8,7 +8,7 @@ class FieldSheet(Base):
     id = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=True)
-    laudo_number = Column(Integer, nullable=False, unique=True)
+    laudo_number = Column(Integer, nullable=True, unique=True)
     dosimeter_number = Column(Integer, nullable=False)
     collection_date = Column(Date, nullable=False)
     epi = Column(String(200), nullable=True)
