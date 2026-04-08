@@ -207,7 +207,7 @@ def generate_bulk_report(
     capa["M20"] = company.cnpj or ""
     capa["N23"] = period
     laudo_numbers = [s.laudo_number for s in sheets]
-    capa["M3"] = f"{laudo_numbers[0]:04d}-1/{year}.0 ao {laudo_numbers[-1]:04d}-{len(sheets)}/{year}.0"
+    capa["M3"] = f"{laudo_numbers[0]:04d}-1 ao {laudo_numbers[-1]:04d}-{len(sheets)}"
     # Preenche número das ordens na Capa e apaga placeholders do template
     all_number_cells = [
         "P3","P4","P5","P6","P7","P8","P9","P10","P11","P12",
@@ -218,7 +218,7 @@ def generate_bulk_report(
     ]
     for i, coord in enumerate(all_number_cells):
         if i < len(sheets):
-            capa[coord] = f"{sheets[i].laudo_number:04d}-{i+1}/{year}.0"
+            capa[coord] = f"{sheets[i].laudo_number:04d}-{i+1}"
         else:
             capa[coord] = None  # limpa placeholder do template
 
@@ -300,7 +300,7 @@ def generate_bulk_report(
         if ne_val_sheet is not None:
             acao_result = "ACIMA" if ne_val_sheet > 85 else "ABAIXO"
 
-        ws["E1"] = f"{sheet.laudo_number:04d}-{i+1}/{year}.0"
+        ws["E1"] = f"{sheet.laudo_number:04d}-{i+1}"
         ws["L1"] = sig_date_str
         ws["B2"] = company.razao_social
         ws["B3"] = company.endereco or ""

@@ -69,11 +69,11 @@
         <div style="margin-bottom:7mm;">
           <div style="font-size:6.5pt; color:#777; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:1mm;">Nº do Relatório</div>
           <div style="font-size:10pt; font-weight:bold; color:#1f9c74;">
-            {{ "%04d"|format(laudo_numbers[0]) }}-1/{{ year }}.0{% if laudo_numbers|length > 1 %} ao {{ "%04d"|format(laudo_numbers[-1]) }}-{{ laudo_numbers|length }}/{{ year }}.0{% endif %}
+            {{ "%04d"|format(laudo_numbers[0]) }}-1{% if laudo_numbers|length > 1 %} ao {{ "%04d"|format(laudo_numbers[-1]) }}-{{ laudo_numbers|length }}{% endif %}
           </div>
           <div style="font-size:7pt; color:#888; margin-top:1mm;">(Nº da Amostra)</div>
           {% for n in laudo_numbers %}
-          <div style="font-size:8pt; color:#444; padding:1px 0;">{{ "%04d"|format(n) }}-{{ loop.index }}/{{ year }}.0</div>
+          <div style="font-size:8pt; color:#444; padding:1px 0;">{{ "%04d"|format(n) }}-{{ loop.index }}</div>
           {% endfor %}
         </div>
 
@@ -151,7 +151,7 @@
     <tbody>
       {% for f in fichas %}
       <tr>
-        <td>{{ "%04d"|format(f.laudo_number) }}-{{ loop.index }}/{{ year }}.0</td>
+        <td>{{ "%04d"|format(f.laudo_number) }}-{{ loop.index }}</td>
         <td style="text-align:left;">{{ f.employee_nome or '—' }}</td>
         <td style="text-align:left;">{{ f.funcao or '—' }}</td>
         <td style="text-align:left;">{{ f.local or '—' }}</td>
@@ -185,7 +185,7 @@
     </tr>
   </table>
 
-  <h1>Relatório de Ensaio Analítico N. {{ "%04d"|format(f.laudo_number) }}-{{ loop.index }}/{{ year }}.0</h1>
+  <h1>Relatório de Ensaio Analítico N. {{ "%04d"|format(f.laudo_number) }}-{{ loop.index }}</h1>
 
   <table>
     <tr><td class="label">Razão Social:</td><td>{{ razao_social }}</td></tr>
