@@ -508,6 +508,27 @@ def generate_bulk_pdf(
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
+@router.delete("/consolidated/{rec_id}")
+def delete_consolidated(rec_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
+    rec = db.query(ConsolidatedReport).filter(ConsolidatedReport.id == rec_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    if rec.storage_path.startswith("supabase://"):
+        storage_path = rec.storage_path.removeprefix("supabase://")
+        try:
+            supabase_storage.delete_file(storage_path)
+        except Exception:
+            pass
+    elif os.path.exists(rec.storage_path):
+        try:
+            os.unlink(rec.storage_path)
+        except OSError:
+            pass
+    db.delete(rec)
+    db.commit()
+    return {"ok": True}
+
+
 @router.get("/consolidated/{company_id}")
 def list_consolidated(company_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
     recs = db.query(ConsolidatedReport).filter(

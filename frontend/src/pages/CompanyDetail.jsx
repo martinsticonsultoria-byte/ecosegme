@@ -292,7 +292,7 @@ export default function CompanyDetail() {
               <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Nenhum relatório consolidado gerado.</div>
             ) : (
               <table className="table">
-                <thead><tr><th>Arquivo</th><th>Análise</th><th>Formato</th><th>Gerado em</th><th>Ação</th></tr></thead>
+                <thead><tr><th>Arquivo</th><th>Análise</th><th>Formato</th><th>Gerado em</th><th>Ações</th></tr></thead>
                 <tbody>
                   {consolidated.map(r => (
                     <tr key={r.id}>
@@ -300,7 +300,7 @@ export default function CompanyDetail() {
                       <td style={{ color: '#64748b', fontSize: 13 }}>{r.tipo_analise}</td>
                       <td><span style={{ textTransform: 'uppercase', fontSize: 11, fontWeight: 700, color: r.format === 'pdf' ? '#dc2626' : '#166534' }}>{r.format}</span></td>
                       <td style={{ color: '#64748b', fontSize: 13 }}>{new Date(r.generated_at).toLocaleString('pt-BR')}</td>
-                      <td>
+                      <td style={{ display: 'flex', gap: 6 }}>
                         <button className="btn btn-primary btn-sm" onClick={async () => {
                           try {
                             const res = await api.get(`/reports/consolidated/download/${r.id}`, { responseType: 'blob' });
@@ -310,6 +310,16 @@ export default function CompanyDetail() {
                             window.URL.revokeObjectURL(url);
                           } catch { alert('Erro ao baixar relatório.'); }
                         }}>Baixar</button>
+                        <button className="btn btn-sm" style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                          onClick={async () => {
+                            if (!window.confirm(`Excluir o relatório "${r.filename}"? Você poderá gerá-lo novamente.`)) return;
+                            try {
+                              await api.delete(`/reports/consolidated/${r.id}`);
+                              setConsolidated(c => c.filter(x => x.id !== r.id));
+                            } catch { alert('Erro ao excluir relatório.'); }
+                          }}>
+                          Excluir
+                        </button>
                       </td>
                     </tr>
                   ))}
