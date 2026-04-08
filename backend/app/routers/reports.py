@@ -142,7 +142,11 @@ def delete_report(report_id: int, db: Session = Depends(get_db), _=Depends(get_c
             os.unlink(report.output_path)
         except OSError:
             pass
+    sheet = db.query(FieldSheet).filter(FieldSheet.id == report.field_sheet_id).first()
     db.delete(report)
+    if sheet and sheet.status == "aprovada":
+        sheet.status = "pendente"
+        sheet.signature_date = None
     db.commit()
     return {"ok": True}
 
