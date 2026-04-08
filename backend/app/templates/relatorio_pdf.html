@@ -139,7 +139,6 @@
     <thead>
       <tr>
         <th>Nº de Laudo</th>
-        <th>Colaborador</th>
         <th>Cargo/Função</th>
         <th>Local</th>
         <th>Setor</th>
@@ -152,7 +151,6 @@
       {% for f in fichas %}
       <tr>
         <td>{{ "%04d"|format(f.laudo_number) }}-{{ loop.index }}</td>
-        <td style="text-align:left;">{{ f.employee_nome or '—' }}</td>
         <td style="text-align:left;">{{ f.funcao or '—' }}</td>
         <td style="text-align:left;">{{ f.local or '—' }}</td>
         <td style="text-align:left;">{{ f.setor or '—' }}</td>
@@ -173,14 +171,15 @@
 {% for f in fichas %}
 <div class="page-break">
 
-  <!-- Logo + Número do Relatório -->
-  <table style="border:none; margin-bottom:4px;">
+  <!-- Cabeçalho: logo esquerda + texto direita -->
+  <table style="border:none; margin-bottom:4px; width:100%;">
     <tr>
-      <td style="border:none; vertical-align:middle;">
+      <td style="border:none; vertical-align:middle; width:40%;">
         <img src="data:image/png;base64,{{ logo_b64 }}" style="height:40px;" alt="EcoSegme" />
       </td>
       <td style="border:none; vertical-align:middle; text-align:right; font-size:7.5pt; color:#555; line-height:1.6;">
-        {% if f.signature_date %}Data de Assinatura: <strong>{{ f.signature_date }}</strong>{% endif %}
+        EcoSegme — Serviços em Segurança do Trabalho e Meio Ambiente<br/>
+        CNPJ: 47.252.046/0001-32
       </td>
     </tr>
   </table>
@@ -263,14 +262,10 @@
       <th style="background:#c6efce; text-align:center;">Nível de Ação</th>
     </tr>
     <tr>
-      <td>Dose Diária (%):</td>
-      <td style="text-align:center;">{{ f.dose_diaria or '—' }}</td>
-      <td rowspan="4" style="text-align:center; vertical-align:middle;">85 dB(A)</td>
-      <td rowspan="4" style="text-align:center; vertical-align:middle;">80 dB(A)</td>
-    </tr>
-    <tr>
       <td>Nível de Exposição dB(A):</td>
       <td style="text-align:center;">{{ f.ne_db or '—' }}</td>
+      <td rowspan="3" style="text-align:center; vertical-align:middle;">85 dB(A)</td>
+      <td rowspan="3" style="text-align:center; vertical-align:middle;">80 dB(A)</td>
     </tr>
     <tr>
       <td>Nível de Exposição Normalizado dB(A):</td>
@@ -294,24 +289,14 @@
     </td></tr>
   </table>
 
-  <table style="margin-top:14px; border:none;">
-    <tr>
-      <td style="border:none; text-align:center; width:50%;">
-        ______________________________<br/>
-        {{ f.technician_name }}<br/>
-        Técnico Responsável pela Coleta
-      </td>
-      <td style="border:none; text-align:center; width:50%;">
-        ______________________________<br/>
-        Arimar Neves Neto<br/>
-        Engenheiro de Segurança do Trabalho<br/>
-        CREA Nº 13726-D/AM
-      </td>
-    </tr>
-  </table>
-  {% if f.signature_date %}
-  <p style="text-align:center; margin-top:6px; font-size:8pt;">{{ f.signature_date }}</p>
-  {% endif %}
+  <div style="text-align:center; margin-top:18px;">
+    <img src="data:image/jpeg;base64,{{ assinatura_b64 }}" style="height:22mm;" alt="Assinatura" /><br/>
+    <span style="font-size:8pt; font-weight:bold;">Arimar Neves Neto</span><br/>
+    <span style="font-size:7.5pt;">Engenheiro de Segurança do Trabalho — CREA Nº 13726-D/AM</span><br/>
+    {% if f.signature_date %}
+    <span style="font-size:8pt; margin-top:4px; display:block;">{{ f.signature_date }}</span>
+    {% endif %}
+  </div>
 
 </div>
 {% endfor %}

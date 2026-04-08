@@ -15,6 +15,14 @@ from app import supabase_storage
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
+_MESES_PT = ["janeiro","fevereiro","março","abril","maio","junho",
+             "julho","agosto","setembro","outubro","novembro","dezembro"]
+
+def _fmt_sig_date(d):
+    if not d:
+        return ""
+    return f"Manaus, {d.day:02d} de {_MESES_PT[d.month-1]} de {d.year}."
+
 @router.post("/generate/{field_sheet_id}")
 def generate_report(field_sheet_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     existing = db.query(GeneratedReport).filter(GeneratedReport.field_sheet_id == field_sheet_id).first()
@@ -440,16 +448,19 @@ def generate_bulk_pdf(
             "tempo_medicao": upload.tempo_medicao if upload else "",
             "inicio": upload.inicio if upload else "",
             "fim": upload.fim if upload else "",
-            "signature_date": sheet.signature_date.strftime("%d/%m/%Y") if sheet.signature_date else "",
+            "signature_date": _fmt_sig_date(sheet.signature_date),
             "has_laudo": sheet.id in generated_ids,
         })
 
     import base64
     tmpl_path = os.path.join(os.path.dirname(__file__), "../templates/relatorio_pdf.html")
     logo_path = os.path.join(os.path.dirname(__file__), "../templates/logo.png")
+    assinatura_path = os.path.join(os.path.dirname(__file__), "../templates/assinatura_arimar.jpg")
     img_dir = os.path.join(os.path.dirname(__file__), "../templates/images")
     with open(logo_path, "rb") as f:
         logo_b64 = base64.b64encode(f.read()).decode()
+    with open(assinatura_path, "rb") as f:
+        assinatura_b64 = base64.b64encode(f.read()).decode()
     with open(os.path.join(img_dir, "capa_img_left.png"), "rb") as f:
         capa_img_left_b64 = base64.b64encode(f.read()).decode()
     with open(os.path.join(img_dir, "capa_img_top_right.png"), "rb") as f:
@@ -469,6 +480,7 @@ def generate_bulk_pdf(
         year=datetime.now().year,
         laudo_numbers=[s.laudo_number for s in sheets],
         logo_b64=logo_b64,
+        assinatura_b64=assinatura_b64,
         capa_img_left_b64=capa_img_left_b64,
         capa_img_top_right_b64=capa_img_top_right_b64,
         capa_img_bot_right_b64=capa_img_bot_right_b64,
