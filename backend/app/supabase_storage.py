@@ -31,3 +31,7 @@ def get_signed_url(path: str, expires_in: int = 3600) -> str:
     client = _get_client()
     res = client.storage.from_(BUCKET).create_signed_url(path, expires_in)
     return res["signedURL"]
+
+def delete_file(path: str) -> None:
+    client = _get_client()
+    client.storage.from_(BUCKET).remove([path])

@@ -17,6 +17,7 @@ export default function CompanyDetail() {
   const [loading, setLoading] = useState(true);
   const [downloadError, setDownloadError] = useState('');
   const [downloadingFicha, setDownloadingFicha] = useState(null);
+  const [deletingReport, setDeletingReport] = useState(null);
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
@@ -100,6 +101,17 @@ export default function CompanyDetail() {
     } catch {
       setDownloadError('Erro ao baixar ficha PDF.');
     } finally { setDownloadingFicha(null); }
+  };
+
+  const handleDeleteReport = async (report) => {
+    if (!window.confirm(`Excluir o laudo "${report.filename}"? Você poderá gerá-lo novamente.`)) return;
+    setDeletingReport(report.id);
+    try {
+      await api.delete(`/reports/${report.id}`);
+      setReports(r => r.filter(x => x.id !== report.id));
+    } catch {
+      setDownloadError('Erro ao excluir laudo.');
+    } finally { setDeletingReport(null); }
   };
 
   const handleDownload = async (report) => {
@@ -315,7 +327,7 @@ export default function CompanyDetail() {
               <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Nenhum laudo gerado.</div>
             ) : (
               <table className="table">
-                <thead><tr><th>#</th><th>Arquivo</th><th>Gerado em</th><th>SHA-256</th><th>Ação</th></tr></thead>
+                <thead><tr><th>#</th><th>Arquivo</th><th>Gerado em</th><th>SHA-256</th><th>Ações</th></tr></thead>
                 <tbody>
                   {reports.map(r => (
                     <tr key={r.id}>
@@ -323,8 +335,13 @@ export default function CompanyDetail() {
                       <td style={{ fontSize: 13, fontWeight: 500 }}>{r.filename}</td>
                       <td style={{ color: '#64748b', fontSize: 13 }}>{new Date(r.generated_at).toLocaleString('pt-BR')}</td>
                       <td><span style={{ fontFamily: 'monospace', fontSize: 11, color: '#94a3b8' }}>{r.sha256.substring(0, 16)}...</span></td>
-                      <td>
+                      <td style={{ display: 'flex', gap: 6 }}>
                         <button className="btn btn-primary btn-sm" onClick={() => handleDownload(r)}>Baixar</button>
+                        <button className="btn btn-sm" style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                          onClick={() => handleDeleteReport(r)}
+                          disabled={deletingReport === r.id}>
+                          {deletingReport === r.id ? '...' : 'Excluir'}
+                        </button>
                       </td>
                     </tr>
                   ))}

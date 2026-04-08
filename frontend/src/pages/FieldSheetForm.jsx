@@ -272,11 +272,6 @@ export default function FieldSheetForm() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Ordem de Realização</label>
-            <input className="form-input" value={nextNumber ? `#${nextNumber} (automático)` : 'Carregando...'} disabled style={{ background: '#f8fafc', color: '#94a3b8' }} />
-          </div>
-
-          <div className="form-group">
             <label className="form-label">Nº Dosímetro <span>*</span></label>
             <input type="number" name="dosimeter_number" className="form-input" value={form.dosimeter_number} onChange={handleChange} placeholder="Ex: 42" />
           </div>
@@ -284,6 +279,11 @@ export default function FieldSheetForm() {
           <div className="form-group">
             <label className="form-label">Data de Coleta <span>*</span></label>
             <input type="date" name="collection_date" className="form-input" value={form.collection_date} onChange={handleChange} />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Resp. pelo Acompanhamento</label>
+            <input name="technician_name_2" className="form-input" value={form.technician_name_2} onChange={handleChange} placeholder="Nome do responsável pelo acompanhamento (opcional)" />
           </div>
 
         </div>

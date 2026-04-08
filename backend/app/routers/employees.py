@@ -39,9 +39,13 @@ def update_employee(employee_id: int, data: EmployeeCreate, db: Session = Depend
 
 @router.delete("/{employee_id}")
 def delete_employee(employee_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):
+    from app.models.field_sheet import FieldSheet
     employee = db.query(Employee).filter(Employee.id == employee_id).first()
     if not employee:
         raise HTTPException(status_code=404, detail="Funcionário não encontrado")
+    has_sheets = db.query(FieldSheet).filter(FieldSheet.employee_id == employee_id).first()
+    if has_sheets:
+        raise HTTPException(status_code=409, detail="Não é possível excluir este funcionário pois ele possui fichas de campo vinculadas.")
     db.delete(employee)
     db.commit()
     return {"ok": True}

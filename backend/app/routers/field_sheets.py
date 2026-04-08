@@ -87,11 +87,15 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
         raise HTTPException(status_code=404, detail="Ficha não encontrada")
     if sheet.status == "aprovada":
         raise HTTPException(status_code=400, detail="Não é possível editar uma ficha já aprovada")
-    allowed = {"epi", "activity", "machine_noise", "technician_name_2", "pos_verificacao_db", "dosimeter_number"}
+    allowed = {"epi", "activity", "machine_noise", "technician_name_2", "pos_verificacao_db", "laudo_number"}
     for key, value in body.items():
         if key in allowed:
             setattr(sheet, key, value if value != "" else None)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Número de ordem já existe. Escolha outro.")
     db.refresh(sheet)
     return {"ok": True}
 

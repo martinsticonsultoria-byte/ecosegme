@@ -33,9 +33,14 @@ def update_company(company_id: int, data: CompanyCreate, db: Session = Depends(g
 
 @router.delete("/{company_id}")
 def delete_company(company_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):
+    from sqlalchemy.exc import IntegrityError
     company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Empresa não encontrada")
-    db.delete(company)
-    db.commit()
+    try:
+        db.delete(company)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Não é possível excluir esta empresa pois ela possui fichas ou funcionários vinculados.")
     return {"ok": True}

@@ -128,6 +128,30 @@ def upload_sonus(
     }
 
 
+@router.delete("/sonus/{field_sheet_id}")
+def delete_sonus_upload(
+    field_sheet_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user)
+):
+    sheet = db.query(FieldSheet).filter(FieldSheet.id == field_sheet_id).first()
+    if not sheet:
+        raise HTTPException(status_code=404, detail="Ficha não encontrada")
+    if sheet.status == "aprovada":
+        raise HTTPException(status_code=400, detail="Não é possível excluir o SONUS de uma ficha já aprovada")
+    upload = db.query(SonusUpload).filter(SonusUpload.field_sheet_id == field_sheet_id).first()
+    if not upload:
+        raise HTTPException(status_code=404, detail="Nenhum upload encontrado para esta ficha")
+    if upload.storage_path and os.path.exists(upload.storage_path):
+        try:
+            os.unlink(upload.storage_path)
+        except OSError:
+            pass
+    db.delete(upload)
+    db.commit()
+    return {"ok": True}
+
+
 @router.get("/sonus/{field_sheet_id}")
 def get_sonus_upload(
     field_sheet_id: int,

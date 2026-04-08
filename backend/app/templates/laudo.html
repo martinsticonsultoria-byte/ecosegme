@@ -124,21 +124,6 @@
 
 <table>
   <tr>
-    {% if technician_name_2 %}
-    <td style="text-align:center; width:33%">
-      ______________________________<br/>
-      {{ technician_name }}<br/>
-      Técnico Responsável
-    </td>
-    <td style="text-align:center; width:34%">
-      ______________________________<br/>
-      {{ technician_name_2 }}<br/>
-      Técnico Responsável
-    </td>
-    <td style="text-align:center; width:33%">
-      Data: {{ signature_date }}
-    </td>
-    {% else %}
     <td style="text-align:center; width:50%">
       ______________________________<br/>
       {{ technician_name }}<br/>
@@ -147,7 +132,6 @@
     <td style="text-align:center; width:50%">
       Data: {{ signature_date }}
     </td>
-    {% endif %}
   </tr>
 </table>
 

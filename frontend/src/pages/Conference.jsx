@@ -20,6 +20,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
   const [genBulkXls, setGenBulkXls] = useState(false);
   const [errors, setErrors] = useState({});
   const [epiOptions, setEpiOptions] = useState([]);
+  const [deletingSonus, setDeletingSonus] = useState({});
 
 
   useEffect(() => {
@@ -72,6 +73,19 @@ function ConferenceDetail({ group, onBack, onReload }) {
     } finally { setUploading(u => ({ ...u, [sheetId]: false })); }
   };
 
+  const handleDeleteSonus = async (sheetId) => {
+    if (!window.confirm('Excluir o PDF do SONUS desta ficha? Você poderá enviar outro depois.')) return;
+    setDeletingSonus(d => ({ ...d, [sheetId]: true }));
+    try {
+      await api.delete(`/uploads/sonus/${sheetId}`);
+      setUploadResult(r => ({ ...r, [sheetId]: null }));
+      setUploadFile(f => ({ ...f, [sheetId]: null }));
+      setSheets(s => s.map(x => x.id === sheetId ? { ...x, has_sonus: false } : x));
+    } catch (err) {
+      setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao excluir SONUS' }));
+    } finally { setDeletingSonus(d => ({ ...d, [sheetId]: false })); }
+  };
+
   const handleGenerate = async (sheetId) => {
     setGenerating(g => ({ ...g, [sheetId]: true }));
     setErrors(e => ({ ...e, [sheetId]: '' }));
@@ -116,12 +130,11 @@ function ConferenceDetail({ group, onBack, onReload }) {
   const startEdit = (sheet) => {
     setEditingId(sheet.id);
     setEditForm({
+      laudo_number: sheet.laudo_number || '',
       epi: sheet.epi || '',
       activity: sheet.activity || '',
       machine_noise: sheet.machine_noise || '',
-      technician_name_2: sheet.technician_name_2 || '',
       pos_verificacao_db: sheet.pos_verificacao_db || '',
-      dosimeter_number: sheet.dosimeter_number || '',
     });
   };
 
@@ -281,6 +294,10 @@ function ConferenceDetail({ group, onBack, onReload }) {
                       <td colSpan={14} style={{ padding: '14px 16px', background: '#f8fff8', borderBottom: '2px solid #bbf7d0' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, maxWidth: 860 }}>
                           <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Nº da Ordem</label>
+                            <input className="form-input" type="number" value={editForm.laudo_number} onChange={e => setEditForm(f => ({ ...f, laudo_number: parseInt(e.target.value) || '' }))} placeholder="Ex: 42" />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">EPI Utilizado</label>
                             <input list="epi-list-conf" className="form-input"
                               placeholder="Digite o EPI utilizado..."
@@ -290,10 +307,6 @@ function ConferenceDetail({ group, onBack, onReload }) {
                             <datalist id="epi-list-conf">
                               {epiOptions.map(o => <option key={o} value={o} />)}
                             </datalist>
-                          </div>
-                          <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="form-label">Nº Dosímetro</label>
-                            <input className="form-input" type="number" value={editForm.dosimeter_number} onChange={e => setEditForm(f => ({ ...f, dosimeter_number: e.target.value }))} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Pós Verificação [dB]</label>
@@ -306,10 +319,6 @@ function ConferenceDetail({ group, onBack, onReload }) {
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Máquinas/Equipamentos</label>
                             <textarea className="form-input" rows={2} value={editForm.machine_noise} onChange={e => setEditForm(f => ({ ...f, machine_noise: e.target.value }))} />
-                          </div>
-                          <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="form-label">Resp. pelo Acompanhamento</label>
-                            <input className="form-input" value={editForm.technician_name_2} onChange={e => setEditForm(f => ({ ...f, technician_name_2: e.target.value }))} />
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
@@ -325,16 +334,27 @@ function ConferenceDetail({ group, onBack, onReload }) {
                     <tr key={`upload-${sheet.id}`}>
                       <td colSpan={14} style={{ padding: '12px 16px', background: '#f0f9ff', borderBottom: '2px solid #bae6fd' }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: '#0369a1', marginBottom: 8 }}>Upload de Laudo (SONUS 2)</div>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', maxWidth: 600 }}>
-                          <input type="file" accept=".pdf" className="form-input"
-                            style={{ padding: '6px 10px', cursor: 'pointer', fontSize: 13, flex: 1 }}
-                            onChange={e => setUploadFile(f => ({ ...f, [sheet.id]: e.target.files[0] }))} />
-                          <button className="btn btn-primary btn-sm"
-                            onClick={() => handleUpload(sheet.id)}
-                            disabled={uploading[sheet.id] || !uploadFile[sheet.id]}>
-                            {uploading[sheet.id] ? 'Enviando...' : 'Conferir'}
-                          </button>
-                        </div>
+                        {sheet.has_sonus && !uploadResult[sheet.id] ? (
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                            <span style={{ fontSize: 13, color: '#0369a1' }}>PDF do SONUS já enviado.</span>
+                            <button className="btn btn-sm" style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                              onClick={() => handleDeleteSonus(sheet.id)}
+                              disabled={deletingSonus[sheet.id]}>
+                              {deletingSonus[sheet.id] ? '...' : 'Excluir e reenviar'}
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', maxWidth: 600, marginBottom: 8 }}>
+                            <input type="file" accept=".pdf" className="form-input"
+                              style={{ padding: '6px 10px', cursor: 'pointer', fontSize: 13, flex: 1 }}
+                              onChange={e => setUploadFile(f => ({ ...f, [sheet.id]: e.target.files[0] }))} />
+                            <button className="btn btn-primary btn-sm"
+                              onClick={() => handleUpload(sheet.id)}
+                              disabled={uploading[sheet.id] || !uploadFile[sheet.id]}>
+                              {uploading[sheet.id] ? 'Enviando...' : 'Conferir'}
+                            </button>
+                          </div>
+                        )}
 
                         {uploadResult[sheet.id] && (
                           <div style={{ marginTop: 10 }}>

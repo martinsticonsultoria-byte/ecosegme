@@ -126,6 +126,27 @@ def download_report(report_id: int, db: Session = Depends(get_db), _=Depends(get
         return RedirectResponse(url=signed_url)
     raise HTTPException(status_code=404, detail="Arquivo do laudo nao encontrado. Gere novamente.")
 
+@router.delete("/{report_id}")
+def delete_report(report_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
+    report = db.query(GeneratedReport).filter(GeneratedReport.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Laudo não encontrado")
+    if report.output_path.startswith("supabase://"):
+        storage_path = report.output_path.removeprefix("supabase://")
+        try:
+            supabase_storage.delete_file(storage_path)
+        except Exception:
+            pass
+    elif os.path.exists(report.output_path):
+        try:
+            os.unlink(report.output_path)
+        except OSError:
+            pass
+    db.delete(report)
+    db.commit()
+    return {"ok": True}
+
+
 @router.get("/url/{report_id}")
 def get_download_url(report_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
     report = db.query(GeneratedReport).filter(GeneratedReport.id == report_id).first()
