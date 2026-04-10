@@ -135,6 +135,16 @@ function ConferenceDetail({ group, onBack, onReload }) {
       activity: sheet.activity || '',
       machine_noise: sheet.machine_noise || '',
       pos_verificacao_db: sheet.pos_verificacao_db || '',
+      pre_verificacao_db: sheet.pre_verificacao_db || '',
+      technician_name: sheet.technician_name || '',
+      technician_name_2: sheet.technician_name_2 || '',
+      collection_date: sheet.collection_date || '',
+      dosimeter_number: sheet.dosimeter_number || '',
+      tipo_analise: sheet.tipo_analise || 'Ruído',
+      funcao: sheet.employee_funcao || '',
+      matricula: sheet.employee_matricula || '',
+      setor: sheet.employee_setor || '',
+      local: sheet.employee_local || '',
     });
   };
 
@@ -305,26 +315,77 @@ function ConferenceDetail({ group, onBack, onReload }) {
                   {editingId === sheet.id && (
                     <tr key={`edit-${sheet.id}`}>
                       <td colSpan={14} style={{ padding: '14px 16px', background: '#f8fff8', borderBottom: '2px solid #bbf7d0' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, maxWidth: 860 }}>
+
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Identificação</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 12 }}>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Nº da Ordem</label>
                             <input className="form-input" type="number" value={editForm.laudo_number} onChange={e => setEditForm(f => ({ ...f, laudo_number: parseInt(e.target.value) || '' }))} placeholder="Ex: 42" />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Nº Dosímetro</label>
+                            <input className="form-input" type="number" value={editForm.dosimeter_number} onChange={e => setEditForm(f => ({ ...f, dosimeter_number: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Data da Coleta</label>
+                            <input className="form-input" type="date" value={editForm.collection_date} onChange={e => setEditForm(f => ({ ...f, collection_date: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Tipo de Análise</label>
+                            <select className="form-input" value={editForm.tipo_analise} onChange={e => setEditForm(f => ({ ...f, tipo_analise: e.target.value }))}>
+                              <option>Ruído</option>
+                              <option>Calor</option>
+                              <option>Químico</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Funcionário</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 12 }}>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Cargo/Função</label>
+                            <input className="form-input" value={editForm.funcao} onChange={e => setEditForm(f => ({ ...f, funcao: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Matrícula</label>
+                            <input className="form-input" value={editForm.matricula} onChange={e => setEditForm(f => ({ ...f, matricula: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Setor</label>
+                            <input className="form-input" value={editForm.setor} onChange={e => setEditForm(f => ({ ...f, setor: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Local da Coleta</label>
+                            <input className="form-input" value={editForm.local} onChange={e => setEditForm(f => ({ ...f, local: e.target.value }))} />
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Técnico e Condições</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 12 }}>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Técnico Responsável</label>
+                            <input className="form-input" value={editForm.technician_name} onChange={e => setEditForm(f => ({ ...f, technician_name: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Técnico 2</label>
+                            <input className="form-input" value={editForm.technician_name_2} onChange={e => setEditForm(f => ({ ...f, technician_name_2: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">EPI Utilizado</label>
-                            <input list="epi-list-conf" className="form-input"
-                              placeholder="Digite o EPI utilizado..."
-                              value={editForm.epi || ''}
-                              onChange={e => setEditForm(f => ({ ...f, epi: e.target.value }))}
-                              autoComplete="off" />
-                            <datalist id="epi-list-conf">
-                              {epiOptions.map(o => <option key={o} value={o} />)}
-                            </datalist>
+                            <input list="epi-list-conf" className="form-input" value={editForm.epi} onChange={e => setEditForm(f => ({ ...f, epi: e.target.value }))} autoComplete="off" />
+                            <datalist id="epi-list-conf">{epiOptions.map(o => <option key={o} value={o} />)}</datalist>
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Pré Verificação [dB]</label>
+                            <input className="form-input" value={editForm.pre_verificacao_db} onChange={e => setEditForm(f => ({ ...f, pre_verificacao_db: e.target.value }))} placeholder="114,00" />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Pós Verificação [dB]</label>
                             <input className="form-input" value={editForm.pos_verificacao_db} onChange={e => setEditForm(f => ({ ...f, pos_verificacao_db: e.target.value }))} placeholder="Ex: 114,00" />
                           </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Atividade Desenvolvida</label>
                             <textarea className="form-input" rows={2} value={editForm.activity} onChange={e => setEditForm(f => ({ ...f, activity: e.target.value }))} />
@@ -334,7 +395,8 @@ function ConferenceDetail({ group, onBack, onReload }) {
                             <textarea className="form-input" rows={2} value={editForm.machine_noise} onChange={e => setEditForm(f => ({ ...f, machine_noise: e.target.value }))} />
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+
+                        <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                           <button className="btn btn-primary btn-sm" onClick={() => handleSaveEdit(sheet.id)} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</button>
                           <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(null)}>Cancelar</button>
                         </div>

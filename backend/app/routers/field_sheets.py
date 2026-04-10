@@ -84,10 +84,33 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
         raise HTTPException(status_code=404, detail="Ficha não encontrada")
     if sheet.status == "aprovada":
         raise HTTPException(status_code=400, detail="Não é possível editar uma ficha já aprovada")
-    allowed = {"epi", "activity", "machine_noise", "technician_name_2", "pos_verificacao_db", "laudo_number"}
+    allowed = {
+        "epi", "activity", "machine_noise", "technician_name_2", "pos_verificacao_db",
+        "laudo_number", "technician_name", "pre_verificacao_db", "dosimeter_number",
+        "collection_date", "tipo_analise",
+    }
+    from datetime import date as date_type
     for key, value in body.items():
-        if key in allowed:
-            setattr(sheet, key, value if value != "" else None)
+        if key not in allowed:
+            continue
+        if value == "":
+            value = None
+        if key == "collection_date" and value:
+            from datetime import datetime
+            value = datetime.strptime(value, "%Y-%m-%d").date()
+        if key == "dosimeter_number" and value:
+            value = int(value)
+        setattr(sheet, key, value)
+
+    # Atualiza campos do funcionário se enviados
+    emp_fields = {"funcao", "matricula", "setor", "local"}
+    emp_updates = {k: (v if v != "" else None) for k, v in body.items() if k in emp_fields}
+    if emp_updates and sheet.employee_id:
+        from app.models.employee import Employee
+        emp = db.query(Employee).filter(Employee.id == sheet.employee_id).first()
+        if emp:
+            for k, v in emp_updates.items():
+                setattr(emp, k, v)
     try:
         db.commit()
     except Exception:
