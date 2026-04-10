@@ -279,6 +279,19 @@ function ConferenceDetail({ group, onBack, onReload }) {
                     </td>
                   </tr>
 
+                  {/* Aviso de campos obrigatórios para aprovação */}
+                  {sheet.status !== 'aprovada' && (!sheet.laudo_number || !sheet.has_sonus) && (
+                    <tr key={`warn-${sheet.id}`}>
+                      <td colSpan={14} style={{ padding: '4px 12px', background: '#fffbeb', borderTop: 'none' }}>
+                        <span style={{ color: '#92400e', fontSize: 11.5 }}>
+                          ⚠ Para aprovar esta ficha:
+                          {!sheet.laudo_number && <span> &nbsp;defina o <strong>Nº de Ordem</strong> (clique em Editar);</span>}
+                          {!sheet.has_sonus && <span> &nbsp;envie o <strong>PDF do SONUS 2</strong> (clique em ▼ SONUS).</span>}
+                        </span>
+                      </td>
+                    </tr>
+                  )}
+
                   {/* Erro inline */}
                   {errors[sheet.id] && (
                     <tr key={`err-${sheet.id}`}>
