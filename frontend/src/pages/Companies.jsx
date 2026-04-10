@@ -11,9 +11,15 @@ export default function Companies() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
+  const [error, setError] = useState(false);
 
   const load = () => {
-    api.get('/companies').then(res => setCompanies(res.data)).finally(() => setLoading(false));
+    setLoading(true);
+    setError(false);
+    api.get('/companies')
+      .then(res => setCompanies(res.data))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
@@ -101,6 +107,11 @@ export default function Companies() {
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Carregando...</div>
+        ) : error ? (
+          <div style={{ padding: 40, textAlign: 'center' }}>
+            <p style={{ color: '#dc2626', marginBottom: 12 }}>Erro ao carregar empresas. O servidor pode estar iniciando.</p>
+            <button className="btn btn-secondary" onClick={load}>Tentar novamente</button>
+          </div>
         ) : companies.length === 0 ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
             <p style={{ color: '#6b7280' }}>Nenhuma empresa cadastrada ainda.</p>
