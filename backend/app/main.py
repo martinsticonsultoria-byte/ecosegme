@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
+from app.database import get_db
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -43,4 +44,10 @@ app.include_router(epis.router)
 
 @app.get("/health")
 def health():
+    return {"status": "ok"}
+
+@app.get("/ping")
+def ping(db=Depends(get_db)):
+    from app.models.company import Company
+    db.query(Company).limit(1).all()
     return {"status": "ok"}
