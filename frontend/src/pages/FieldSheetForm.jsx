@@ -16,7 +16,7 @@ export default function FieldSheetForm() {
   const [newEmpFields, setNewEmpFields] = useState({ funcao: '', matricula: '', setor: '', local: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [nextNumber, setNextNumber] = useState(null);
+  const [, setNextNumber] = useState(null);
   const [savedSheet, setSavedSheet] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [epiCustom, setEpiCustom] = useState(false);
@@ -40,7 +40,6 @@ export default function FieldSheetForm() {
 
   useEffect(() => {
     api.get('/companies').then(res => setCompanies(res.data));
-    api.get('/field-sheets/next-number').then(res => setNextNumber(res.data.next_number));
     api.get('/epis').then(res => setEpiOptions([...res.data.predefined, ...res.data.custom]));
     if (prefilledCompanyId) {
       api.get(`/employees?company_id=${prefilledCompanyId}`).then(res => setEmployees(res.data));
@@ -124,7 +123,7 @@ export default function FieldSheetForm() {
       const url = window.URL.createObjectURL(res.data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `ficha_${String(savedSheet.laudo_number).padStart(4, '0')}.pdf`;
+      a.download = `ficha_${savedSheet.id}.pdf`;
       a.click();
       window.URL.revokeObjectURL(url);
     } catch {
@@ -138,7 +137,8 @@ export default function FieldSheetForm() {
         <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 24, color: '#16a34a' }}>✓</div>
         <h2 style={{ color: '#16a34a', marginBottom: 8 }}>Ficha salva com sucesso!</h2>
         <p style={{ color: '#64748b', marginBottom: 32 }}>
-          Ordem de Realização #{savedSheet.laudo_number} — {savedSheet.employee_nome || ''}
+          Funcionário: {savedSheet.employee_nome || '—'}<br/>
+          <span style={{ fontSize: 12, color: '#94a3b8' }}>O Nº de Ordem será definido pelo admin na aba de Conferência antes da aprovação.</span>
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', flexDirection: 'column' }}>
           <button className="btn btn-primary" onClick={handleDownloadFicha} disabled={downloading} style={{ padding: '12px 28px' }}>
