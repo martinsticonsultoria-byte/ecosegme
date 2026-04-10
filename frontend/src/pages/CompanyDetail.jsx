@@ -23,19 +23,20 @@ export default function CompanyDetail() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    const safe = (promise, fallback) => promise.then(r => r.data).catch(() => fallback);
     Promise.all([
-      api.get(`/companies/${id}`),
-      api.get(`/employees?company_id=${id}`),
-      api.get(`/reports/list/${id}`),
-      api.get(`/field-sheets?company_id=${id}`),
-      api.get(`/reports/consolidated/${id}`),
-    ]).then(([companyRes, employeesRes, reportsRes, sheetsRes, consolidatedRes]) => {
-      setCompany(companyRes.data);
-      setEmployees(employeesRes.data);
-      setReports(reportsRes.data);
-      setFieldSheets(sheetsRes.data);
-      setConsolidated(consolidatedRes.data);
-    }).catch(() => setCompany(null)).finally(() => setLoading(false));
+      api.get(`/companies/${id}`).then(r => r.data).catch(() => null),
+      safe(api.get(`/employees?company_id=${id}`), []),
+      safe(api.get(`/reports/list/${id}`), []),
+      safe(api.get(`/field-sheets?company_id=${id}`), []),
+      safe(api.get(`/reports/consolidated/${id}`), []),
+    ]).then(([company, employees, reports, sheets, consolidated]) => {
+      setCompany(company);
+      setEmployees(employees);
+      setReports(reports);
+      setFieldSheets(sheets);
+      setConsolidated(consolidated);
+    }).finally(() => setLoading(false));
   }, [id]);
 
   const handleEditCompany = () => {
