@@ -281,11 +281,6 @@ export default function FieldSheetForm() {
             <input type="date" name="collection_date" className="form-input" value={form.collection_date} onChange={handleChange} />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Resp. pelo Acompanhamento</label>
-            <input name="technician_name_2" className="form-input" value={form.technician_name_2} onChange={handleChange} placeholder="Nome do responsável pelo acompanhamento (opcional)" />
-          </div>
-
         </div>
       </div>
 

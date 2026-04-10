@@ -367,7 +367,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                             <input className="form-input" value={editForm.technician_name} onChange={e => setEditForm(f => ({ ...f, technician_name: e.target.value }))} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="form-label">Técnico 2</label>
+                            <label className="form-label">Resp. pelo Acompanhamento</label>
                             <input className="form-input" value={editForm.technician_name_2} onChange={e => setEditForm(f => ({ ...f, technician_name_2: e.target.value }))} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
