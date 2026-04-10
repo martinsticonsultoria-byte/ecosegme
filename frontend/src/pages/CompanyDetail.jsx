@@ -24,19 +24,18 @@ export default function CompanyDetail() {
 
   useEffect(() => {
     Promise.all([
-      api.get('/companies'),
+      api.get(`/companies/${id}`),
       api.get(`/employees?company_id=${id}`),
       api.get(`/reports/list/${id}`),
       api.get(`/field-sheets?company_id=${id}`),
       api.get(`/reports/consolidated/${id}`),
-    ]).then(([companiesRes, employeesRes, reportsRes, sheetsRes, consolidatedRes]) => {
-      const found = companiesRes.data.find(c => c.id === parseInt(id));
-      setCompany(found || null);
+    ]).then(([companyRes, employeesRes, reportsRes, sheetsRes, consolidatedRes]) => {
+      setCompany(companyRes.data);
       setEmployees(employeesRes.data);
       setReports(reportsRes.data);
       setFieldSheets(sheetsRes.data);
       setConsolidated(consolidatedRes.data);
-    }).finally(() => setLoading(false));
+    }).catch(() => setCompany(null)).finally(() => setLoading(false));
   }, [id]);
 
   const handleEditCompany = () => {

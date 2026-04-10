@@ -20,6 +20,13 @@ def create_company(data: CompanyCreate, db: Session = Depends(get_db), _=Depends
     db.refresh(company)
     return company
 
+@router.get("/{company_id}", response_model=CompanyOut)
+def get_company(company_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa não encontrada")
+    return company
+
 @router.put("/{company_id}", response_model=CompanyOut)
 def update_company(company_id: int, data: CompanyCreate, db: Session = Depends(get_db), _=Depends(require_admin)):
     company = db.query(Company).filter(Company.id == company_id).first()
