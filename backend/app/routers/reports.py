@@ -199,6 +199,13 @@ def generate_bulk_report(
     if not sheets:
         raise HTTPException(status_code=404, detail="Nenhuma ficha encontrada para esse grupo")
 
+    sem_numero = [s for s in sheets if not s.laudo_number]
+    if sem_numero:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{len(sem_numero)} ficha(s) sem Nº de Ordem definido. Defina todos antes de gerar o relatório."
+        )
+
     uploads_list = db.query(SonusUpload).filter(
         SonusUpload.field_sheet_id.in_([s.id for s in sheets])
     ).all()
@@ -397,6 +404,13 @@ def generate_bulk_pdf(
 
     if not sheets:
         raise HTTPException(status_code=404, detail="Nenhuma ficha encontrada para esse grupo")
+
+    sem_numero = [s for s in sheets if not s.laudo_number]
+    if sem_numero:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{len(sem_numero)} ficha(s) sem Nº de Ordem definido. Defina todos antes de gerar o relatório."
+        )
 
     uploads_list = db.query(SonusUpload).filter(
         SonusUpload.field_sheet_id.in_([s.id for s in sheets])
