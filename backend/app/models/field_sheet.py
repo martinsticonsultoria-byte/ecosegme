@@ -62,3 +62,29 @@ class FieldSheet(Base):
         if session is None:
             return False
         return session.query(SonusUpload).filter(SonusUpload.field_sheet_id == self.id).first() is not None
+
+    @property
+    def sonus_parsed_name(self):
+        from app.models.sonus_upload import SonusUpload
+        from sqlalchemy.orm import object_session
+        session = object_session(self)
+        if session is None:
+            return None
+        upload = session.query(SonusUpload).filter(SonusUpload.field_sheet_id == self.id).first()
+        return upload.parsed_employee_name if upload else None
+
+    @property
+    def sonus_name_mismatch(self):
+        from app.models.sonus_upload import SonusUpload
+        from sqlalchemy.orm import object_session
+        session = object_session(self)
+        if session is None:
+            return False
+        upload = session.query(SonusUpload).filter(SonusUpload.field_sheet_id == self.id).first()
+        if not upload or not upload.parsed_employee_name:
+            return False
+        emp_nome = self.employee.nome if self.employee else self.employee_name_text
+        if not emp_nome:
+            return False
+        from app.parser import names_match
+        return not names_match(upload.parsed_employee_name, emp_nome)

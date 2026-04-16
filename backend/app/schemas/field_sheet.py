@@ -48,6 +48,8 @@ class FieldSheetOut(BaseModel):
     pre_verificacao_db: Optional[str] = None
     pos_verificacao_db: Optional[str] = None
     has_sonus: Optional[bool] = False
+    sonus_parsed_name: Optional[str] = None
+    sonus_name_mismatch: Optional[bool] = None
     created_at: datetime
 
     class Config:

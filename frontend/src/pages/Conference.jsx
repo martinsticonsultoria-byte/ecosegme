@@ -100,13 +100,19 @@ function ConferenceDetail({ group, onBack, onReload }) {
 
   const handleDownloadLaudo = async (reportData) => {
     try {
-      const res = await api.get(`/reports/download/${reportData.id}`, { responseType: 'blob' });
-      const blobUrl = window.URL.createObjectURL(res.data);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = reportData.filename || `laudo_${reportData.id}.pdf`;
-      a.click();
-      window.URL.revokeObjectURL(blobUrl);
+      const urlRes = await api.get(`/reports/url/${reportData.id}`);
+      const { url, local } = urlRes.data;
+      if (local) {
+        const res = await api.get(url, { responseType: 'blob' });
+        const blobUrl = window.URL.createObjectURL(res.data);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = reportData.filename || `laudo_${reportData.id}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(blobUrl);
+      } else {
+        window.open(url, '_blank');
+      }
     } catch { alert('Erro ao baixar laudo.'); }
   };
 
@@ -280,8 +286,19 @@ function ConferenceDetail({ group, onBack, onReload }) {
                           </button>
                           <button className="btn btn-primary btn-sm"
                             onClick={() => handleApprove(sheet.id)}
-                            disabled={approving[sheet.id] || !sheet.has_sonus || !sheet.laudo_number}
-                            title={!sheet.laudo_number ? 'Defina o Nº da Ordem antes de aprovar' : !sheet.has_sonus ? 'Envie o PDF do SONUS antes de aprovar' : ''}>
+                            disabled={
+                              approving[sheet.id] ||
+                              !sheet.has_sonus ||
+                              !sheet.laudo_number ||
+                              sheet.sonus_name_mismatch === true ||
+                              uploadResult[sheet.id]?.name_match === false
+                            }
+                            title={
+                              !sheet.laudo_number ? 'Defina o Nº da Ordem antes de aprovar' :
+                              !sheet.has_sonus ? 'Envie o PDF do SONUS antes de aprovar' :
+                              (sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) ? 'Nome no SONUS diverge do cadastro — corrija antes de aprovar' :
+                              ''
+                            }>
                             {approving[sheet.id] ? '...' : 'Aprovar'}
                           </button>
                         </div>
@@ -290,13 +307,16 @@ function ConferenceDetail({ group, onBack, onReload }) {
                   </tr>
 
                   {/* Aviso de campos obrigatórios para aprovação */}
-                  {sheet.status !== 'aprovada' && (!sheet.laudo_number || !sheet.has_sonus) && (
+                  {sheet.status !== 'aprovada' && (!sheet.laudo_number || !sheet.has_sonus || sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) && (
                     <tr key={`warn-${sheet.id}`}>
                       <td colSpan={14} style={{ padding: '4px 12px', background: '#fffbeb', borderTop: 'none' }}>
                         <span style={{ color: '#92400e', fontSize: 11.5 }}>
                           ⚠ Para aprovar esta ficha:
                           {!sheet.laudo_number && <span> &nbsp;defina o <strong>Nº de Ordem</strong> (clique em Editar);</span>}
                           {!sheet.has_sonus && <span> &nbsp;envie o <strong>PDF do SONUS 2</strong> (clique em ▼ SONUS).</span>}
+                          {(sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) && (
+                            <span> &nbsp;<strong>Nome divergente:</strong> SONUS traz &quot;{uploadResult[sheet.id]?.parsed_data?.funcionario || sheet.sonus_parsed_name}&quot; mas cadastro é &quot;{sheet.employee_nome}&quot; — corrija o cadastro ou reenvie o SONUS correto.</span>
+                          )}
                         </span>
                       </td>
                     </tr>
@@ -433,11 +453,16 @@ function ConferenceDetail({ group, onBack, onReload }) {
 
                         {uploadResult[sheet.id] && (
                           <div style={{ marginTop: 10 }}>
-                            <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#0f172a', marginBottom: 10 }}>
+                            <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#0f172a', marginBottom: 8 }}>
                               <span>Início: <b>{uploadResult[sheet.id].parsed_data?.inicio}</b></span>
                               <span>Fim: <b>{uploadResult[sheet.id].parsed_data?.fim}</b></span>
                               <span>NE: <b>{uploadResult[sheet.id].parsed_data?.ne_db} dB</b></span>
                             </div>
+                            {uploadResult[sheet.id].name_match === false && (
+                              <div style={{ padding: '6px 10px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 6, fontSize: 12, color: '#b91c1c', marginBottom: 8 }}>
+                                ⚠ {uploadResult[sheet.id].name_alert}
+                              </div>
+                            )}
                             {!reports[sheet.id]
                               ? <button className="btn btn-primary btn-sm" onClick={() => handleGenerate(sheet.id)} disabled={generating[sheet.id]}>
                                   {generating[sheet.id] ? 'Gerando...' : 'Gerar Laudo PDF'}

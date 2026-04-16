@@ -134,6 +134,15 @@ def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=De
         sonus = db.query(SonusUpload).filter(SonusUpload.field_sheet_id == sheet_id).first()
         if not sonus:
             raise HTTPException(status_code=400, detail="É necessário enviar o PDF do SONUS 2 antes de aprovar a ficha")
+        if sonus.parsed_employee_name:
+            emp_nome = sheet.employee.nome if sheet.employee else sheet.employee_name_text
+            if emp_nome:
+                from app.parser import names_match
+                if not names_match(sonus.parsed_employee_name, emp_nome):
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Nome no SONUS '{sonus.parsed_employee_name}' diverge do cadastro '{emp_nome}'. Corrija antes de aprovar."
+                    )
     sheet.status = new_status
     if new_status == "aprovada" and not sheet.signature_date:
         from datetime import date
