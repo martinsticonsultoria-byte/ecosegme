@@ -265,14 +265,22 @@
       <th style="background:#c6efce; text-align:center;">Nível de Ação</th>
     </tr>
     <tr>
+      <td>Dose Diária (%):</td>
+      <td style="text-align:center;">{{ f.dose_diaria or '—' }}</td>
+      <td rowspan="4" style="text-align:center; vertical-align:middle;">85 dB(A)</td>
+      <td rowspan="4" style="text-align:center; vertical-align:middle;">80 dB(A)</td>
+    </tr>
+    <tr>
       <td>Nível de Exposição dB(A):</td>
       <td style="text-align:center;">{{ f.ne_db or '—' }}</td>
-      <td rowspan="3" style="text-align:center; vertical-align:middle;">85 dB(A)</td>
-      <td rowspan="3" style="text-align:center; vertical-align:middle;">80 dB(A)</td>
     </tr>
     <tr>
       <td>Nível de Exposição Normalizado dB(A):</td>
       <td style="text-align:center;">{{ f.nen_db or '—' }}</td>
+    </tr>
+    <tr>
+      <td>Tempo de Medição (min):</td>
+      <td style="text-align:center;">{{ f.tempo_medicao or '—' }}</td>
     </tr>
   </table>
   </div>
