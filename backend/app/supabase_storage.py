@@ -23,7 +23,7 @@ def upload_pdf(pdf_bytes: bytes, filename: str) -> str:
     client.storage.from_(BUCKET).upload(
         path=filename,
         file=pdf_bytes,
-        file_options={"content-type": "application/pdf", "upsert": "false"},
+        file_options={"content-type": "application/pdf", "upsert": "true"},
     )
     return filename
 

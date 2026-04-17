@@ -85,17 +85,18 @@ def upload_sonus(
         f.write(content)
 
     employee = sheet.employee
-    match_result = False
+    emp_nome = employee.nome if employee else sheet.employee_name_text
+    match_result = None
     similarity_score = 0.0
     name_alert = None
 
-    if data.get("funcionario") and employee:
-        match_result = names_match(data["funcionario"], employee.nome)
-        similarity_score = round(name_similarity(data["funcionario"], employee.nome), 2)
+    if data.get("funcionario") and emp_nome:
+        match_result = names_match(data["funcionario"], emp_nome)
+        similarity_score = round(name_similarity(data["funcionario"], emp_nome), 2)
         if not match_result:
             name_alert = (
                 f"ATENÇÃO: Nome no PDF '{data['funcionario']}' diverge do cadastro "
-                f"'{employee.nome}' (similaridade: {similarity_score:.0%})"
+                f"'{emp_nome}' (similaridade: {similarity_score:.0%})"
             )
 
     upload = SonusUpload(

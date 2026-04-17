@@ -11,14 +11,14 @@ export default function Companies() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
-  const [error, setError] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const load = () => {
     setLoading(true);
-    setError(false);
+    setLoadError(false);
     api.get('/companies')
       .then(res => setCompanies(res.data))
-      .catch(() => setError(true))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   };
 
@@ -107,7 +107,7 @@ export default function Companies() {
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Carregando...</div>
-        ) : error ? (
+        ) : loadError ? (
           <div style={{ padding: 40, textAlign: 'center' }}>
             <p style={{ color: '#dc2626', marginBottom: 12 }}>Erro ao carregar empresas. O servidor pode estar iniciando.</p>
             <button className="btn btn-secondary" onClick={load}>Tentar novamente</button>
@@ -120,22 +120,24 @@ export default function Companies() {
           <table className="table">
             <thead>
               <tr>
-                <th>#</th>
+                <th style={{ width: 48 }}>#</th>
                 <th>Razão Social</th>
+                <th>CNPJ</th>
                 <th>Endereço</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody>
-              {companies.filter(c => c.razao_social.toLowerCase().includes(search.toLowerCase())).map(c => (
+              {companies.filter(c => c.razao_social.toLowerCase().includes(search.toLowerCase())).map((c, idx) => (
                 <tr key={c.id}>
-                  <td><span className="badge badge-blue">{c.id}</span></td>
+                  <td><span className="badge badge-blue">{idx + 1}</span></td>
                   <td>
                     <span style={{ fontWeight: 600, color: '#16a34a', cursor: 'pointer', textDecoration: 'underline' }}
                       onClick={() => navigate(`/companies/${c.id}`)}>
                       {c.razao_social}
                     </span>
                   </td>
+                  <td style={{ color: '#64748b', fontFamily: 'monospace', fontSize: 13 }}>{c.cnpj || '—'}</td>
                   <td style={{ color: '#64748b' }}>{c.endereco || '—'}</td>
                   <td></td>
                 </tr>
