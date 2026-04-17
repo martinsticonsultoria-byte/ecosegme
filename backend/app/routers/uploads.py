@@ -95,8 +95,7 @@ def upload_sonus(
         similarity_score = round(name_similarity(data["funcionario"], emp_nome), 2)
         if not match_result:
             name_alert = (
-                f"ATENÇÃO: Nome no PDF '{data['funcionario']}' diverge do cadastro "
-                f"'{emp_nome}' (similaridade: {similarity_score:.0%})"
+                f"ATENÇÃO: Nome no PDF '{data['funcionario']}' diverge do cadastro '{emp_nome}'"
             )
 
     upload = SonusUpload(
