@@ -157,12 +157,6 @@ def extract_sonus_data(pdf_path: str) -> dict:
     if missing:
         result["_warnings"].append(f"Campos não encontrados: {', '.join(missing)}")
 
-    if found < 3:
-        raise ValueError(
-            f"Extração insuficiente: apenas {found}/6 campos encontrados. "
-            f"Campos ausentes: {', '.join(missing)}"
-        )
-
     return result
 
 
