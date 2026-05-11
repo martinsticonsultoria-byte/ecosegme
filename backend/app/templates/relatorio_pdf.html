@@ -69,12 +69,8 @@
         <div style="margin-bottom:7mm;">
           <div style="font-size:6.5pt; color:#777; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:1mm;">Nº do Relatório</div>
           <div style="font-size:10pt; font-weight:bold; color:#1f9c74;">
-            {{ "%04d"|format(laudo_numbers[0]) }}-1{% if laudo_numbers|length > 1 %} ao {{ "%04d"|format(laudo_numbers[-1]) }}-{{ laudo_numbers|length }}{% endif %}
+            {{ laudo_min }}.1/{{ year }}{% if laudo_min != laudo_max %} ao {{ laudo_max }}.1/{{ year }}{% endif %}
           </div>
-          <div style="font-size:7pt; color:#888; margin-top:1mm;">(Nº da Amostra)</div>
-          {% for n in laudo_numbers %}
-          <div style="font-size:8pt; color:#444; padding:1px 0;">{{ "%04d"|format(n) }}-{{ loop.index }}</div>
-          {% endfor %}
         </div>
 
         <!-- Caixa empresa -->

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { DeleteFieldSheetButton } from './CompanyDetail';
 
 // ─── Visão de detalhe: tabela de fichas de uma empresa ───────────────────────
 function ConferenceDetail({ group, onBack, onReload }) {
@@ -21,6 +22,8 @@ function ConferenceDetail({ group, onBack, onReload }) {
   const [errors, setErrors] = useState({});
   const [epiOptions, setEpiOptions] = useState([]);
   const [deletingSonus, setDeletingSonus] = useState({});
+  const [modoSelecao, setModoSelecao] = useState(false);
+  const [fichasSelecionadas, setFichasSelecionadas] = useState([]);
 
 
   useEffect(() => {
@@ -214,11 +217,29 @@ function ConferenceDetail({ group, onBack, onReload }) {
             <p className="page-subtitle">{group.tipo_analise} · {sheets.length} ficha{sheets.length !== 1 ? 's' : ''} · {group.tecnicos.join(', ')}</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary"
-              onClick={() => blobDownload(`/reports/generate-bulk-pdf?${params}`, `relatorio_${group.tipo_analise}_${group.company_nome?.slice(0,20)}.pdf`, setGenBulkPdf)}
-              disabled={genBulkPdf}>
-              {genBulkPdf ? 'Gerando...' : 'Gerar Relatório PDF'}
-            </button>
+            {!modoSelecao ? (
+              <button className="btn btn-primary" onClick={() => setModoSelecao(true)}>
+                Gerar Relatório PDF
+              </button>
+            ) : (
+              <>
+                <button className="btn btn-primary"
+                  onClick={() => {
+                    const p = new URLSearchParams({ company_id: group.company_id, tipo_analise: group.tipo_analise });
+                    fichasSelecionadas.forEach(id => p.append('field_sheet_ids', id));
+                    blobDownload(`/reports/generate-bulk-pdf?${p}`, `relatorio_${group.tipo_analise}_${group.company_nome?.slice(0,20)}.pdf`, setGenBulkPdf);
+                    setModoSelecao(false);
+                    setFichasSelecionadas([]);
+                  }}
+                  disabled={genBulkPdf || fichasSelecionadas.length === 0}>
+                  {genBulkPdf ? 'Gerando...' : 'Confirmar e Gerar'}
+                </button>
+                <button className="btn btn-secondary"
+                  onClick={() => { setModoSelecao(false); setFichasSelecionadas([]); }}>
+                  Cancelar Seleção
+                </button>
+              </>
+            )}
             <button className="btn btn-secondary"
               onClick={() => blobDownload(`/reports/generate-bulk?${params}`, `relatorio_${group.tipo_analise}_${group.company_nome?.slice(0,20)}.xlsx`, setGenBulkXls)}
               disabled={genBulkXls}>
@@ -237,6 +258,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1350, tableLayout: 'auto' }}>
             <thead>
               <tr>
+                {modoSelecao && <th style={{ ...thStyle, width: 36 }}></th>}
                 <th style={thStyle}>#</th>
                 <th style={thStyle}>Dosímetro</th>
                 <th style={thStyle}>Data Coleta</th>
@@ -258,8 +280,18 @@ function ConferenceDetail({ group, onBack, onReload }) {
                 <>
                   {/* Linha principal da ficha */}
                   <tr key={sheet.id} style={{ background: editingId === sheet.id ? '#f0faf6' : undefined }}>
+                    {modoSelecao && (
+                      <td style={{ ...tdStyle, width: 36, textAlign: 'center' }}>
+                        <input type="checkbox"
+                          checked={fichasSelecionadas.includes(sheet.id)}
+                          onChange={e => setFichasSelecionadas(prev =>
+                            e.target.checked ? [...prev, sheet.id] : prev.filter(id => id !== sheet.id)
+                          )}
+                        />
+                      </td>
+                    )}
                     <td style={tdStyle}>
-                      {sheet.laudo_number ? <span className="badge badge-blue">#{String(sheet.laudo_number).padStart(4, '0')}</span> : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}
+                      {sheet.laudo_number ? <span className="badge badge-blue">{sheet.laudo_number}.1/{new Date().getFullYear()}</span> : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}
                     </td>
                     <td style={tdSmall}>{sheet.dosimeter_number}</td>
                     <td style={tdSmall}>{new Date(sheet.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
@@ -308,6 +340,10 @@ function ConferenceDetail({ group, onBack, onReload }) {
                             }>
                             {approving[sheet.id] ? '...' : 'Aprovar'}
                           </button>
+                          <DeleteFieldSheetButton
+                            fieldSheetId={sheet.id}
+                            onDeleted={() => setSheets(prev => prev.filter(f => f.id !== sheet.id))}
+                          />
                         </div>
                       )}
                     </td>
@@ -316,7 +352,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                   {/* Aviso de campos obrigatórios para aprovação */}
                   {sheet.status !== 'aprovada' && (!sheet.laudo_number || !sheet.has_sonus || sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) && (
                     <tr key={`warn-${sheet.id}`}>
-                      <td colSpan={14} style={{ padding: '4px 12px', background: '#fffbeb', borderTop: 'none' }}>
+                      <td colSpan={modoSelecao ? 15 : 14} style={{ padding: '4px 12px', background: '#fffbeb', borderTop: 'none' }}>
                         <span style={{ color: '#92400e', fontSize: 11.5 }}>
                           ⚠ Para aprovar esta ficha:
                           {!sheet.laudo_number && <span> &nbsp;defina o <strong>Nº de Ordem</strong> (clique em Editar);</span>}
@@ -332,7 +368,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                   {/* Erro inline */}
                   {errors[sheet.id] && (
                     <tr key={`err-${sheet.id}`}>
-                      <td colSpan={14} style={{ padding: '4px 12px', background: '#fff5f5' }}>
+                      <td colSpan={modoSelecao ? 15 : 14} style={{ padding: '4px 12px', background: '#fff5f5' }}>
                         <span style={{ color: '#dc2626', fontSize: 12 }}>{errors[sheet.id]}</span>
                       </td>
                     </tr>
@@ -341,13 +377,16 @@ function ConferenceDetail({ group, onBack, onReload }) {
                   {/* Linha de edição expandida */}
                   {editingId === sheet.id && (
                     <tr key={`edit-${sheet.id}`}>
-                      <td colSpan={14} style={{ padding: '14px 16px', background: '#f8fff8', borderBottom: '2px solid #bbf7d0' }}>
+                      <td colSpan={modoSelecao ? 15 : 14} style={{ padding: '14px 16px', background: '#f8fff8', borderBottom: '2px solid #bbf7d0' }}>
 
                         <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Identificação</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 12 }}>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Nº da Ordem</label>
-                            <input className="form-input" type="number" value={editForm.laudo_number} onChange={e => setEditForm(f => ({ ...f, laudo_number: parseInt(e.target.value) || '' }))} placeholder="Ex: 42" />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <input className="form-input" type="number" value={editForm.laudo_number} onChange={e => setEditForm(f => ({ ...f, laudo_number: parseInt(e.target.value) || '' }))} placeholder="Ex: 42" style={{ width: '100px' }} />
+                              <span style={{ color: '#666', fontWeight: '500' }}>{`.1/${new Date().getFullYear()}`}</span>
+                            </div>
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Nº Dosímetro</label>
@@ -434,7 +473,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                   {/* Upload SONUS expandido */}
                   {expandedUpload === sheet.id && (
                     <tr key={`upload-${sheet.id}`}>
-                      <td colSpan={14} style={{ padding: '12px 16px', background: '#f0f9ff', borderBottom: '2px solid #bae6fd' }}>
+                      <td colSpan={modoSelecao ? 15 : 14} style={{ padding: '12px 16px', background: '#f0f9ff', borderBottom: '2px solid #bae6fd' }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: '#0369a1', marginBottom: 8 }}>Upload de Laudo (SONUS 2)</div>
                         {sheet.has_sonus && !uploadResult[sheet.id] ? (
                           <div style={{ marginBottom: 8 }}>

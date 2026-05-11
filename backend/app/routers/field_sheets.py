@@ -10,7 +10,7 @@ from app.database import get_db
 from app.models.field_sheet import FieldSheet
 from app.models.employee import Employee
 from app.schemas.field_sheet import FieldSheetCreate, FieldSheetOut
-from app.core.deps import get_current_user
+from app.core.deps import get_current_user, require_admin
 from app.models.user import User
 
 FICHA_TEMPLATE = os.path.join(os.path.dirname(__file__), "../templates/ficha_campo.html")
@@ -200,6 +200,14 @@ def download_field_sheet_pdf(sheet_id: int, db: Session = Depends(get_db), _=Dep
     safe_nome = emp_nome.replace(" ", "_") if emp_nome else "sem_nome"
     filename = f"ficha_{sheet.laudo_number:04d}_{safe_nome}.pdf"
     return FileResponse(tmp.name, media_type="application/pdf", filename=filename)
+
+@router.delete("/{sheet_id}", status_code=204)
+def delete_field_sheet(sheet_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):
+    sheet = db.query(FieldSheet).filter(FieldSheet.id == sheet_id).first()
+    if not sheet:
+        raise HTTPException(status_code=404, detail="Ficha não encontrada")
+    db.delete(sheet)
+    db.commit()
 
 @router.get("/{sheet_id}", response_model=FieldSheetOut)
 def get_field_sheet(sheet_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
