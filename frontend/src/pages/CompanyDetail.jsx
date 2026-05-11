@@ -2,6 +2,58 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
+export function DeleteFieldSheetButton({ fieldSheetId, onDeleted }) {
+  const [showModal, setShowModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await api.delete(`/field-sheets/${fieldSheetId}`);
+      setShowModal(false);
+      onDeleted();
+    } catch {
+      alert('Erro ao excluir ficha.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <>
+      <button
+        className="btn btn-sm"
+        style={{ background: '#FADADD', color: '#8B0000', border: '1px solid #f5a0a0', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+        onClick={() => setShowModal(true)}
+      >
+        Excluir Ficha de Campo
+      </button>
+
+      {showModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#F2F2F2', borderRadius: 8, padding: 24, maxWidth: 400, width: '90%' }}>
+            <p style={{ color: '#8B0000', fontWeight: 600, marginBottom: 16 }}>
+              Tem certeza que deseja excluir definitivamente este arquivo?
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                style={{ background: '#8B0000', color: 'white', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? '...' : 'Excluir'}
+              </button>
+              <button className="btn btn-secondary btn-sm" onClick={() => setShowModal(false)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function CompanyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -21,6 +73,11 @@ export default function CompanyDetail() {
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [showRelModal, setShowRelModal] = useState(false);
+  const [relFichas, setRelFichas] = useState([]);
+  const [relFichasSel, setRelFichasSel] = useState([]);
+  const [relCarregando, setRelCarregando] = useState(false);
+  const [relGerando, setRelGerando] = useState(false);
 
   useEffect(() => {
     const safe = (promise, fallback) => promise.then(r => r.data).catch(() => fallback);
@@ -61,7 +118,7 @@ export default function CompanyDetail() {
       await api.delete(`/companies/${id}`);
       navigate('/companies');
     } catch {
-      setDownloadError('Erro ao deletar empresa.');
+      alert('Erro ao deletar empresa.');
     }
   };
 
@@ -86,6 +143,48 @@ export default function CompanyDetail() {
       }
       alert(msg);
     } finally { setGenerating(false); }
+  };
+
+  const handleOpenRelModal = async () => {
+    setShowRelModal(true);
+    setRelFichasSel([]);
+    setRelCarregando(true);
+    try {
+      const res = await api.get(`/field-sheets?company_id=${id}`);
+      setRelFichas(res.data);
+    } catch {
+      alert('Erro ao carregar fichas.');
+      setShowRelModal(false);
+    } finally {
+      setRelCarregando(false);
+    }
+  };
+
+  const handleGerarPdfComSelecao = async () => {
+    setRelGerando(true);
+    try {
+      const p = new URLSearchParams({ company_id: id, tipo_analise: genTipo });
+      relFichasSel.forEach(fid => p.append('field_sheet_ids', fid));
+      const res = await api.get(`/reports/generate-bulk-pdf?${p}`, { responseType: 'blob' });
+      const blobUrl = window.URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `relatorio_${genTipo}_${company?.razao_social?.slice(0,20)}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(blobUrl);
+      setShowRelModal(false);
+      setRelFichasSel([]);
+      const updated = await api.get(`/reports/consolidated/${id}`);
+      setConsolidated(updated.data);
+    } catch (err) {
+      let msg = 'Erro ao gerar relatório.';
+      if (err.response?.data instanceof Blob) {
+        try { const t = await err.response.data.text(); msg = JSON.parse(t).detail || msg; } catch {}
+      }
+      alert(msg);
+    } finally {
+      setRelGerando(false);
+    }
   };
 
   const handleDownloadFicha = async (sheet) => {
@@ -256,10 +355,14 @@ export default function CompanyDetail() {
                       <td style={{ color: '#64748b' }}>{new Date(s.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                       <td style={{ color: '#64748b' }}>{s.technician_name}</td>
                       <td style={{ color: '#64748b' }}>{s.dosimeter_number}</td>
-                      <td>
+                      <td style={{ display: 'flex', gap: 4 }}>
                         <button className="btn btn-primary btn-sm" onClick={() => handleDownloadFicha(s)} disabled={downloadingFicha === s.id}>
                           {downloadingFicha === s.id ? '...' : 'Ficha PDF'}
                         </button>
+                        <DeleteFieldSheetButton
+                          fieldSheetId={s.id}
+                          onDeleted={() => setFieldSheets(prev => prev.filter(f => f.id !== s.id))}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -284,7 +387,9 @@ export default function CompanyDetail() {
                 <option value="pdf">PDF</option>
                 <option value="xlsx">Excel</option>
               </select>
-              <button className="btn btn-primary btn-sm" onClick={handleGenerateConsolidated} disabled={generating}>
+              <button className="btn btn-primary btn-sm"
+                onClick={genFormat === 'pdf' ? handleOpenRelModal : handleGenerateConsolidated}
+                disabled={generating}>
                 {generating ? 'Gerando...' : '+ Gerar Relatório'}
               </button>
             </div>
@@ -361,6 +466,61 @@ export default function CompanyDetail() {
           </>
         )}
       </div>
+
+      {showRelModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', borderRadius: 8, padding: 24, maxWidth: 560, width: '95%', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Selecionar fichas para o relatório PDF</div>
+            {relCarregando ? (
+              <div style={{ textAlign: 'center', padding: 24, color: '#94a3b8' }}>Carregando fichas...</div>
+            ) : relFichas.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 24, color: '#94a3b8' }}>Nenhuma ficha encontrada.</div>
+            ) : (
+              <div style={{ overflowY: 'auto', flex: 1, marginBottom: 16 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc' }}>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569', textAlign: 'left', width: 36 }}></th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569', textAlign: 'left' }}>Nº Laudo</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569', textAlign: 'left' }}>Funcionário</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569', textAlign: 'left' }}>Data Coleta</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {relFichas.map(s => (
+                      <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '8px 10px' }}>
+                          <input type="checkbox"
+                            checked={relFichasSel.includes(s.id)}
+                            onChange={e => setRelFichasSel(prev =>
+                              e.target.checked ? [...prev, s.id] : prev.filter(x => x !== s.id)
+                            )}
+                          />
+                        </td>
+                        <td style={{ padding: '8px 10px' }}>
+                          {s.laudo_number ? `${s.laudo_number}.1/${new Date().getFullYear()}` : <span style={{ color: '#f59e0b' }}>S/Nº</span>}
+                        </td>
+                        <td style={{ padding: '8px 10px', fontWeight: 500 }}>{s.employee_nome || '—'}</td>
+                        <td style={{ padding: '8px 10px', color: '#64748b' }}>{new Date(s.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn btn-primary btn-sm"
+                onClick={handleGerarPdfComSelecao}
+                disabled={relGerando || relFichasSel.length === 0}>
+                {relGerando ? 'Gerando...' : 'Gerar PDF'}
+              </button>
+              <button className="btn btn-secondary btn-sm" onClick={() => setShowRelModal(false)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

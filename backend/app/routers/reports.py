@@ -1,5 +1,6 @@
 import os
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -384,6 +385,7 @@ def generate_bulk_report(
 def generate_bulk_pdf(
     company_id: int,
     tipo_analise: str,
+    field_sheet_ids: Optional[List[int]] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -397,10 +399,16 @@ def generate_bulk_pdf(
 
     tipo_filter = or_(FieldSheet.tipo_analise == tipo_analise, FieldSheet.tipo_analise.is_(None)) \
         if tipo_analise == "Ruído" else FieldSheet.tipo_analise == tipo_analise
-    sheets = db.query(FieldSheet).filter(
-        FieldSheet.company_id == company_id,
-        tipo_filter
-    ).order_by(FieldSheet.laudo_number).all()
+    if field_sheet_ids:
+        sheets = db.query(FieldSheet).filter(
+            FieldSheet.id.in_(field_sheet_ids),
+            FieldSheet.company_id == company_id
+        ).order_by(FieldSheet.laudo_number).all()
+    else:
+        sheets = db.query(FieldSheet).filter(
+            FieldSheet.company_id == company_id,
+            tipo_filter
+        ).order_by(FieldSheet.laudo_number).all()
 
     if not sheets:
         raise HTTPException(status_code=404, detail="Nenhuma ficha encontrada para esse grupo")
@@ -484,15 +492,18 @@ def generate_bulk_pdf(
     with open(tmpl_path, "r", encoding="utf-8") as f:
         tmpl = Template(f.read())
 
+    laudo_numbers = [s.laudo_number for s in sheets]
     html = tmpl.render(
         razao_social=company.razao_social,
         cnpj=company.cnpj or "",
         endereco=company.endereco or "",
         tipo_analise=tipo_analise,
         period=period,
-        report_date=datetime.now().strftime("%d/%m/%Y"),
+        report_date=datetime.now().strftime("%m.%Y"),
         year=datetime.now().year,
-        laudo_numbers=[s.laudo_number for s in sheets],
+        laudo_numbers=laudo_numbers,
+        laudo_min=min(laudo_numbers) if laudo_numbers else '',
+        laudo_max=max(laudo_numbers) if laudo_numbers else '',
         logo_b64=logo_b64,
         assinatura_b64=assinatura_b64,
         capa_img_left_b64=capa_img_left_b64,
