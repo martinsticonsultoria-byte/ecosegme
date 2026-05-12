@@ -39,13 +39,51 @@ def update_employee(employee_id: int, data: EmployeeCreate, db: Session = Depend
 
 @router.delete("/{employee_id}")
 def delete_employee(employee_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):
+    import os
     from app.models.field_sheet import FieldSheet
+    from app.models.generated_report import GeneratedReport
+    from app.models.sonus_upload import SonusUpload
+    from app.models.audit_log import AuditLog
+    from app import supabase_storage
+
     employee = db.query(Employee).filter(Employee.id == employee_id).first()
     if not employee:
         raise HTTPException(status_code=404, detail="Funcionário não encontrado")
-    has_sheets = db.query(FieldSheet).filter(FieldSheet.employee_id == employee_id).first()
-    if has_sheets:
-        raise HTTPException(status_code=409, detail="Não é possível excluir este funcionário pois ele possui fichas de campo vinculadas.")
+
+    sheets = db.query(FieldSheet).filter(FieldSheet.employee_id == employee_id).all()
+    sheet_ids = [s.id for s in sheets]
+
+    if sheet_ids:
+        # Nullify AuditLogs vinculados às fichas
+        db.query(AuditLog).filter(AuditLog.field_sheet_id.in_(sheet_ids)).update(
+            {AuditLog.field_sheet_id: None}, synchronize_session=False
+        )
+        # Delete GeneratedReports + arquivos no storage
+        reports = db.query(GeneratedReport).filter(
+            GeneratedReport.field_sheet_id.in_(sheet_ids)
+        ).all()
+        for report in reports:
+            if report.output_path and report.output_path.startswith("supabase://"):
+                try:
+                    supabase_storage.delete_file(report.output_path.removeprefix("supabase://"))
+                except Exception:
+                    pass
+            elif report.output_path and os.path.exists(report.output_path):
+                try:
+                    os.unlink(report.output_path)
+                except OSError:
+                    pass
+            db.delete(report)
+        db.flush()
+        # Delete SonusUploads
+        db.query(SonusUpload).filter(
+            SonusUpload.field_sheet_id.in_(sheet_ids)
+        ).delete(synchronize_session=False)
+        # Delete FieldSheets
+        db.query(FieldSheet).filter(
+            FieldSheet.employee_id == employee_id
+        ).delete(synchronize_session=False)
+
     db.delete(employee)
     db.commit()
     return {"ok": True}

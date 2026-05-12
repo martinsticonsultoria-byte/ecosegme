@@ -78,6 +78,13 @@ export default function CompanyDetail() {
   const [relFichasSel, setRelFichasSel] = useState([]);
   const [relCarregando, setRelCarregando] = useState(false);
   const [relGerando, setRelGerando] = useState(false);
+  const [editEmpModal, setEditEmpModal] = useState(false);
+  const [editEmpForm, setEditEmpForm] = useState({});
+  const [editEmpTarget, setEditEmpTarget] = useState(null);
+  const [savingEmp, setSavingEmp] = useState(false);
+  const [deleteEmpModal, setDeleteEmpModal] = useState(false);
+  const [deleteEmpTarget, setDeleteEmpTarget] = useState(null);
+  const [deletingEmp, setDeletingEmp] = useState(false);
 
   useEffect(() => {
     const safe = (promise, fallback) => promise.then(r => r.data).catch(() => fallback);
@@ -113,7 +120,7 @@ export default function CompanyDetail() {
   };
 
   const handleDeleteCompany = async () => {
-    if (!window.confirm(`Deletar a empresa "${company.razao_social}" e todos os seus dados?`)) return;
+    if (!window.confirm(`Tem certeza? Todas as fichas, laudos, funcionários e dados vinculados à empresa serão deletados permanentemente.`)) return;
     try {
       await api.delete(`/companies/${id}`);
       navigate('/companies');
@@ -124,6 +131,34 @@ export default function CompanyDetail() {
         alert('Erro ao deletar empresa. Tente novamente.')
       }
     }
+  };
+
+  const handleEditEmployee = (emp) => {
+    setEditEmpTarget(emp);
+    setEditEmpForm({ nome: emp.nome, funcao: emp.funcao || '', matricula: emp.matricula || '', setor: emp.setor || '', local: emp.local || '' });
+    setEditEmpModal(true);
+  };
+
+  const handleSaveEmployee = async () => {
+    setSavingEmp(true);
+    try {
+      const res = await api.put(`/employees/${editEmpTarget.id}`, { ...editEmpForm, company_id: Number(id) });
+      setEmployees(prev => prev.map(e => e.id === editEmpTarget.id ? res.data : e));
+      setEditEmpModal(false);
+    } catch {
+      alert('Erro ao salvar funcionário.');
+    } finally { setSavingEmp(false); }
+  };
+
+  const handleDeleteEmployee = async () => {
+    setDeletingEmp(true);
+    try {
+      await api.delete(`/employees/${deleteEmpTarget.id}`);
+      setEmployees(prev => prev.filter(e => e.id !== deleteEmpTarget.id));
+      setDeleteEmpModal(false);
+    } catch {
+      alert('Erro ao excluir funcionário.');
+    } finally { setDeletingEmp(false); }
   };
 
   const handleGenerateConsolidated = async () => {
@@ -321,7 +356,7 @@ export default function CompanyDetail() {
               <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Nenhum funcionário cadastrado.</div>
             ) : (
               <table className="table">
-                <thead><tr><th>Nome</th><th>Função</th><th>Matrícula</th><th>Setor</th><th>Local</th></tr></thead>
+                <thead><tr><th>Nome</th><th>Função</th><th>Matrícula</th><th>Setor</th><th>Local</th><th>Ações</th></tr></thead>
                 <tbody>
                   {employees.map(e => (
                     <tr key={e.id}>
@@ -330,6 +365,14 @@ export default function CompanyDetail() {
                       <td>{e.matricula || '—'}</td>
                       <td>{e.setor || '—'}</td>
                       <td>{e.local || '—'}</td>
+                      <td style={{ display: 'flex', gap: 4 }}>
+                        <button className="btn btn-primary btn-sm" onClick={() => handleEditEmployee(e)}>Editar</button>
+                        <button
+                          className="btn btn-sm"
+                          style={{ background: '#FADADD', color: '#8B0000', border: '1px solid #f5a0a0', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                          onClick={() => { setDeleteEmpTarget(e); setDeleteEmpModal(true); }}
+                        >Excluir</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -470,6 +513,58 @@ export default function CompanyDetail() {
           </>
         )}
       </div>
+
+      {editEmpModal && editEmpTarget && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', borderRadius: 8, padding: 24, maxWidth: 480, width: '95%' }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Editar Funcionário</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Nome *</label>
+                <input className="form-input" value={editEmpForm.nome || ''} onChange={e => setEditEmpForm({ ...editEmpForm, nome: e.target.value })} />
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Função</label>
+                <input className="form-input" value={editEmpForm.funcao || ''} onChange={e => setEditEmpForm({ ...editEmpForm, funcao: e.target.value })} />
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Matrícula</label>
+                <input className="form-input" value={editEmpForm.matricula || ''} onChange={e => setEditEmpForm({ ...editEmpForm, matricula: e.target.value })} />
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Setor</label>
+                <input className="form-input" value={editEmpForm.setor || ''} onChange={e => setEditEmpForm({ ...editEmpForm, setor: e.target.value })} />
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Local</label>
+                <input className="form-input" value={editEmpForm.local || ''} onChange={e => setEditEmpForm({ ...editEmpForm, local: e.target.value })} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-primary" onClick={handleSaveEmployee} disabled={savingEmp}>{savingEmp ? 'Salvando...' : 'Salvar'}</button>
+              <button className="btn btn-secondary" onClick={() => setEditEmpModal(false)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteEmpModal && deleteEmpTarget && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#F2F2F2', borderRadius: 8, padding: 24, maxWidth: 400, width: '90%' }}>
+            <p style={{ color: '#8B0000', fontWeight: 600, marginBottom: 16 }}>
+              Tem certeza que deseja excluir este funcionário e todos os seus dados vinculados?
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                style={{ background: '#8B0000', color: 'white', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                onClick={handleDeleteEmployee}
+                disabled={deletingEmp}
+              >{deletingEmp ? '...' : 'Excluir'}</button>
+              <button className="btn btn-secondary btn-sm" onClick={() => setDeleteEmpModal(false)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showRelModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
