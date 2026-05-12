@@ -3,12 +3,16 @@ import tempfile
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import List
 from jinja2 import Template
 from weasyprint import HTML
 from app.database import get_db
 from app.models.field_sheet import FieldSheet
 from app.models.employee import Employee
+from app.models.generated_report import GeneratedReport
+from app.models.sonus_upload import SonusUpload
+from app.models.audit_log import AuditLog
 from app.schemas.field_sheet import FieldSheetCreate, FieldSheetOut
 from app.core.deps import get_current_user, require_admin
 from app.models.user import User
@@ -203,11 +207,38 @@ def download_field_sheet_pdf(sheet_id: int, db: Session = Depends(get_db), _=Dep
 
 @router.delete("/{sheet_id}", status_code=204)
 def delete_field_sheet(sheet_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):
+    from app import supabase_storage
     sheet = db.query(FieldSheet).filter(FieldSheet.id == sheet_id).first()
     if not sheet:
         raise HTTPException(status_code=404, detail="Ficha não encontrada")
-    db.delete(sheet)
-    db.commit()
+    try:
+        reports = db.query(GeneratedReport).filter(GeneratedReport.field_sheet_id == sheet_id).all()
+        for r in reports:
+            if r.output_path:
+                try:
+                    supabase_storage.delete_file(r.output_path)
+                except Exception:
+                    pass
+            db.delete(r)
+
+        sonuses = db.query(SonusUpload).filter(SonusUpload.field_sheet_id == sheet_id).all()
+        for s in sonuses:
+            if s.storage_path:
+                try:
+                    supabase_storage.delete_file(s.storage_path)
+                except Exception:
+                    pass
+            db.delete(s)
+
+        db.query(AuditLog).filter(AuditLog.field_sheet_id == sheet_id).update(
+            {AuditLog.field_sheet_id: None}
+        )
+
+        db.delete(sheet)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Não foi possível excluir a ficha pois existem registros vinculados.")
 
 @router.get("/{sheet_id}", response_model=FieldSheetOut)
 def get_field_sheet(sheet_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
