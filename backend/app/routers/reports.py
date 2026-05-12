@@ -483,12 +483,12 @@ def generate_bulk_pdf(
         logo_b64 = base64.b64encode(f.read()).decode()
     with open(assinatura_path, "rb") as f:
         assinatura_b64 = base64.b64encode(f.read()).decode()
-    with open(os.path.join(img_dir, "capa_img_left.png"), "rb") as f:
-        capa_img_left_b64 = base64.b64encode(f.read()).decode()
-    with open(os.path.join(img_dir, "capa_img_top_right.png"), "rb") as f:
-        capa_img_top_right_b64 = base64.b64encode(f.read()).decode()
-    with open(os.path.join(img_dir, "capa_img_bot_right.png"), "rb") as f:
-        capa_img_bot_right_b64 = base64.b64encode(f.read()).decode()
+    with open(os.path.join(img_dir, "capa_circulo.png"), "rb") as f:
+        capa_circulo_b64 = base64.b64encode(f.read()).decode()
+    with open(os.path.join(img_dir, "capa_foto_predio.png"), "rb") as f:
+        capa_foto_predio_b64 = base64.b64encode(f.read()).decode()
+    with open(os.path.join(img_dir, "capa_cabeçalho.png"), "rb") as f:
+        capa_cabecalho_b64 = base64.b64encode(f.read()).decode()
     with open(tmpl_path, "r", encoding="utf-8") as f:
         tmpl = Template(f.read())
 
@@ -506,9 +506,9 @@ def generate_bulk_pdf(
         laudo_max=max(laudo_numbers) if laudo_numbers else '',
         logo_b64=logo_b64,
         assinatura_b64=assinatura_b64,
-        capa_img_left_b64=capa_img_left_b64,
-        capa_img_top_right_b64=capa_img_top_right_b64,
-        capa_img_bot_right_b64=capa_img_bot_right_b64,
+        capa_circulo_b64=capa_circulo_b64,
+        capa_foto_predio_b64=capa_foto_predio_b64,
+        capa_cabecalho_b64=capa_cabecalho_b64,
         fichas=fichas,
     )
 

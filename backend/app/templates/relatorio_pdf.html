@@ -27,97 +27,61 @@
 <body>
 
 <!-- ══════════════════ CAPA ══════════════════ -->
-<div style="background:#f0f7ef; min-height:297mm; box-sizing:border-box; margin:0; padding:0;">
+<div style="position:relative; width:100%; min-height:297mm; background:white; page-break-after:always; overflow:hidden;">
 
-  <!-- Header: logo branca + faixa verde com título -->
-  <table style="border:none; width:100%; margin:0;">
-    <tr>
-      <td style="border:none; background:white; padding:4mm 10mm; vertical-align:middle; width:40%;">
-        <img src="data:image/png;base64,{{ logo_b64 }}" style="height:14mm;" alt="EcoSegme" />
-      </td>
-      <td style="border:none; background:#1f9c74; padding:4mm 10mm; vertical-align:middle; text-align:right; color:white;">
-        <div style="font-size:14pt; font-weight:bold; letter-spacing:0.5px;">RELATÓRIO DE AVALIAÇÃO</div>
-        <div style="font-size:10pt; opacity:0.9;">{{ tipo_analise | upper }} OCUPACIONAL</div>
-      </td>
-    </tr>
-  </table>
+  <!-- Tagline + Logo (topo esquerdo) -->
+  <div style="position:absolute; top:20px; left:30px;">
+    <p style="font-size:8px; color:#1a3d2b; letter-spacing:3px; text-transform:uppercase; margin:0 0 4px 0; padding-bottom:4px; border-bottom:1px solid #c8a96e;">EXCELÊNCIA EM SOLUÇÕES AMBIENTAIS</p>
+    <img src="data:image/png;base64,{{ logo_b64 }}" style="width:180px; display:block; margin-top:8px;" alt="EcoSegme" />
+  </div>
 
-  <!-- Corpo: duas colunas -->
-  <table style="border:none; width:100%; height:245mm;">
-    <tr>
-      <!-- Esquerda: imagem grande -->
-      <td style="border:none; width:45%; vertical-align:bottom; padding:0;">
-        <img src="data:image/png;base64,{{ capa_img_left_b64 }}" style="width:100%; display:block;" alt="" />
-      </td>
+  <!-- Símbolo circular translúcido (canto direito topo) -->
+  <img src="data:image/png;base64,{{ capa_circulo_b64 }}"
+       style="position:absolute; right:-20px; top:60px; width:280px; opacity:0.6;" />
 
-      <!-- Direita: dados -->
-      <td style="border:none; width:55%; vertical-align:top; padding:10mm 12mm 8mm 8mm;">
+  <!-- Título -->
+  <div style="position:absolute; top:170px; left:30px;">
+    <p style="font-size:28px; font-weight:300; color:#1a1a1a; margin:0; line-height:1.2;">RELATÓRIO DE</p>
+    <p style="font-size:40px; font-weight:900; color:#1a1a1a; margin:0; line-height:1.1;">RUÍDO OCUPACIONAL</p>
+  </div>
 
-        <!-- Imagens lado a lado -->
-        <table style="border:none; width:100%; margin-bottom:8mm;">
-          <tr>
-            <td style="border:none; text-align:center; padding:0 2mm 0 0;">
-              <img src="data:image/png;base64,{{ capa_img_top_right_b64 }}" style="max-height:28mm; max-width:100%;" alt="" />
-            </td>
-            <td style="border:none; text-align:center; padding:0 0 0 2mm;">
-              <img src="data:image/png;base64,{{ capa_img_bot_right_b64 }}" style="max-height:28mm; max-width:100%;" alt="" />
-            </td>
-          </tr>
-        </table>
+  <!-- Dados da empresa -->
+  <div style="position:absolute; top:320px; left:30px; width:46%;">
+    <p style="margin:0 0 10px 0;">
+      <span style="font-size:8px; color:#666; text-transform:uppercase; letter-spacing:1px;">🏢 EMPRESA</span><br/>
+      <strong style="font-size:14px; color:#1a1a1a;">{{ razao_social }}</strong>
+    </p>
+    <p style="margin:0 0 10px 0;">
+      <span style="font-size:8px; color:#666; text-transform:uppercase; letter-spacing:1px;">📍 ENDEREÇO</span><br/>
+      <strong style="font-size:14px; color:#1a1a1a;">{{ endereco or '—' }}</strong>
+    </p>
+    <p style="margin:0;">
+      <span style="font-size:8px; color:#666; text-transform:uppercase; letter-spacing:1px;">📋 CNPJ</span><br/>
+      <strong style="font-size:14px; color:#1a1a1a;">{{ cnpj or '—' }}</strong>
+    </p>
+  </div>
 
-        <!-- Nº Relatório -->
-        <div style="margin-bottom:7mm;">
-          <div style="font-size:6.5pt; color:#777; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:1mm;">Nº do Relatório</div>
-          <div style="font-size:10pt; font-weight:bold; color:#1f9c74;">
-            {{ laudo_min }}.1/{{ year }}{% if laudo_min != laudo_max %} ao {{ laudo_max }}.1/{{ year }}{% endif %}
-          </div>
-        </div>
+  <!-- Foto prédio (lado direito) -->
+  <div style="position:absolute; right:0; top:120px; width:48%; height:400px; overflow:hidden;">
+    <img src="data:image/png;base64,{{ capa_foto_predio_b64 }}" style="width:100%; height:100%;" />
+  </div>
 
-        <!-- Caixa empresa -->
-        <table style="border:2px solid #1f9c74; width:100%; margin-bottom:7mm; background:white;">
-          <tr>
-            <td colspan="2" style="border:none; border-bottom:1px solid #c8e6c9; font-size:7pt; color:#1f9c74; font-weight:bold; text-transform:uppercase; letter-spacing:0.8px; padding:2mm 3mm;">
-              Dados do Cliente
-            </td>
-          </tr>
-          <tr>
-            <td style="border:none; border-bottom:1px solid #efefef; font-size:8pt; font-weight:bold; padding:2mm 3mm; white-space:nowrap; width:1%; background:#f9fef9;">Empresa:</td>
-            <td style="border:none; border-bottom:1px solid #efefef; font-size:8pt; padding:2mm 3mm;">{{ razao_social }}</td>
-          </tr>
-          <tr>
-            <td style="border:none; border-bottom:1px solid #efefef; font-size:8pt; font-weight:bold; padding:2mm 3mm; white-space:nowrap; background:#f9fef9;">CNPJ:</td>
-            <td style="border:none; border-bottom:1px solid #efefef; font-size:8pt; padding:2mm 3mm;">{{ cnpj or '—' }}</td>
-          </tr>
-          <tr>
-            <td style="border:none; font-size:8pt; font-weight:bold; padding:2mm 3mm; white-space:nowrap; vertical-align:top; background:#f9fef9;">Endereço:</td>
-            <td style="border:none; font-size:8pt; padding:2mm 3mm;">{{ endereco or '—' }}</td>
-          </tr>
-        </table>
+  <!-- Faixa verde escura com dados do relatório -->
+  <div style="position:absolute; bottom:80px; left:0; width:55%; background:#1a3d2b; padding:20px 30px; box-sizing:border-box;">
+    <p style="font-size:10px; color:rgba(255,255,255,0.7); letter-spacing:2px; text-transform:uppercase; margin:0 0 4px 0;">Nº RELATÓRIO</p>
+    <p style="font-size:32px; font-weight:700; color:white; line-height:1.1; margin:0 0 12px 0;">
+      {% if laudo_min == laudo_max %}{{ laudo_min }}.1/{{ year }}{% else %}{{ laudo_min }}.1/{{ year }} ao {{ laudo_max }}.1/{{ year }}{% endif %}
+    </p>
+    <div style="border-bottom:1px solid rgba(255,255,255,0.4); width:60%; margin-bottom:12px;"></div>
+    <p style="margin:0;">
+      <span style="font-size:8px; color:rgba(255,255,255,0.7); text-transform:uppercase; letter-spacing:1px;">📅 DATA DE EMISSÃO</span><br/>
+      <strong style="font-size:14px; color:white;">{{ report_date }}</strong>
+    </p>
+  </div>
 
-        <!-- Período -->
-        <div style="margin-bottom:6mm;">
-          <div style="font-size:6.5pt; color:#777; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:1mm;">Período de Avaliação</div>
-          <div style="font-size:10pt; font-weight:bold; color:#1f9c74;">{{ period }}</div>
-        </div>
-
-        <!-- Data de Emissão -->
-        <div>
-          <div style="font-size:6.5pt; color:#777; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:1mm;">Data de Emissão</div>
-          <div style="font-size:10pt; font-weight:bold;">{{ report_date }}</div>
-        </div>
-
-      </td>
-    </tr>
-  </table>
-
-  <!-- Footer verde -->
-  <table style="border:none; width:100%; background:#1f9c74; margin:0;">
-    <tr>
-      <td style="border:none; padding:3mm 10mm; text-align:center; color:white; font-size:8pt; letter-spacing:0.3px;">
-        EcoSegme — Serviços em Segurança do Trabalho e Meio Ambiente
-      </td>
-    </tr>
-  </table>
+  <!-- Rodapé (imagem com contatos) -->
+  <img src="data:image/png;base64,{{ capa_cabecalho_b64 }}"
+       style="position:absolute; bottom:0; left:0; width:100%;" />
 
 </div>
 
