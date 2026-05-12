@@ -23,10 +23,10 @@ export function DeleteFieldSheetButton({ fieldSheetId, onDeleted }) {
     <>
       <button
         className="btn btn-sm"
-        style={{ background: '#FADADD', color: '#8B0000', border: '1px solid #f5a0a0', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+        style={{ background: '#FADADD', color: '#8B0000', border: '1px solid #f5a0a0', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 11, fontWeight: 600, whiteSpace: 'normal', textAlign: 'center', lineHeight: '1.2', maxWidth: 72 }}
         onClick={() => setShowModal(true)}
       >
-        Excluir Ficha de Campo
+        <span>Excluir<br/>Ficha de<br/>Campo</span>
       </button>
 
       {showModal && (
@@ -117,8 +117,12 @@ export default function CompanyDetail() {
     try {
       await api.delete(`/companies/${id}`);
       navigate('/companies');
-    } catch {
-      alert('Erro ao deletar empresa.');
+    } catch (err) {
+      if (err.response?.status === 409) {
+        alert(err.response?.data?.detail || 'Não é possível excluir esta empresa pois ela possui fichas ou funcionários vinculados.')
+      } else {
+        alert('Erro ao deletar empresa. Tente novamente.')
+      }
     }
   };
 

@@ -305,7 +305,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                     <td style={{ ...tdSmall, maxWidth: 140 }}>{sheet.machine_noise || '—'}</td>
                     <td style={tdSmall}>{sheet.technician_name}</td>
                     <td style={{ ...tdStyle, minWidth: 90, whiteSpace: 'nowrap' }}><StatusBadge status={sheet.status} /></td>
-                    <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap', width: 290, minWidth: 290 }}>
+                    <td style={{ ...tdStyle, textAlign: 'right', width: 340, minWidth: 340 }}>
                       {sheet.status === 'aprovada' ? (
                         <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                           <button className="btn btn-secondary btn-sm"
