@@ -496,6 +496,27 @@ def generate_bulk_pdf(
         tmpl = Template(f.read())
 
     laudo_numbers = [s.laudo_number for s in sheets]
+
+    nome = company.razao_social or ''
+    if len(nome) <= 20:
+        empresa_font_size = '20.1pt'
+    elif len(nome) <= 35:
+        empresa_font_size = '16pt'
+    elif len(nome) <= 50:
+        empresa_font_size = '13pt'
+    else:
+        empresa_font_size = '11pt'
+
+    end = company.endereco or ''
+    if len(end) <= 30:
+        endereco_font_size = '8.5pt'
+    elif len(end) <= 50:
+        endereco_font_size = '7pt'
+    elif len(end) <= 70:
+        endereco_font_size = '6pt'
+    else:
+        endereco_font_size = '5pt'
+
     html = tmpl.render(
         razao_social=company.razao_social,
         cnpj=company.cnpj or "",
@@ -510,6 +531,8 @@ def generate_bulk_pdf(
         logo_b64=logo_b64,
         assinatura_b64=assinatura_b64,
         capa_fundo_b64=capa_fundo_b64,
+        empresa_font_size=empresa_font_size,
+        endereco_font_size=endereco_font_size,
         signature_date_ext=f"{datetime.now().day:02d} de {_MESES_PT[datetime.now().month-1]} de {datetime.now().year}",
         fichas=fichas,
     )
