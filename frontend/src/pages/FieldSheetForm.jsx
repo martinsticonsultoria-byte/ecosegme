@@ -134,6 +134,24 @@ export default function FieldSheetForm() {
   if (savedSheet) return (
     <div className="page">
       <div className="card" style={{ textAlign: 'center', padding: 48 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+          <button
+            onClick={() => navigate('/companies')}
+            style={{ background: 'none', border: 'none', color: '#1a3d2b', fontSize: '14px', cursor: 'pointer' }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          >
+            ← Voltar para Empresas
+          </button>
+          <button
+            onClick={() => navigate('/conference')}
+            style={{ background: 'none', border: 'none', color: '#1a3d2b', fontSize: '14px', cursor: 'pointer' }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          >
+            Avançar para Conferência →
+          </button>
+        </div>
         <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 24, color: '#16a34a' }}>✓</div>
         <h2 style={{ color: '#16a34a', marginBottom: 8 }}>Ficha salva com sucesso!</h2>
         <p style={{ color: '#64748b', marginBottom: 32 }}>
@@ -146,9 +164,6 @@ export default function FieldSheetForm() {
           </button>
           <button className="btn btn-primary" onClick={() => { setSavedSheet(null); setEmployeeInput(''); setSelectedEmployee(null); setNewEmpFields({ funcao: '', matricula: '', setor: '', local: '' }); setNextNumber(n => n + 1); }} style={{ padding: '12px 28px' }}>
             + Nova Ficha
-          </button>
-          <button className="btn btn-secondary" onClick={() => navigate('/companies')} style={{ padding: '12px 28px' }}>
-            Voltar para Empresas
           </button>
         </div>
       </div>

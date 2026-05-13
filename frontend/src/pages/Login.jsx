@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,6 +9,15 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('saved_email');
+    if (saved) {
+      setEmail(saved);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,6 +25,11 @@ export default function Login() {
     setError('');
     try {
       const u = await login(email, password);
+      if (rememberMe) {
+        localStorage.setItem('saved_email', email);
+      } else {
+        localStorage.removeItem('saved_email');
+      }
       navigate(u?.role === 'admin_staff' ? '/companies' : '/field-sheet/new');
     } catch {
       setError('Email ou senha incorretos');
@@ -76,6 +90,19 @@ export default function Login() {
                 placeholder="••••••••"
                 required
               />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0' }}>
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={e => setRememberMe(e.target.checked)}
+                style={{ cursor: 'pointer' }}
+              />
+              <label htmlFor="rememberMe" style={{ fontSize: 13, color: '#64748b', cursor: 'pointer', userSelect: 'none' }}>
+                Permanecer logado
+              </label>
             </div>
 
             {error && <div className="alert alert-error">{error}</div>}

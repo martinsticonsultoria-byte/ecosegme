@@ -7,6 +7,9 @@ from jinja2 import Template
 from pypdf import PdfWriter, PdfReader
 
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "templates", "laudo.html")
+
+_MESES_PT = ["janeiro","fevereiro","março","abril","maio","junho",
+             "julho","agosto","setembro","outubro","novembro","dezembro"]
 OUTPUT_DIR = os.environ.get("STORAGE_DIR", "/tmp/laudos")
 
 def slugify(text, max_len=20):
@@ -20,7 +23,17 @@ def generate_laudo(data: dict) -> tuple:
     with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
         template_str = f.read()
     template = Template(template_str)
-    html_content = template.render(**data)
+    sig_date = data.get('signature_date', '')
+    if sig_date:
+        try:
+            d = datetime.strptime(sig_date, "%d/%m/%Y")
+            signature_date_ext = f"{d.day:02d} de {_MESES_PT[d.month-1]} de {d.year}"
+        except Exception:
+            signature_date_ext = sig_date
+    else:
+        _now = datetime.now()
+        signature_date_ext = f"{_now.day:02d} de {_MESES_PT[_now.month-1]} de {_now.year}"
+    html_content = template.render(**data, signature_date_ext=signature_date_ext)
 
     # Nome padronizado: [codigo]_[empresa]_[tipo]_[data].pdf
     codigo = str(data["laudo_number"]).zfill(4)

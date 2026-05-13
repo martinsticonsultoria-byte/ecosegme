@@ -447,6 +447,12 @@ def generate_bulk_pdf(
                 ne_val = float(ne_db.replace(",", "."))
             except Exception:
                 ne_val = None
+        sig_d = sheet.signature_date
+        if sig_d:
+            sig_date_ext = f"{sig_d.day:02d} de {_MESES_PT[sig_d.month-1]} de {sig_d.year}"
+        else:
+            _now = datetime.now()
+            sig_date_ext = f"{_now.day:02d} de {_MESES_PT[_now.month-1]} de {_now.year}"
         fichas.append({
             "laudo_number": sheet.laudo_number,
             "employee_nome": emp.nome if emp else (sheet.employee_name_text or ""),
@@ -471,13 +477,14 @@ def generate_bulk_pdf(
             "inicio": upload.inicio if upload else "",
             "fim": upload.fim if upload else "",
             "signature_date": _fmt_sig_date(sheet.signature_date),
+            "signature_date_ext": sig_date_ext,
             "has_laudo": sheet.id in generated_ids,
         })
 
     import base64
     tmpl_path = os.path.join(os.path.dirname(__file__), "../templates/relatorio_pdf.html")
     logo_path = os.path.join(os.path.dirname(__file__), "../templates/logo.png")
-    assinatura_path = os.path.join(os.path.dirname(__file__), "../templates/assinatura_arimar.png")
+    assinatura_path = os.path.join(os.path.dirname(__file__), "../templates/relatório_assinatura.png")
     img_dir = os.path.join(os.path.dirname(__file__), "../templates/images")
     with open(logo_path, "rb") as f:
         logo_b64 = base64.b64encode(f.read()).decode()
@@ -503,6 +510,7 @@ def generate_bulk_pdf(
         logo_b64=logo_b64,
         assinatura_b64=assinatura_b64,
         capa_fundo_b64=capa_fundo_b64,
+        signature_date_ext=f"{datetime.now().day:02d} de {_MESES_PT[datetime.now().month-1]} de {datetime.now().year}",
         fichas=fichas,
     )
 
