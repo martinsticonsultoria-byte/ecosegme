@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
   @page { size: A4; margin: 10mm 12mm; }
   @page :first { margin: 0; }
 
@@ -34,30 +35,30 @@
        style="position:absolute; top:0; left:0; width:595pt; height:842pt;"/>
 
   <!-- EMPRESA valor -->
-  <div style="position:absolute; top:432pt; left:65pt;
-              font-size:13pt; font-weight:700; color:#1a3d2b;
-              font-family:Arial, sans-serif;">
+  <div style="position:absolute; top:399.2pt; left:93.4pt;
+              font-size:9pt; font-weight:700; color:#005d50;
+              font-family:'Montserrat', Arial, sans-serif;">
     {{ razao_social }}
   </div>
 
   <!-- ENDEREÇO valor -->
-  <div style="position:absolute; top:470pt; left:65pt;
-              font-size:13pt; font-weight:700; color:#1a3d2b;
-              font-family:Arial, sans-serif;">
+  <div style="position:absolute; top:442.4pt; left:93.4pt;
+              font-size:8.5pt; font-weight:700; color:#005d50;
+              font-family:'Montserrat', Arial, sans-serif;">
     {{ endereco or '—' }}
   </div>
 
   <!-- CNPJ valor -->
-  <div style="position:absolute; top:508pt; left:65pt;
-              font-size:13pt; font-weight:700; color:#1a3d2b;
-              font-family:Arial, sans-serif;">
+  <div style="position:absolute; top:489.3pt; left:93.4pt;
+              font-size:8.5pt; font-weight:700; color:#005d50;
+              font-family:'Montserrat', Arial, sans-serif;">
     {{ cnpj or '—' }}
   </div>
 
   <!-- Nº RELATÓRIO valor -->
-  <div style="position:absolute; top:572pt; left:30pt;
-              font-size:28pt; font-weight:900; color:#ffffff;
-              font-family:Arial, sans-serif; letter-spacing:-0.5pt;">
+  <div style="position:absolute; top:591.7pt; left:45.2pt;
+              font-size:25.8pt; font-weight:900; color:#ffffff;
+              font-family:'Montserrat', Arial, sans-serif;">
     {% if laudo_min == laudo_max %}
       {{ laudo_min }}.1/{{ year }}
     {% else %}
@@ -66,9 +67,9 @@
   </div>
 
   <!-- DATA DE EMISSÃO valor -->
-  <div style="position:absolute; top:658pt; left:65pt;
-              font-size:12pt; font-weight:700; color:#1a3d2b;
-              font-family:Arial, sans-serif;">
+  <div style="position:absolute; top:677.8pt; left:82.1pt;
+              font-size:8.5pt; font-weight:700; color:#ffffff;
+              font-family:'Montserrat', Arial, sans-serif;">
     {{ report_date }}
   </div>
 
