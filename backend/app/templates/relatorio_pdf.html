@@ -53,7 +53,7 @@
   </div>
 
   <!-- CNPJ valor -->
-  <div style="position:absolute; top:503.4pt; left:52.7pt;
+  <div style="position:absolute; top:503.4pt; left:93.4pt;
               font-size:16.5pt; font-weight:700; color:#005d50;
               font-family:'Montserrat', Arial, sans-serif;
               max-width:215.9pt; white-space:normal; word-wrap:break-word;">
@@ -61,8 +61,8 @@
   </div>
 
   <!-- Nº RELATÓRIO valor -->
-  <div style="position:absolute; top:599.3pt; left:25.5pt;
-              font-size:35.5pt; font-weight:900; color:#ffffff;
+  <div style="position:absolute; top:599.3pt; left:45.2pt;
+              font-size:{{ nr_font_size }}; font-weight:400; color:#ffffff;
               font-family:'Montserrat', Arial, sans-serif;
               max-width:321.1pt; white-space:normal; word-wrap:break-word;">
     {% if laudo_min == laudo_max %}
@@ -74,7 +74,7 @@
 
   <!-- DATA DE EMISSÃO valor -->
   <div style="position:absolute; top:685.8pt; left:82.2pt;
-              font-size:20pt; font-weight:700; color:#ffffff;
+              font-size:20pt; font-weight:400; color:#ffffff;
               font-family:'Montserrat', Arial, sans-serif;
               max-width:103.8pt; white-space:normal; word-wrap:break-word;">
     {{ report_date }}

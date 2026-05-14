@@ -509,6 +509,12 @@ def generate_bulk_pdf(
     empresa_font_size  = calc_font_size(company.razao_social or '', 375.9)
     endereco_font_size = calc_font_size(company.endereco or '', 329.7)
 
+    laudo_min = min(laudo_numbers) if laudo_numbers else 0
+    laudo_max = max(laudo_numbers) if laudo_numbers else 0
+    _year = datetime.now().year
+    nr_texto = f"{laudo_min}.1/{_year} ao {laudo_max}.1/{_year}" if laudo_min != laudo_max else f"{laudo_min}.1/{_year}"
+    nr_font_size = calc_font_size(nr_texto, 321.1, font_size_pt=25.8, min_pt=10.0)
+
     html = tmpl.render(
         razao_social=company.razao_social,
         cnpj=company.cnpj or "",
@@ -516,16 +522,17 @@ def generate_bulk_pdf(
         tipo_analise=tipo_analise,
         period=period,
         report_date=datetime.now().strftime("%m.%Y"),
-        year=datetime.now().year,
+        year=_year,
         laudo_numbers=laudo_numbers,
-        laudo_min=min(laudo_numbers) if laudo_numbers else '',
-        laudo_max=max(laudo_numbers) if laudo_numbers else '',
+        laudo_min=laudo_min,
+        laudo_max=laudo_max,
         logo_b64=logo_b64,
         assinatura_b64=assinatura_b64,
         capa_fundo_b64=capa_fundo_b64,
         empresa_font_size=empresa_font_size,
         endereco_font_size=endereco_font_size,
-        signature_date_ext=f"{datetime.now().day:02d} de {_MESES_PT[datetime.now().month-1]} de {datetime.now().year}",
+        nr_font_size=nr_font_size,
+        signature_date_ext=f"{datetime.now().day:02d} de {_MESES_PT[datetime.now().month-1]} de {_year}",
         fichas=fichas,
     )
 
