@@ -264,23 +264,14 @@
     </td></tr>
   </table>
 
-  <table style="border:none; margin-top:18px; width:100%;">
-    <tr>
-      <td style="border:none; text-align:center; vertical-align:bottom; padding-bottom:0;">
-        <p style="font-size:11pt; color:#1a1a1a; margin-bottom:4pt;">
-          Manaus, {{ f.signature_date_ext }}
-        </p>
-        <img src="data:image/png;base64,{{ assinatura_b64 }}" style="width:280pt; height:auto; display:block; margin:0 auto;" alt="Assinatura" />
-        <div style="border-top:1px solid #555; width:60%; margin:0 auto; padding-top:4px;">
-          <div style="font-size:8pt; font-weight:bold;">Arimar Neves Neto</div>
-          <div style="font-size:7.5pt;">Engenheiro de Segurança do Trabalho — CREA Nº 13726-D/AM</div>
-          {% if f.signature_date %}
-          <div style="font-size:8pt; margin-top:3px;">{{ f.signature_date }}</div>
-          {% endif %}
-        </div>
-      </td>
-    </tr>
-  </table>
+  <div style="text-align:center; margin-top:20pt;">
+    <p style="font-size:11pt; color:#1a1a1a; margin:0 0 8pt 0;
+              font-family:Arial, sans-serif;">
+      Manaus, {{ signature_date_ext }}
+    </p>
+    <img src="data:image/png;base64,{{ assinatura_b64 }}"
+         style="width:220pt; height:auto; display:block; margin:0 auto;"/>
+  </div>
 
 </div>
 {% endfor %}

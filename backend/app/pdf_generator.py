@@ -1,4 +1,5 @@
 import os
+import base64
 import hashlib
 import re
 from datetime import datetime
@@ -33,7 +34,10 @@ def generate_laudo(data: dict) -> tuple:
     else:
         _now = datetime.now()
         signature_date_ext = f"{_now.day:02d} de {_MESES_PT[_now.month-1]} de {_now.year}"
-    html_content = template.render(**data, signature_date_ext=signature_date_ext)
+    assinatura_path = os.path.join(os.path.dirname(__file__), "templates", "relatório_assinatura.png")
+    with open(assinatura_path, "rb") as f_sig:
+        assinatura_b64 = base64.b64encode(f_sig.read()).decode()
+    html_content = template.render(**data, signature_date_ext=signature_date_ext, assinatura_b64=assinatura_b64)
 
     # Nome padronizado: [codigo]_[empresa]_[tipo]_[data].pdf
     codigo = str(data["laudo_number"]).zfill(4)
