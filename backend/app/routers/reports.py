@@ -389,7 +389,7 @@ def generate_bulk_pdf(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    import io, tempfile
+    import io, tempfile, math
     from fastapi.responses import StreamingResponse
     from datetime import datetime
     from jinja2 import Template
@@ -497,25 +497,17 @@ def generate_bulk_pdf(
 
     laudo_numbers = [s.laudo_number for s in sheets]
 
-    nome = company.razao_social or ''
-    if len(nome) <= 20:
-        empresa_font_size = '20.1pt'
-    elif len(nome) <= 35:
-        empresa_font_size = '16pt'
-    elif len(nome) <= 50:
-        empresa_font_size = '13pt'
-    else:
-        empresa_font_size = '11pt'
+    def calc_font_size(texto, max_width_pt, font_size_pt=16.5, min_pt=9.0):
+        while font_size_pt > min_pt:
+            chars_per_line = max_width_pt / (0.55 * font_size_pt)
+            lines = math.ceil(len(texto) / chars_per_line)
+            if lines <= 2:
+                break
+            font_size_pt -= 0.5
+        return f'{font_size_pt}pt'
 
-    end = company.endereco or ''
-    if len(end) <= 30:
-        endereco_font_size = '8.5pt'
-    elif len(end) <= 50:
-        endereco_font_size = '7pt'
-    elif len(end) <= 70:
-        endereco_font_size = '6pt'
-    else:
-        endereco_font_size = '5pt'
+    empresa_font_size  = calc_font_size(company.razao_social or '', 375.9)
+    endereco_font_size = calc_font_size(company.endereco or '', 329.7)
 
     html = tmpl.render(
         razao_social=company.razao_social,

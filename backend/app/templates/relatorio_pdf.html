@@ -35,34 +35,36 @@
        style="position:absolute; top:0; left:0; width:595pt; height:842pt;"/>
 
   <!-- EMPRESA valor -->
-  <div style="position:absolute; top:399.2pt; left:93.4pt;
+  <div style="position:absolute; top:383.0pt; left:93.4pt;
               font-size:{{ empresa_font_size }}; font-weight:700; color:#005d50;
               font-family:'Montserrat', Arial, sans-serif;
-              max-width:331.7pt; max-height:80pt; overflow:hidden;
+              max-width:375.9pt; max-height:80pt; overflow:hidden;
               white-space:normal; word-wrap:break-word; overflow-wrap:break-word;">
     {{ razao_social }}
   </div>
 
   <!-- ENDEREÇO valor -->
-  <div style="position:absolute; top:442.4pt; left:93.4pt;
+  <div style="position:absolute; top:442.7pt; left:93.4pt;
               font-size:{{ endereco_font_size }}; font-weight:700; color:#005d50;
               font-family:'Montserrat', Arial, sans-serif;
-              max-width:331.7pt; max-height:40pt; overflow:hidden;
+              max-width:329.7pt; max-height:40pt; overflow:hidden;
               white-space:normal; word-wrap:break-word;">
     {{ endereco or '—' }}
   </div>
 
   <!-- CNPJ valor -->
-  <div style="position:absolute; top:489.3pt; left:93.4pt;
-              font-size:8.5pt; font-weight:700; color:#005d50;
-              font-family:'Montserrat', Arial, sans-serif;">
+  <div style="position:absolute; top:503.4pt; left:52.7pt;
+              font-size:16.5pt; font-weight:700; color:#005d50;
+              font-family:'Montserrat', Arial, sans-serif;
+              max-width:215.9pt; white-space:normal; word-wrap:break-word;">
     {{ cnpj or '—' }}
   </div>
 
   <!-- Nº RELATÓRIO valor -->
-  <div style="position:absolute; top:591.7pt; left:45.2pt;
-              font-size:25.8pt; font-weight:900; color:#ffffff;
-              font-family:'Montserrat', Arial, sans-serif;">
+  <div style="position:absolute; top:599.3pt; left:25.5pt;
+              font-size:35.5pt; font-weight:900; color:#ffffff;
+              font-family:'Montserrat', Arial, sans-serif;
+              max-width:321.1pt; white-space:normal; word-wrap:break-word;">
     {% if laudo_min == laudo_max %}
       {{ laudo_min }}.1/{{ year }}
     {% else %}
@@ -71,9 +73,10 @@
   </div>
 
   <!-- DATA DE EMISSÃO valor -->
-  <div style="position:absolute; top:677.8pt; left:82.1pt;
-              font-size:8.5pt; font-weight:700; color:#ffffff;
-              font-family:'Montserrat', Arial, sans-serif;">
+  <div style="position:absolute; top:685.8pt; left:82.2pt;
+              font-size:20pt; font-weight:700; color:#ffffff;
+              font-family:'Montserrat', Arial, sans-serif;
+              max-width:103.8pt; white-space:normal; word-wrap:break-word;">
     {{ report_date }}
   </div>
 
