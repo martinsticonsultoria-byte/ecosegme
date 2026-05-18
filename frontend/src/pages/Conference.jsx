@@ -331,11 +331,13 @@ function ConferenceDetail({ group, onBack, onReload }) {
                               approving[sheet.id] ||
                               !sheet.has_sonus ||
                               !sheet.laudo_number ||
+                              !sheet.data_relatorio ||
                               sheet.sonus_name_mismatch === true ||
                               uploadResult[sheet.id]?.name_match === false
                             }
                             title={
                               !sheet.laudo_number ? 'Defina o Nº do Laudo antes de aprovar' :
+                              !sheet.data_relatorio ? 'Defina a Data do Relatório antes de aprovar' :
                               !sheet.has_sonus ? 'Envie o PDF do SONUS antes de aprovar' :
                               (sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) ? 'Nome no SONUS diverge do cadastro — corrija antes de aprovar' :
                               ''
@@ -352,12 +354,13 @@ function ConferenceDetail({ group, onBack, onReload }) {
                   </tr>
 
                   {/* Aviso de campos obrigatórios para aprovação */}
-                  {sheet.status !== 'aprovada' && (!sheet.laudo_number || !sheet.has_sonus || sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) && (
+                  {sheet.status !== 'aprovada' && (!sheet.laudo_number || !sheet.data_relatorio || !sheet.has_sonus || sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) && (
                     <tr key={`warn-${sheet.id}`}>
                       <td colSpan={modoSelecao ? 15 : 14} style={{ padding: '4px 12px', background: '#fffbeb', borderTop: 'none' }}>
                         <span style={{ color: '#92400e', fontSize: 11.5 }}>
                           ⚠ Para aprovar esta ficha:
                           {!sheet.laudo_number && <span> &nbsp;defina o <strong>Nº do Laudo</strong> (clique em Editar);</span>}
+                          {!sheet.data_relatorio && <span> &nbsp;defina a <strong>Data do Relatório</strong> (clique em Editar);</span>}
                           {!sheet.has_sonus && <span> &nbsp;envie o <strong>PDF do SONUS 2</strong> (clique em ▼ SONUS).</span>}
                           {(sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) && (
                             <span> &nbsp;<strong>Nome divergente:</strong> SONUS traz &quot;{uploadResult[sheet.id]?.parsed_data?.funcionario || sheet.sonus_parsed_name}&quot; mas cadastro é &quot;{sheet.employee_nome}&quot; — corrija o cadastro ou reenvie o SONUS correto.</span>

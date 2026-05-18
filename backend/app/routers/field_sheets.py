@@ -144,6 +144,8 @@ def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=De
     if new_status == "aprovada":
         if not sheet.laudo_number:
             raise HTTPException(status_code=400, detail="Defina o Nº do Laudo antes de aprovar a ficha")
+        if not sheet.data_relatorio:
+            raise HTTPException(status_code=400, detail="Defina a Data do Relatório antes de aprovar a ficha")
         sonus = db.query(SonusUpload).filter(SonusUpload.field_sheet_id == sheet_id).first()
         if not sonus:
             raise HTTPException(status_code=400, detail="É necessário enviar o PDF do SONUS 2 antes de aprovar a ficha")

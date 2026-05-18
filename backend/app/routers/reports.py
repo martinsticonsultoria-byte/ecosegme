@@ -420,6 +420,13 @@ def generate_bulk_pdf(
             detail=f"{len(sem_numero)} ficha(s) sem Nº do Laudo definido. Defina todos antes de gerar o relatório."
         )
 
+    sem_data = [s for s in sheets if not s.data_relatorio]
+    if sem_data:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{len(sem_data)} ficha(s) sem Data do Relatório definida. Defina todas antes de gerar o relatório."
+        )
+
     uploads_list = db.query(SonusUpload).filter(
         SonusUpload.field_sheet_id.in_([s.id for s in sheets])
     ).all()

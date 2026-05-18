@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cd \"C:\\\\Users\\\\Edu Marafiga\\\\ecosegme\\\\backend\"; Get-ChildItem -Name | Where-Object { $_ -match \"venv|env|\\\\.venv\" })",
+      "PowerShell(Start-Process \"C:\\\\Users\\\\Edu Marafiga\\\\ecosegme\\\\backend\\\\capa_preview.html\")"
+    ]
+  }
+}
