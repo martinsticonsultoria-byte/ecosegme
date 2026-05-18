@@ -204,7 +204,7 @@ def generate_bulk_report(
     if sem_numero:
         raise HTTPException(
             status_code=400,
-            detail=f"{len(sem_numero)} ficha(s) sem Nº de Ordem definido. Defina todos antes de gerar o relatório."
+            detail=f"{len(sem_numero)} ficha(s) sem Nº do Laudo definido. Defina todos antes de gerar o relatório."
         )
 
     uploads_list = db.query(SonusUpload).filter(
@@ -417,7 +417,7 @@ def generate_bulk_pdf(
     if sem_numero:
         raise HTTPException(
             status_code=400,
-            detail=f"{len(sem_numero)} ficha(s) sem Nº de Ordem definido. Defina todos antes de gerar o relatório."
+            detail=f"{len(sem_numero)} ficha(s) sem Nº do Laudo definido. Defina todos antes de gerar o relatório."
         )
 
     uploads_list = db.query(SonusUpload).filter(
@@ -447,7 +447,7 @@ def generate_bulk_pdf(
                 ne_val = float(ne_db.replace(",", "."))
             except Exception:
                 ne_val = None
-        sig_d = sheet.signature_date
+        sig_d = sheet.data_relatorio or sheet.signature_date
         if sig_d:
             sig_date_ext = f"{sig_d.day:02d} de {_MESES_PT[sig_d.month-1]} de {sig_d.year}"
         else:
@@ -478,6 +478,7 @@ def generate_bulk_pdf(
             "fim": upload.fim if upload else "",
             "signature_date": _fmt_sig_date(sheet.signature_date),
             "signature_date_ext": sig_date_ext,
+            "conclusao_texto": sheet.conclusao_texto or None,
             "has_laudo": sheet.id in generated_ids,
         })
 
@@ -515,6 +516,10 @@ def generate_bulk_pdf(
     nr_texto = f"{laudo_min}.1/{_year} ao {laudo_max}.1/{_year}" if laudo_min != laudo_max else f"{laudo_min}.1/{_year}"
     nr_font_size = calc_font_size(nr_texto, 321.1, font_size_pt=25.8, min_pt=10.0)
 
+    _relatorio_dates = [s.data_relatorio for s in sheets if s.data_relatorio]
+    _ref_date = max(_relatorio_dates) if _relatorio_dates else datetime.now().date()
+    _signature_date_ext = f"{_ref_date.day:02d} de {_MESES_PT[_ref_date.month-1]} de {_ref_date.year}"
+
     html = tmpl.render(
         razao_social=company.razao_social,
         cnpj=company.cnpj or "",
@@ -532,7 +537,7 @@ def generate_bulk_pdf(
         empresa_font_size=empresa_font_size,
         endereco_font_size=endereco_font_size,
         nr_font_size=nr_font_size,
-        signature_date_ext=f"{datetime.now().day:02d} de {_MESES_PT[datetime.now().month-1]} de {_year}",
+        signature_date_ext=_signature_date_ext,
         fichas=fichas,
     )
 

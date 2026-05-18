@@ -155,6 +155,8 @@ function ConferenceDetail({ group, onBack, onReload }) {
       technician_name: sheet.technician_name || '',
       technician_name_2: sheet.technician_name_2 || '',
       collection_date: sheet.collection_date || '',
+      data_relatorio: sheet.data_relatorio || '',
+      conclusao_texto: sheet.conclusao_texto || '',
       dosimeter_number: sheet.dosimeter_number || '',
       tipo_analise: sheet.tipo_analise || 'Ruído',
       funcao: sheet.employee_funcao || '',
@@ -333,7 +335,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                               uploadResult[sheet.id]?.name_match === false
                             }
                             title={
-                              !sheet.laudo_number ? 'Defina o Nº da Ordem antes de aprovar' :
+                              !sheet.laudo_number ? 'Defina o Nº do Laudo antes de aprovar' :
                               !sheet.has_sonus ? 'Envie o PDF do SONUS antes de aprovar' :
                               (sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) ? 'Nome no SONUS diverge do cadastro — corrija antes de aprovar' :
                               ''
@@ -355,7 +357,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                       <td colSpan={modoSelecao ? 15 : 14} style={{ padding: '4px 12px', background: '#fffbeb', borderTop: 'none' }}>
                         <span style={{ color: '#92400e', fontSize: 11.5 }}>
                           ⚠ Para aprovar esta ficha:
-                          {!sheet.laudo_number && <span> &nbsp;defina o <strong>Nº de Ordem</strong> (clique em Editar);</span>}
+                          {!sheet.laudo_number && <span> &nbsp;defina o <strong>Nº do Laudo</strong> (clique em Editar);</span>}
                           {!sheet.has_sonus && <span> &nbsp;envie o <strong>PDF do SONUS 2</strong> (clique em ▼ SONUS).</span>}
                           {(sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) && (
                             <span> &nbsp;<strong>Nome divergente:</strong> SONUS traz &quot;{uploadResult[sheet.id]?.parsed_data?.funcionario || sheet.sonus_parsed_name}&quot; mas cadastro é &quot;{sheet.employee_nome}&quot; — corrija o cadastro ou reenvie o SONUS correto.</span>
@@ -382,7 +384,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                         <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Identificação</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 12 }}>
                           <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="form-label">Nº da Ordem</label>
+                            <label className="form-label">Nº do Laudo</label>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                               <input className="form-input" type="number" value={editForm.laudo_number} onChange={e => setEditForm(f => ({ ...f, laudo_number: parseInt(e.target.value) || '' }))} placeholder="Ex: 42" style={{ width: '100px' }} />
                               <span style={{ color: '#666', fontWeight: '500' }}>{`.1/${new Date().getFullYear()}`}</span>
@@ -395,6 +397,10 @@ function ConferenceDetail({ group, onBack, onReload }) {
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Data da Coleta</label>
                             <input className="form-input" type="date" value={editForm.collection_date} onChange={e => setEditForm(f => ({ ...f, collection_date: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Data do Relatório</label>
+                            <input className="form-input" type="date" value={editForm.data_relatorio} onChange={e => setEditForm(f => ({ ...f, data_relatorio: e.target.value }))} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Tipo de Análise</label>
@@ -459,6 +465,13 @@ function ConferenceDetail({ group, onBack, onReload }) {
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Máquinas/Equipamentos</label>
                             <textarea className="form-input" rows={2} value={editForm.machine_noise} onChange={e => setEditForm(f => ({ ...f, machine_noise: e.target.value }))} />
+                          </div>
+                        </div>
+
+                        <div style={{ marginBottom: 12 }}>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Conclusão Personalizada <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional — substitui o texto automático no PDF)</span></label>
+                            <textarea className="form-input" rows={3} value={editForm.conclusao_texto} onChange={e => setEditForm(f => ({ ...f, conclusao_texto: e.target.value }))} placeholder="Deixe em branco para usar o texto automático gerado pelo sistema." />
                           </div>
                         </div>
 

@@ -156,7 +156,7 @@ export default function FieldSheetForm() {
         <h2 style={{ color: '#16a34a', marginBottom: 8 }}>Ficha salva com sucesso!</h2>
         <p style={{ color: '#64748b', marginBottom: 32 }}>
           Funcionário: {savedSheet.employee_nome || '—'}<br/>
-          <span style={{ fontSize: 12, color: '#94a3b8' }}>O Nº de Ordem será definido pelo admin na aba de Conferência antes da aprovação.</span>
+          <span style={{ fontSize: 12, color: '#94a3b8' }}>O Nº do Laudo será definido pelo admin na aba de Conferência antes da aprovação.</span>
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', flexDirection: 'column' }}>
           <button className="btn btn-primary" onClick={handleDownloadFicha} disabled={downloading} style={{ padding: '12px 28px' }}>

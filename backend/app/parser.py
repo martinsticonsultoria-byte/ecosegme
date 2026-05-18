@@ -32,9 +32,7 @@ PATTERNS = {
         r"Fim[:\s]+(\d{2}[hH]\d{2})",
     ],
     "dose_diaria": [
-        r"Dose di[aá]ria\s*\[%\][:\s]+([\d,\.]+)",
         r"Dose\s*\[%\][:\s]+([\d,\.]+)",
-        r"Dose di[aá]ria[:\s]+([\d,\.]+)\s*%",
         r"D\s*=\s*([\d,\.]+)\s*%",
     ],
     "ne_db": [

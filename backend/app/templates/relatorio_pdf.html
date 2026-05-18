@@ -47,13 +47,13 @@
   <div style="position:absolute; top:442.7pt; left:93.4pt;
               font-size:{{ endereco_font_size }}; font-weight:700; color:#005d50;
               font-family:'Montserrat', Arial, sans-serif;
-              max-width:329.7pt; max-height:40pt; overflow:hidden;
-              white-space:normal; word-wrap:break-word;">
+              max-width:329.7pt; max-height:30pt; overflow:hidden;
+              line-height:1.3; white-space:normal; word-wrap:break-word;">
     {{ endereco or '—' }}
   </div>
 
   <!-- CNPJ valor -->
-  <div style="position:absolute; top:503.4pt; left:93.4pt;
+  <div style="position:absolute; top:520pt; left:93.4pt;
               font-size:16.5pt; font-weight:700; color:#005d50;
               font-family:'Montserrat', Arial, sans-serif;
               max-width:215.9pt; white-space:normal; word-wrap:break-word;">
@@ -229,7 +229,7 @@
       <th style="background:#c6efce; text-align:center;">Nível de Ação</th>
     </tr>
     <tr>
-      <td>Dose Diária (%):</td>
+      <td>Dose [%]:</td>
       <td style="text-align:center;">{{ f.dose_diaria or '—' }}</td>
       <td rowspan="4" style="text-align:center; vertical-align:middle;">85 dB(A)</td>
       <td rowspan="4" style="text-align:center; vertical-align:middle;">80 dB(A)</td>
@@ -252,7 +252,9 @@
   <h2>Conclusão:</h2>
   <table>
     <tr><td>
-      {% if f.ne_val is not none %}
+      {% if f.conclusao_texto %}
+        {{ f.conclusao_texto }}
+      {% elif f.ne_val is not none %}
         {% if f.ne_val <= 85 %}
           O nível equivalente de ruído está dentro do limite de tolerância estabelecido no Anexo 1 da NR 15 para uma jornada de 8 horas diárias, não caracterizando exposição excessiva. No entanto, é recomendável manter medidas preventivas para reduzir riscos auditivos e garantir a conformidade com as normas de segurança.
         {% else %}
@@ -265,7 +267,7 @@
   </table>
 
   <div style="text-align:center; margin-top:20pt;">
-    <p style="font-size:11pt; color:#1a1a1a; margin:0 0 8pt 0;
+    <p style="font-size:11pt; color:#1a1a1a; margin:0 0 24pt 0;
               font-family:Arial, sans-serif;">
       Manaus, {{ signature_date_ext }}
     </p>

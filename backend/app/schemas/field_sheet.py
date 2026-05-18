@@ -19,6 +19,8 @@ class FieldSheetCreate(BaseModel):
     technician_name: str
     technician_name_2: Optional[str] = None
     signature_date: Optional[date] = None
+    data_relatorio: Optional[date] = None
+    conclusao_texto: Optional[str] = None
     turno: Optional[str] = None
     codigo_esocial: Optional[str] = None
     pre_verificacao_db: Optional[str] = None
@@ -33,6 +35,7 @@ class FieldSheetOut(BaseModel):
     technician_name: str
     technician_name_2: Optional[str] = None
     signature_date: Optional[date] = None
+    data_relatorio: Optional[date] = None
     status: str
     company_id: int
     company_nome: Optional[str] = None
@@ -47,6 +50,9 @@ class FieldSheetOut(BaseModel):
     machine_noise: Optional[str] = None
     pre_verificacao_db: Optional[str] = None
     pos_verificacao_db: Optional[str] = None
+    data_relatorio: Optional[date] = None
+    conclusao_texto: Optional[str] = None
+    laudo_y: int = 1
     has_sonus: Optional[bool] = False
     sonus_parsed_name: Optional[str] = None
     sonus_name_mismatch: Optional[bool] = None

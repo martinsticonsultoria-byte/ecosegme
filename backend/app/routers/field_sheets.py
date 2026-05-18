@@ -1,9 +1,11 @@
 import os
 import tempfile
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import extract
 from typing import List
 from jinja2 import Template
 from weasyprint import HTML
@@ -67,9 +69,16 @@ def create_field_sheet(data: FieldSheetCreate, db: Session = Depends(get_db), cu
             db.flush()
             employee_id = new_emp.id
 
+    current_year = datetime.now().year
+    count_this_year = db.query(FieldSheet).filter(
+        FieldSheet.company_id == data.company_id,
+        extract('year', FieldSheet.created_at) == current_year
+    ).count()
+
     payload = data.dict()
     payload['employee_id'] = employee_id
     payload['laudo_number'] = None
+    payload['laudo_y'] = count_this_year + 1
     payload['created_by'] = current_user.id
     # remove campos auxiliares que não existem no modelo
     for key in ('employee_funcao', 'employee_matricula', 'employee_setor', 'employee_local'):
@@ -91,7 +100,7 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
     allowed = {
         "epi", "activity", "machine_noise", "technician_name_2", "pos_verificacao_db",
         "laudo_number", "technician_name", "pre_verificacao_db", "dosimeter_number",
-        "collection_date", "tipo_analise",
+        "collection_date", "tipo_analise", "data_relatorio", "conclusao_texto",
     }
     from datetime import date as date_type
     for key, value in body.items():
@@ -99,7 +108,7 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
             continue
         if value == "":
             value = None
-        if key == "collection_date" and value:
+        if key in ("collection_date", "data_relatorio") and value:
             from datetime import datetime
             value = datetime.strptime(value, "%Y-%m-%d").date()
         if key == "dosimeter_number" and value:
@@ -134,7 +143,7 @@ def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=De
         raise HTTPException(status_code=400, detail="Status invalido")
     if new_status == "aprovada":
         if not sheet.laudo_number:
-            raise HTTPException(status_code=400, detail="Defina o Nº da Ordem antes de aprovar a ficha")
+            raise HTTPException(status_code=400, detail="Defina o Nº do Laudo antes de aprovar a ficha")
         sonus = db.query(SonusUpload).filter(SonusUpload.field_sheet_id == sheet_id).first()
         if not sonus:
             raise HTTPException(status_code=400, detail="É necessário enviar o PDF do SONUS 2 antes de aprovar a ficha")
