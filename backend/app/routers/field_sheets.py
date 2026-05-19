@@ -159,9 +159,18 @@ def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=De
                         detail=f"Nome no SONUS '{sonus.parsed_employee_name}' diverge do cadastro '{emp_nome}'. Corrija antes de aprovar."
                     )
     sheet.status = new_status
-    if new_status == "aprovada" and not sheet.signature_date:
+    if new_status == "aprovada":
         from datetime import date
-        sheet.signature_date = date.today()
+        if not sheet.signature_date:
+            sheet.signature_date = date.today()
+        ano_atual = datetime.now().year
+        count = db.query(FieldSheet).filter(
+            FieldSheet.company_id == sheet.company_id,
+            FieldSheet.status == "aprovada",
+            extract('year', FieldSheet.created_at) == ano_atual,
+            FieldSheet.id != sheet.id,
+        ).count()
+        sheet.laudo_y = count + 1
     db.commit()
     db.refresh(sheet)
     return {"id": sheet.id, "status": sheet.status}

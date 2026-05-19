@@ -293,7 +293,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                       </td>
                     )}
                     <td style={tdStyle}>
-                      {sheet.laudo_number ? <span className="badge badge-blue">{sheet.laudo_number}.1/{new Date().getFullYear()}</span> : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}
+                      {sheet.laudo_number ? <span className="badge badge-blue">{sheet.laudo_number}.{sheet.laudo_y || 1}/{new Date().getFullYear()}</span> : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}
                     </td>
                     <td style={tdSmall}>{sheet.dosimeter_number}</td>
                     <td style={tdSmall}>{new Date(sheet.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
@@ -331,15 +331,12 @@ function ConferenceDetail({ group, onBack, onReload }) {
                               approving[sheet.id] ||
                               !sheet.has_sonus ||
                               !sheet.laudo_number ||
-                              !sheet.data_relatorio ||
-                              sheet.sonus_name_mismatch === true ||
-                              uploadResult[sheet.id]?.name_match === false
+                              !sheet.data_relatorio
                             }
                             title={
                               !sheet.laudo_number ? 'Defina o Nº do Laudo antes de aprovar' :
                               !sheet.data_relatorio ? 'Defina a Data do Relatório antes de aprovar' :
                               !sheet.has_sonus ? 'Envie o PDF do SONUS antes de aprovar' :
-                              (sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) ? 'Nome no SONUS diverge do cadastro — corrija antes de aprovar' :
                               ''
                             }>
                             {approving[sheet.id] ? '...' : 'Aprovar'}
@@ -354,7 +351,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                   </tr>
 
                   {/* Aviso de campos obrigatórios para aprovação */}
-                  {sheet.status !== 'aprovada' && (!sheet.laudo_number || !sheet.data_relatorio || !sheet.has_sonus || sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) && (
+                  {sheet.status !== 'aprovada' && (!sheet.laudo_number || !sheet.data_relatorio || !sheet.has_sonus) && (
                     <tr key={`warn-${sheet.id}`}>
                       <td colSpan={modoSelecao ? 15 : 14} style={{ padding: '4px 12px', background: '#fffbeb', borderTop: 'none' }}>
                         <span style={{ color: '#92400e', fontSize: 11.5 }}>
@@ -362,9 +359,6 @@ function ConferenceDetail({ group, onBack, onReload }) {
                           {!sheet.laudo_number && <span> &nbsp;defina o <strong>Nº do Laudo</strong> (clique em Editar);</span>}
                           {!sheet.data_relatorio && <span> &nbsp;defina a <strong>Data do Relatório</strong> (clique em Editar);</span>}
                           {!sheet.has_sonus && <span> &nbsp;envie o <strong>PDF do SONUS 2</strong> (clique em ▼ SONUS).</span>}
-                          {(sheet.sonus_name_mismatch || uploadResult[sheet.id]?.name_match === false) && (
-                            <span> &nbsp;<strong>Nome divergente:</strong> SONUS traz &quot;{uploadResult[sheet.id]?.parsed_data?.funcionario || sheet.sonus_parsed_name}&quot; mas cadastro é &quot;{sheet.employee_nome}&quot; — corrija o cadastro ou reenvie o SONUS correto.</span>
-                          )}
                         </span>
                       </td>
                     </tr>
@@ -388,10 +382,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 12 }}>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Nº do Laudo</label>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <input className="form-input" type="number" value={editForm.laudo_number} onChange={e => setEditForm(f => ({ ...f, laudo_number: parseInt(e.target.value) || '' }))} placeholder="Ex: 42" style={{ width: '100px' }} />
-                              <span style={{ color: '#666', fontWeight: '500' }}>{`.1/${new Date().getFullYear()}`}</span>
-                            </div>
+                            <input className="form-input" type="number" value={editForm.laudo_number} onChange={e => setEditForm(f => ({ ...f, laudo_number: parseInt(e.target.value) || '' }))} placeholder="Ex: 42" style={{ width: '120px' }} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Nº Dosímetro</label>
@@ -493,29 +484,18 @@ function ConferenceDetail({ group, onBack, onReload }) {
                         <div style={{ fontSize: 12, fontWeight: 600, color: '#0369a1', marginBottom: 8 }}>Upload de Laudo (SONUS 2)</div>
                         {sheet.has_sonus && !uploadResult[sheet.id] ? (
                           <div style={{ marginBottom: 8 }}>
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: sheet.sonus_name_mismatch ? 8 : 0 }}>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
                               <span style={{ fontSize: 13, color: '#0369a1' }}>PDF do SONUS já enviado.</span>
-                              <button className="btn btn-sm" style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
-                                onClick={() => handleDeleteSonus(sheet.id)}
-                                disabled={deletingSonus[sheet.id]}>
-                                {deletingSonus[sheet.id] ? '...' : 'Excluir e reenviar'}
-                              </button>
                             </div>
-                            {sheet.sonus_name_mismatch && (
-                              <div style={{ padding: '6px 10px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 6, fontSize: 12, color: '#b91c1c', marginBottom: 8 }}>
-                                ⚠ Nome no SONUS &quot;{sheet.sonus_parsed_name}&quot; diverge do cadastro &quot;{sheet.employee_nome}&quot; — exclua e reenvie o SONUS correto.
-                              </div>
-                            )}
-                            {!sheet.sonus_name_mismatch && (
-                              !reports[sheet.id]
-                                ? <button className="btn btn-primary btn-sm" onClick={() => handleGenerate(sheet.id)} disabled={generating[sheet.id]}>
-                                    {generating[sheet.id] ? 'Gerando...' : 'Gerar Laudo PDF'}
-                                  </button>
-                                : <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                                    <span style={{ color: '#16a34a', fontWeight: 600, fontSize: 13 }}>Laudo gerado</span>
-                                    <button className="btn btn-secondary btn-sm" onClick={() => handleDownloadLaudo(reports[sheet.id])}>Baixar</button>
-                                  </div>
-                            )}
+                            {!reports[sheet.id]
+                              ? <button className="btn btn-primary btn-sm" onClick={() => handleGenerate(sheet.id)} disabled={generating[sheet.id]}>
+                                  {generating[sheet.id] ? 'Gerando...' : 'Gerar Laudo PDF'}
+                                </button>
+                              : <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                  <span style={{ color: '#16a34a', fontWeight: 600, fontSize: 13 }}>Laudo gerado</span>
+                                  <button className="btn btn-secondary btn-sm" onClick={() => handleDownloadLaudo(reports[sheet.id])}>Baixar</button>
+                                </div>
+                            }
                           </div>
                         ) : (
                           <div style={{ display: 'flex', gap: 8, alignItems: 'center', maxWidth: 600, marginBottom: 8 }}>
@@ -537,21 +517,15 @@ function ConferenceDetail({ group, onBack, onReload }) {
                               <span>Fim: <b>{uploadResult[sheet.id].parsed_data?.fim}</b></span>
                               <span>NE: <b>{uploadResult[sheet.id].parsed_data?.ne_db} dB</b></span>
                             </div>
-                            {uploadResult[sheet.id].name_match === false && (
-                              <div style={{ padding: '6px 10px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 6, fontSize: 12, color: '#b91c1c', marginBottom: 8 }}>
-                                ⚠ {uploadResult[sheet.id].name_alert}
-                              </div>
-                            )}
-                            {uploadResult[sheet.id].name_match !== false && (
-                              !reports[sheet.id]
-                                ? <button className="btn btn-primary btn-sm" onClick={() => handleGenerate(sheet.id)} disabled={generating[sheet.id]}>
-                                    {generating[sheet.id] ? 'Gerando...' : 'Gerar Laudo PDF'}
-                                  </button>
-                                : <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                                    <span style={{ color: '#16a34a', fontWeight: 600, fontSize: 13 }}>Laudo gerado</span>
-                                    <button className="btn btn-secondary btn-sm" onClick={() => handleDownloadLaudo(reports[sheet.id])}>Baixar</button>
-                                  </div>
-                            )}
+                            {!reports[sheet.id]
+                              ? <button className="btn btn-primary btn-sm" onClick={() => handleGenerate(sheet.id)} disabled={generating[sheet.id]}>
+                                  {generating[sheet.id] ? 'Gerando...' : 'Gerar Laudo PDF'}
+                                </button>
+                              : <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                  <span style={{ color: '#16a34a', fontWeight: 600, fontSize: 13 }}>Laudo gerado</span>
+                                  <button className="btn btn-secondary btn-sm" onClick={() => handleDownloadLaudo(reports[sheet.id])}>Baixar</button>
+                                </div>
+                            }
                           </div>
                         )}
                       </td>

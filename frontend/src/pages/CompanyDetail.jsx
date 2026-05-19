@@ -85,6 +85,11 @@ export default function CompanyDetail() {
   const [deleteEmpModal, setDeleteEmpModal] = useState(false);
   const [deleteEmpTarget, setDeleteEmpTarget] = useState(null);
   const [deletingEmp, setDeletingEmp] = useState(false);
+  const [editSheetModal, setEditSheetModal] = useState(false);
+  const [editSheetTarget, setEditSheetTarget] = useState(null);
+  const [editSheetForm, setEditSheetForm] = useState({});
+  const [savingSheet, setSavingSheet] = useState(false);
+  const [epiOptionsSheet, setEpiOptionsSheet] = useState([]);
 
   useEffect(() => {
     const safe = (promise, fallback) => promise.then(r => r.data).catch(() => fallback);
@@ -159,6 +164,45 @@ export default function CompanyDetail() {
     } catch {
       alert('Erro ao excluir funcionário.');
     } finally { setDeletingEmp(false); }
+  };
+
+  const handleEditSheet = (sheet) => {
+    if (!epiOptionsSheet.length) {
+      api.get('/epis').then(res => setEpiOptionsSheet([...res.data.predefined, ...res.data.custom])).catch(() => {});
+    }
+    setEditSheetTarget(sheet);
+    setEditSheetForm({
+      laudo_number: sheet.laudo_number || '',
+      dosimeter_number: sheet.dosimeter_number || '',
+      collection_date: sheet.collection_date || '',
+      data_relatorio: sheet.data_relatorio || '',
+      tipo_analise: sheet.tipo_analise || 'Ruído',
+      epi: sheet.epi || '',
+      activity: sheet.activity || '',
+      machine_noise: sheet.machine_noise || '',
+      pre_verificacao_db: sheet.pre_verificacao_db || '',
+      pos_verificacao_db: sheet.pos_verificacao_db || '',
+      technician_name: sheet.technician_name || '',
+      technician_name_2: sheet.technician_name_2 || '',
+      funcao: sheet.employee_funcao || '',
+      matricula: sheet.employee_matricula || '',
+      setor: sheet.employee_setor || '',
+      local: sheet.employee_local || '',
+      conclusao_texto: sheet.conclusao_texto || '',
+    });
+    setEditSheetModal(true);
+  };
+
+  const handleSaveSheet = async () => {
+    setSavingSheet(true);
+    try {
+      await api.patch(`/field-sheets/${editSheetTarget.id}/edit`, editSheetForm);
+      const res = await api.get(`/field-sheets?company_id=${id}`);
+      setFieldSheets(res.data);
+      setEditSheetModal(false);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Erro ao salvar ficha.');
+    } finally { setSavingSheet(false); }
   };
 
   const handleGenerateConsolidated = async () => {
@@ -397,12 +441,15 @@ export default function CompanyDetail() {
                 <tbody>
                   {fieldSheets.map(s => (
                     <tr key={s.id}>
-                      <td><span className="badge badge-blue">{s.laudo_number}</span></td>
+                      <td>{s.laudo_number ? <span className="badge badge-blue">{s.laudo_number}.{s.laudo_y || 1}/{new Date().getFullYear()}</span> : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}</td>
                       <td style={{ fontWeight: 500 }}>{s.employee_nome || '—'}</td>
                       <td style={{ color: '#64748b' }}>{new Date(s.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                       <td style={{ color: '#64748b' }}>{s.technician_name}</td>
                       <td style={{ color: '#64748b' }}>{s.dosimeter_number}</td>
                       <td style={{ display: 'flex', gap: 4 }}>
+                        {s.status !== 'aprovada' && (
+                          <button className="btn btn-secondary btn-sm" onClick={() => handleEditSheet(s)}>Editar</button>
+                        )}
                         <button className="btn btn-primary btn-sm" onClick={() => handleDownloadFicha(s)} disabled={downloadingFicha === s.id}>
                           {downloadingFicha === s.id ? '...' : 'Ficha PDF'}
                         </button>
@@ -566,6 +613,106 @@ export default function CompanyDetail() {
         </div>
       )}
 
+      {editSheetModal && editSheetTarget && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', borderRadius: 8, padding: 24, maxWidth: 640, width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Editar Ficha de Campo</div>
+
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Identificação</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nº do Laudo</label>
+                <input className="form-input" type="number" value={editSheetForm.laudo_number} onChange={e => setEditSheetForm(f => ({ ...f, laudo_number: parseInt(e.target.value) || '' }))} placeholder="Ex: 42" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nº Dosímetro</label>
+                <input className="form-input" type="number" value={editSheetForm.dosimeter_number} onChange={e => setEditSheetForm(f => ({ ...f, dosimeter_number: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Data da Coleta</label>
+                <input className="form-input" type="date" value={editSheetForm.collection_date} onChange={e => setEditSheetForm(f => ({ ...f, collection_date: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Data do Relatório</label>
+                <input className="form-input" type="date" value={editSheetForm.data_relatorio} onChange={e => setEditSheetForm(f => ({ ...f, data_relatorio: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tipo de Análise</label>
+                <select className="form-input" value={editSheetForm.tipo_analise} onChange={e => setEditSheetForm(f => ({ ...f, tipo_analise: e.target.value }))}>
+                  <option>Ruído</option><option>Calor</option><option>Químico</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Funcionário</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Cargo/Função</label>
+                <input className="form-input" value={editSheetForm.funcao} onChange={e => setEditSheetForm(f => ({ ...f, funcao: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Matrícula</label>
+                <input className="form-input" value={editSheetForm.matricula} onChange={e => setEditSheetForm(f => ({ ...f, matricula: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Setor</label>
+                <input className="form-input" value={editSheetForm.setor} onChange={e => setEditSheetForm(f => ({ ...f, setor: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Local da Coleta</label>
+                <input className="form-input" value={editSheetForm.local} onChange={e => setEditSheetForm(f => ({ ...f, local: e.target.value }))} />
+              </div>
+            </div>
+
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Técnico e Condições</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Técnico Responsável</label>
+                <input className="form-input" value={editSheetForm.technician_name} onChange={e => setEditSheetForm(f => ({ ...f, technician_name: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Resp. pelo Acompanhamento</label>
+                <input className="form-input" value={editSheetForm.technician_name_2} onChange={e => setEditSheetForm(f => ({ ...f, technician_name_2: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">EPI Utilizado</label>
+                <input list="epi-list-sheet" className="form-input" value={editSheetForm.epi} onChange={e => setEditSheetForm(f => ({ ...f, epi: e.target.value }))} autoComplete="off" />
+                <datalist id="epi-list-sheet">{epiOptionsSheet.map(o => <option key={o} value={o} />)}</datalist>
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Pré Verificação [dB]</label>
+                <input className="form-input" value={editSheetForm.pre_verificacao_db} onChange={e => setEditSheetForm(f => ({ ...f, pre_verificacao_db: e.target.value }))} placeholder="114,00" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Pós Verificação [dB]</label>
+                <input className="form-input" value={editSheetForm.pos_verificacao_db} onChange={e => setEditSheetForm(f => ({ ...f, pos_verificacao_db: e.target.value }))} />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Atividade Desenvolvida</label>
+                <textarea className="form-input" rows={2} value={editSheetForm.activity} onChange={e => setEditSheetForm(f => ({ ...f, activity: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Máquinas/Equipamentos</label>
+                <textarea className="form-input" rows={2} value={editSheetForm.machine_noise} onChange={e => setEditSheetForm(f => ({ ...f, machine_noise: e.target.value }))} />
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 16 }}>
+              <label className="form-label">Conclusão Personalizada <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional)</span></label>
+              <textarea className="form-input" rows={3} value={editSheetForm.conclusao_texto} onChange={e => setEditSheetForm(f => ({ ...f, conclusao_texto: e.target.value }))} placeholder="Deixe em branco para usar o texto automático." />
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-primary" onClick={handleSaveSheet} disabled={savingSheet}>{savingSheet ? 'Salvando...' : 'Salvar'}</button>
+              <button className="btn btn-secondary" onClick={() => setEditSheetModal(false)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showRelModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: 'white', borderRadius: 8, padding: 24, maxWidth: 560, width: '95%', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
@@ -597,7 +744,7 @@ export default function CompanyDetail() {
                           />
                         </td>
                         <td style={{ padding: '8px 10px' }}>
-                          {s.laudo_number ? `${s.laudo_number}.1/${new Date().getFullYear()}` : <span style={{ color: '#f59e0b' }}>S/Nº</span>}
+                          {s.laudo_number ? `${s.laudo_number}.${s.laudo_y || 1}/${new Date().getFullYear()}` : <span style={{ color: '#f59e0b' }}>S/Nº</span>}
                         </td>
                         <td style={{ padding: '8px 10px', fontWeight: 500 }}>{s.employee_nome || '—'}</td>
                         <td style={{ padding: '8px 10px', color: '#64748b' }}>{new Date(s.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>

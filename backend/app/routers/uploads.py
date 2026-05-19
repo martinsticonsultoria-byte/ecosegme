@@ -75,6 +75,20 @@ def upload_sonus(
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
+    employee = sheet.employee
+    emp_nome = employee.nome if employee else sheet.employee_name_text
+    match_result = None
+    similarity_score = 0.0
+
+    if data.get("funcionario") and emp_nome:
+        match_result = names_match(data["funcionario"], emp_nome)
+        similarity_score = round(name_similarity(data["funcionario"], emp_nome), 2)
+        if not match_result:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Nome divergente: PDF contém '{data['funcionario']}' mas cadastro é '{emp_nome}'. Envie o PDF correto para este funcionário."
+            )
+
     os.makedirs(STORAGE_DIR, exist_ok=True)
     safe_filename = f"{field_sheet_id}_{sha256[:8]}.pdf"
     storage_dir = os.path.realpath(STORAGE_DIR)
@@ -83,20 +97,6 @@ def upload_sonus(
         raise HTTPException(status_code=400, detail="Nome de arquivo inválido")
     with open(storage_path, "wb") as f:
         f.write(content)
-
-    employee = sheet.employee
-    emp_nome = employee.nome if employee else sheet.employee_name_text
-    match_result = None
-    similarity_score = 0.0
-    name_alert = None
-
-    if data.get("funcionario") and emp_nome:
-        match_result = names_match(data["funcionario"], emp_nome)
-        similarity_score = round(name_similarity(data["funcionario"], emp_nome), 2)
-        if not match_result:
-            name_alert = (
-                f"ATENÇÃO: Nome no PDF '{data['funcionario']}' diverge do cadastro '{emp_nome}'"
-            )
 
     upload = SonusUpload(
         field_sheet_id=field_sheet_id,
@@ -121,7 +121,6 @@ def upload_sonus(
         "parsed_data": {k: v for k, v in data.items() if not k.startswith("_")},
         "name_match": match_result,
         "name_similarity": similarity_score,
-        "name_alert": name_alert,
         "confidence_score": data.get("_confidence_score", 0),
         "warnings": data.get("_warnings", []),
         "sha256": sha256,

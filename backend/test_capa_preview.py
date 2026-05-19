@@ -30,12 +30,12 @@ capa_fundo_b64 = b64(os.path.join(IMG_DIR, "capa_fundo.png.png"))
 logo_b64       = b64(os.path.join(TMPL_DIR, "logo.png"))
 assinatura_b64 = b64(os.path.join(TMPL_DIR, "relatório_assinatura.png"))
 
-# ── Dados fictícios ───────────────────────────────────────────────────────────
-razao_social = "Indústria e Comércio de Alimentos do Norte Ltda"
-endereco     = "Av. Constantino Nery, 3000, Chapada, Manaus/AM"
+# ── Dados fictícios — nome LONGO + nº relatório LONGO para testar redução de fonte ──
+razao_social = "Companhia Amazonense de Processamento Industrial de Alimentos e Bebidas do Norte S/A"
+endereco     = "Rodovia AM-010, Km 18, Distrito Industrial 3, Galpão B, Manaus/AM, CEP 69075-830"
 cnpj         = "12.345.678/0001-99"
-laudo_min    = 42
-laudo_max    = 43
+laudo_min    = 9873
+laudo_max    = 123987
 year         = 2026
 report_date  = "05.2026"
 period       = "15/04/2026 à 15/04/2026"
