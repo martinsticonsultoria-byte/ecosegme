@@ -503,7 +503,7 @@ def generate_bulk_pdf(
     with open(tmpl_path, "r", encoding="utf-8") as f:
         tmpl = Template(f.read())
 
-    laudo_numbers = [s.laudo_number for s in sheets]
+    laudo_numbers = sorted([s.laudo_number for s in sheets])
 
     def calc_font_size(texto, max_width_pt, font_size_pt=16.5, min_pt=9.0):
         while font_size_pt > min_pt:
@@ -517,10 +517,13 @@ def generate_bulk_pdf(
     empresa_font_size  = calc_font_size(company.razao_social or '', 375.9)
     endereco_font_size = calc_font_size(company.endereco or '', 329.7)
 
-    laudo_min = min(laudo_numbers) if laudo_numbers else 0
-    laudo_max = max(laudo_numbers) if laudo_numbers else 0
     _year = datetime.now().year
-    nr_texto = f"{laudo_min}.1/{_year} ao {laudo_max}.1/{_year}" if laudo_min != laudo_max else f"{laudo_min}.1/{_year}"
+    sheets_sorted = sorted(sheets, key=lambda s: (s.laudo_number, s.laudo_y or 0))
+    primeira = sheets_sorted[0]
+    ultima = sheets_sorted[-1]
+    laudo_min = f"{primeira.laudo_number}.{primeira.laudo_y or 1}"
+    laudo_max = f"{ultima.laudo_number}.{ultima.laudo_y or 1}"
+    nr_texto = f"{laudo_min}/{_year} ao {laudo_max}/{_year}" if laudo_min != laudo_max else f"{laudo_min}/{_year}"
     nr_font_size = calc_font_size(nr_texto, 321.1, font_size_pt=25.8, min_pt=10.0)
 
     _relatorio_dates = [s.data_relatorio for s in sheets if s.data_relatorio]
