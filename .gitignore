@@ -1,0 +1,11 @@
+.claude/settings.local.json
+CLAUDE_ECOSEGME.md
+backend/capa_preview.html
+backend/test_capa_preview.py
+*.swp
+*.save
+__pycache__/
+*.pyc
+node_modules/
+dist/
+.DS_Store
