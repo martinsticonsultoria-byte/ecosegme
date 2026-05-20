@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.user import User
 from app.core.security import hash_password
+from app.core.deps import require_admin
 
 router = APIRouter()
 
@@ -14,7 +15,7 @@ def get_db():
         db.close()
 
 @router.post("/setup/seed")
-def run_seed(db: Session = Depends(get_db)):
+def run_seed(db: Session = Depends(get_db), _: User = Depends(require_admin)):
     if db.query(User).first():
         return {"message": "Setup já foi executado", "created": []}
     users = [
