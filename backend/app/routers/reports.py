@@ -505,9 +505,9 @@ def generate_bulk_pdf(
 
     laudo_numbers = sorted([s.laudo_number for s in sheets])
 
-    def calc_font_size(texto, max_width_pt, font_size_pt=16.5, min_pt=9.0):
+    def calc_font_size(texto, max_width_pt, font_size_pt=16.5, min_pt=9.0, char_factor=0.55):
         while font_size_pt > min_pt:
-            chars_per_line = max_width_pt / (0.55 * font_size_pt)
+            chars_per_line = max_width_pt / (char_factor * font_size_pt)
             lines = math.ceil(len(texto) / chars_per_line)
             if lines <= 2:
                 break
@@ -524,7 +524,7 @@ def generate_bulk_pdf(
     laudo_min = f"{primeira.laudo_number}.{primeira.laudo_y or 1}"
     laudo_max = f"{ultima.laudo_number}.{ultima.laudo_y or 1}"
     nr_texto = f"{laudo_min}/{_year} ao {laudo_max}/{_year}" if laudo_min != laudo_max else f"{laudo_min}/{_year}"
-    nr_font_size = calc_font_size(nr_texto, 321.1, font_size_pt=25.8, min_pt=10.0)
+    nr_font_size = calc_font_size(nr_texto, 321.1, font_size_pt=20.0, min_pt=10.0, char_factor=0.65)
 
     _relatorio_dates = [s.data_relatorio for s in sheets if s.data_relatorio]
     _ref_date = max(_relatorio_dates) if _relatorio_dates else datetime.now().date()
