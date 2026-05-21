@@ -10,6 +10,7 @@ from app.core.limiter import limiter
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/login")
+@limiter.limit("10/minute")
 def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == form_data.username, User.active == True).first()
     if not user or not verify_password(form_data.password, user.password_hash):

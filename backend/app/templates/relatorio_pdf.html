@@ -29,10 +29,22 @@
     position: relative;
     width: 595pt;
     height: 842pt;
+<<<<<<< HEAD
+=======
+    min-height: 842pt;
+>>>>>>> 5414c6a2181f4d8b6bea30cfbba12f338fb62f6b
     page-break-after: always;
     font-family: Arial, sans-serif;
     overflow: hidden;
   }
+<<<<<<< HEAD
+=======
+  .cover-spacer {
+    display: block;
+    height: 842pt;
+    width: 1px;
+  }
+>>>>>>> 5414c6a2181f4d8b6bea30cfbba12f338fb62f6b
   .cover-bg {
     position: absolute;
     top: 0; left: 0;
@@ -52,6 +64,10 @@
 
 <!-- ══════════════════ CAPA ══════════════════ -->
 <div class="cover">
+<<<<<<< HEAD
+=======
+  <span class="cover-spacer"></span>
+>>>>>>> 5414c6a2181f4d8b6bea30cfbba12f338fb62f6b
   <img class="cover-bg"
        src="data:image/png;base64,{{ capa_fundo_b64 }}">
 
@@ -127,7 +143,7 @@
     <tbody>
       {% for f in fichas %}
       <tr>
-        <td style="text-align:center;">{{ "%04d"|format(f.laudo_number) }}-{{ loop.index }}</td>
+        <td style="text-align:center;">{{ f.laudo_number }}.{{ f.laudo_y }}/{{ year }}</td>
         <td style="text-align:center;">{{ f.funcao or '—' }}</td>
         <td style="text-align:center;">{{ f.local or '—' }}</td>
         <td style="text-align:center;">{{ f.setor or '—' }}</td>
@@ -164,7 +180,7 @@
     </tr>
   </table>
 
-  <h1>Relatório de Ensaio Analítico N. {{ "%04d"|format(f.laudo_number) }}-{{ loop.index }}</h1>
+  <h1>Relatório de Ensaio Analítico N. {{ f.laudo_number }}.{{ f.laudo_y }}/{{ year }}</h1>
 
   <table>
     <tr><td class="label">Razão Social:</td><td>{{ razao_social }}</td></tr>

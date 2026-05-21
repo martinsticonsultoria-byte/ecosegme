@@ -462,6 +462,7 @@ def generate_bulk_pdf(
             sig_date_ext = f"{_now.day:02d} de {_MESES_PT[_now.month-1]} de {_now.year}"
         fichas.append({
             "laudo_number": sheet.laudo_number,
+            "laudo_y": sheet.laudo_y or 1,
             "employee_nome": emp.nome if emp else (sheet.employee_name_text or ""),
             "funcao": emp.funcao if emp else "",
             "matricula": emp.matricula if emp else "",
@@ -518,7 +519,11 @@ def generate_bulk_pdf(
     endereco_font_size = calc_font_size(company.endereco or '', 329.7)
 
     _year = datetime.now().year
+<<<<<<< HEAD
     sheets_sorted = sorted(sheets, key=lambda s: (s.laudo_number or 0, s.laudo_y or 0))
+=======
+    sheets_sorted = sorted(sheets, key=lambda s: (s.laudo_number, s.laudo_y or 0))
+>>>>>>> 5414c6a2181f4d8b6bea30cfbba12f338fb62f6b
     primeira = sheets_sorted[0]
     ultima = sheets_sorted[-1]
     laudo_min = f"{primeira.laudo_number}.{primeira.laudo_y or 1}"

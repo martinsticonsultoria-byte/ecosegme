@@ -1,10 +1,13 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
 
 class FieldSheet(Base):
     __tablename__ = "field_sheets"
+    __table_args__ = (
+        UniqueConstraint('company_id', 'laudo_number', name='uq_field_sheets_company_laudo_number'),
+    )
     id = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=True)
