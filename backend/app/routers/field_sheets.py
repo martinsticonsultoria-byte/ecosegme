@@ -124,15 +124,6 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
         if emp:
             for k, v in emp_updates.items():
                 setattr(emp, k, v)
-    # Verifica duplicidade de laudo_number dentro da mesma empresa antes de commitar
-    if sheet.laudo_number is not None:
-        conflito = db.query(FieldSheet).filter(
-            FieldSheet.company_id == sheet.company_id,
-            FieldSheet.laudo_number == sheet.laudo_number,
-            FieldSheet.id != sheet_id,
-        ).first()
-        if conflito:
-            raise HTTPException(status_code=400, detail=f"Já existe uma ficha com o Nº do Laudo {sheet.laudo_number} nesta empresa. Escolha outro número.")
     try:
         db.commit()
     except Exception:
