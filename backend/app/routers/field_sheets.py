@@ -176,8 +176,8 @@ def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=De
         count = db.query(FieldSheet).filter(
             FieldSheet.company_id == sheet.company_id,
             FieldSheet.status == "aprovada",
-            extract('year', FieldSheet.created_at) == ano_atual,
             FieldSheet.id != sheet.id,
+            extract('year', FieldSheet.signature_date) == ano_atual,
         ).count()
         sheet.laudo_y = count + 1
     db.commit()

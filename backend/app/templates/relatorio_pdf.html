@@ -29,15 +29,9 @@
     position: relative;
     width: 595pt;
     height: 842pt;
-    min-height: 842pt;
     page-break-after: always;
     font-family: Arial, sans-serif;
     overflow: hidden;
-  }
-  .cover-spacer {
-    display: block;
-    height: 842pt;
-    width: 1px;
   }
   .cover-bg {
     position: absolute;
@@ -58,7 +52,6 @@
 
 <!-- ══════════════════ CAPA ══════════════════ -->
 <div class="cover">
-  <span class="cover-spacer"></span>
   <img class="cover-bg"
        src="data:image/png;base64,{{ capa_fundo_b64 }}">
 
@@ -116,9 +109,11 @@
     </tr>
     {% if endereco %}<tr><td colspan="2" style="border:none;"><strong>Endereço:</strong> {{ endereco }}</td></tr>{% endif %}
   </table>
-  <h1>Resumo das Doses de Ruído</h1>
   <table class="resumo" style="table-layout:fixed;">
     <thead>
+      <tr>
+        <th colspan="7" style="background:#1f9c74; color:white; text-align:center; font-size:10pt; padding:3px; border:1px solid #167a5a; font-weight:bold;">Resumo das Doses de Ruído</th>
+      </tr>
       <tr>
         <th style="width:12%; text-align:center; vertical-align:middle;">Nº de Laudo</th>
         <th style="width:18%; text-align:center; vertical-align:middle;">Cargo/Função</th>

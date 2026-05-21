@@ -519,7 +519,7 @@ def generate_bulk_pdf(
     endereco_font_size = calc_font_size(company.endereco or '', 329.7)
 
     _year = datetime.now().year
-    sheets_sorted = sorted(sheets, key=lambda s: (s.laudo_number, s.laudo_y or 0))
+    sheets_sorted = sorted(sheets, key=lambda s: (s.laudo_number or 0, s.laudo_y or 0))
     primeira = sheets_sorted[0]
     ultima = sheets_sorted[-1]
     laudo_min = f"{primeira.laudo_number}.{primeira.laudo_y or 1}"
