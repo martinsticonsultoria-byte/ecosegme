@@ -14,8 +14,7 @@
 
 [🌐 Demo ao Vivo](https://ecosegme-se6m.vercel.app) · [📖 API Docs](https://ecosegme.onrender.com/docs)
 
-> **Credenciais de demonstração:**
-> Email: `demo@ecosegme.com` · Senha: `demo123`
+> **Para demonstrações e demo, entre em contato**
 
 </div>
 
@@ -29,14 +28,14 @@ Uma consultoria ambiental em Manaus/AM processava laudos técnicos de dosimetria
 Dosímetro → exportar PDF → transcrever dados → Excel → formatar → gerar PDF final
 ```
 
-**Resultado:** 5 dias por laudo · atraso de 60–90 dias no faturamento · 80 laudos/mês acumulando
+**Resultado:** dias por laudo · podendo a chegar à atraso de 60–90 dias no faturamento devido a demora em geração do relatório final · 80 laudos/mês acumulando
 
 **Com o EcoSegme:**
 ```
 Dosímetro → upload do PDF → parser automático → conferência → laudo em PDF
 ```
 
-**Resultado:** menos de 15 minutos por laudo · faturamento no prazo · zero retrabalho de transcrição
+**Resultado:** menos de 10 minutos por laudo · faturamento no prazo · zero retrabalho de transcrição
 
 ---
 
@@ -44,7 +43,7 @@ Dosímetro → upload do PDF → parser automático → conferência → laudo e
 
 | Métrica | Antes | Depois |
 |---|---|---|
-| Tempo por laudo | 5 dias | < 15 minutos |
+| Tempo por laudo | dias | < 10 minutos |
 | Atraso no faturamento | 60–90 dias | Zero |
 | Volume mensal | 80 laudos acumulados | 80 laudos processados |
 | Erros de transcrição | Frequentes | Zero (parser automático) |
@@ -213,5 +212,6 @@ Código disponibilizado para fins de portfólio.
 ---
 
 <div align="center">
-  <sub>Desenvolvido com ❤️ por <a href="https://linkedin.com/in/seu-linkedin">Eduardo Martins</a></sub>
+  <sub>Desenvolvido por <a href="https://www.linkedin.com/in/eduardo-marafiga-9b2ab58a/">Eduardo Martins</a></sub>  <sub>e <a href="https://github.com/glizardx
+">Guilherme Lizardo</a></sub>
 </div>
