@@ -211,6 +211,19 @@ Código disponibilizado para fins de portfólio.
 
 ---
 
+## Screenshots 
+
+<img width="947" height="256" alt="image" src="https://github.com/user-attachments/assets/0ec06422-0c81-4874-a395-157eafcbd6f5" />
+<img width="932" height="336" alt="image" src="https://github.com/user-attachments/assets/f5e33889-7f3a-4e47-ba14-a84767632b9f" />
+<img width="889" height="321" alt="image" src="https://github.com/user-attachments/assets/ea7f89e0-23bb-47dc-a19a-631c91088e85" />
+<img width="894" height="216" alt="image" src="https://github.com/user-attachments/assets/096d3eb5-b02b-40f3-b40e-70a42cd52ef1" />
+<img width="904" height="302" alt="image" src="https://github.com/user-attachments/assets/4b0cfaef-a266-4614-8a09-abd21243abb7" />
+<img width="917" height="281" alt="image" src="https://github.com/user-attachments/assets/e9638331-6e4f-4c4f-87d0-8e2a46de5b47" />
+<img width="912" height="289" alt="image" src="https://github.com/user-attachments/assets/c7f34154-1ec5-44c4-8472-72a464f9dcae" />
+
+
+---
+
 <div align="center">
   <sub>Desenvolvido por <a href="https://www.linkedin.com/in/eduardo-marafiga-9b2ab58a/">Eduardo Martins</a></sub>  <sub>e <a href="https://github.com/glizardx
 ">Guilherme Lizardo</a></sub>
