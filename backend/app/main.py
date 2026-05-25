@@ -9,7 +9,12 @@ from app.routers import auth, companies, employees, field_sheets, uploads, repor
 from app.config import settings
 from app.core.limiter import limiter
 
-app = FastAPI(title="EcoSegme API", version="1.0.0")
+app = FastAPI(
+    title="EcoSegme API",
+    version="1.0.0",
+    docs_url="/docs" if settings.DEBUG else None,
+    redoc_url="/redoc" if settings.DEBUG else None,
+)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
