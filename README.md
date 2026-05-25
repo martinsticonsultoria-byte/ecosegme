@@ -1,4 +1,4 @@
-# EcoSegme — Sistema de Laudos de Dosimetria de Ruído Ocupacional
+# Sistema de Laudos de Dosimetria de Ruído Ocupacional
 
 <div align="center">
 
@@ -22,20 +22,20 @@
 
 ## 🎯 O Problema Resolvido
 
-Uma consultoria ambiental em Manaus/AM processava laudos técnicos de dosimetria de ruído de forma 100% manual:
+Uma consultoria ambiental no Norte do Brasil processava laudos técnicos de dosimetria de ruído de forma 100% manual:
 
 ```
 Dosímetro → exportar PDF → transcrever dados → Excel → formatar → gerar PDF final
 ```
 
-**Resultado:** dias por laudo · podendo a chegar à atraso de 60–90 dias no faturamento devido a demora em geração do relatório final · 80 laudos/mês acumulando
+**Resultado:** dias por laudo · podendo a chegar à atraso de vários dias no faturamento devido a demora em geração do relatório final · dezenas laudos/mês acumulando
 
-**Com o EcoSegme:**
+**Com o sistema:**
 ```
-Dosímetro → upload do PDF → parser automático → conferência → laudo em PDF
+Dosímetro → upload do PDF → parser automático → conferência → Relatório em PDF
 ```
 
-**Resultado:** menos de 10 minutos por laudo · faturamento no prazo · zero retrabalho de transcrição
+**Resultado:** menos de 5 minutos por relatório · faturamento no prazo · zero retrabalho de transcrição
 
 ---
 
@@ -43,9 +43,9 @@ Dosímetro → upload do PDF → parser automático → conferência → laudo e
 
 | Métrica | Antes | Depois |
 |---|---|---|
-| Tempo por laudo | dias | < 10 minutos |
-| Atraso no faturamento | 60–90 dias | Zero |
-| Volume mensal | 80 laudos acumulados | 80 laudos processados |
+| Tempo por laudo | dias | < 5 minutos |
+| Atraso no faturamento | vários dias | Zero |
+| Volume mensal | laudos acumulados | laudos processados |
 | Erros de transcrição | Frequentes | Zero (parser automático) |
 
 ---
@@ -206,7 +206,7 @@ pytest tests/ -v
 
 ## 📄 Licença
 
-Projeto desenvolvido para uso privado da Ecosegme Ambiental.
+Projeto desenvolvido para uso privado da consultoria Ambiental.
 Código disponibilizado para fins de portfólio.
 
 ---
