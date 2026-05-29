@@ -69,7 +69,14 @@ def name_similarity(name_a: str, name_b: str) -> float:
 def names_match(name_pdf: str, name_db: str, threshold: float = 0.85) -> bool:
     if not name_pdf or not name_db:
         return False
-    return name_similarity(name_pdf, name_db) >= threshold
+    a = normalize_text(name_pdf).lower()
+    b = normalize_text(name_db).lower()
+    # Tokens numéricos são identificadores — devem coincidir exatamente
+    nums_a = set(re.findall(r'\b\d+\b', a))
+    nums_b = set(re.findall(r'\b\d+\b', b))
+    if (nums_a or nums_b) and nums_a != nums_b:
+        return False
+    return SequenceMatcher(None, a, b).ratio() >= threshold
 
 
 def validate_header(text: str) -> bool:
