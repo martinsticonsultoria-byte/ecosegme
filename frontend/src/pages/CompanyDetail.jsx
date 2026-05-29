@@ -62,6 +62,9 @@ export default function CompanyDetail() {
   const [reports, setReports] = useState([]);
   const [fieldSheets, setFieldSheets] = useState([]);
   const [consolidated, setConsolidated] = useState([]);
+  const [filtroDataDe, setFiltroDataDe] = useState('');
+  const [filtroDataAte, setFiltroDataAte] = useState('');
+  const [filtroNumLaudo, setFiltroNumLaudo] = useState('');
   const [genTipo, setGenTipo] = useState('Ruído');
   const [genFormat, setGenFormat] = useState('pdf');
   const [generating, setGenerating] = useState(false);
@@ -467,7 +470,14 @@ export default function CompanyDetail() {
         )}
 
         {/* Relatórios Consolidados */}
-        {aba === 'relatorios' && (
+        {aba === 'relatorios' && (() => {
+          const consolidadoFiltrado = consolidated.filter(r => {
+            if (filtroDataDe && new Date(r.generated_at) < new Date(filtroDataDe + 'T00:00:00')) return false;
+            if (filtroDataAte && new Date(r.generated_at) > new Date(filtroDataAte + 'T23:59:59')) return false;
+            if (filtroNumLaudo && !r.filename.toLowerCase().includes(filtroNumLaudo.toLowerCase())) return false;
+            return true;
+          });
+          return (
           <>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 8, alignItems: 'center' }}>
               <select className="form-input" style={{ padding: '6px 10px', fontSize: 13 }} value={genTipo} onChange={e => setGenTipo(e.target.value)}>
@@ -487,13 +497,37 @@ export default function CompanyDetail() {
                 {generating ? 'Gerando...' : '+ Gerar Relatório'}
               </button>
             </div>
-            {consolidated.length === 0 ? (
-              <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Nenhum relatório consolidado gerado.</div>
+            {consolidated.length > 0 && (
+              <div style={{ padding: '10px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: '#fafafa' }}>
+                <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>Filtrar:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <label style={{ fontSize: 12, color: '#64748b' }}>De:</label>
+                  <input type="date" className="form-input" style={{ padding: '4px 8px', fontSize: 12, width: 140 }} value={filtroDataDe} onChange={e => setFiltroDataDe(e.target.value)} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <label style={{ fontSize: 12, color: '#64748b' }}>Até:</label>
+                  <input type="date" className="form-input" style={{ padding: '4px 8px', fontSize: 12, width: 140 }} value={filtroDataAte} onChange={e => setFiltroDataAte(e.target.value)} />
+                </div>
+                <input type="text" className="form-input" style={{ padding: '4px 8px', fontSize: 12, width: 160 }} placeholder="Nº do Laudo..." value={filtroNumLaudo} onChange={e => setFiltroNumLaudo(e.target.value)} />
+                {(filtroDataDe || filtroDataAte || filtroNumLaudo) && (
+                  <button className="btn btn-secondary btn-sm" onClick={() => { setFiltroDataDe(''); setFiltroDataAte(''); setFiltroNumLaudo(''); }} style={{ fontSize: 12 }}>
+                    Limpar filtros
+                  </button>
+                )}
+                {consolidadoFiltrado.length !== consolidated.length && (
+                  <span style={{ fontSize: 12, color: '#94a3b8' }}>{consolidadoFiltrado.length} de {consolidated.length}</span>
+                )}
+              </div>
+            )}
+            {consolidadoFiltrado.length === 0 ? (
+              <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>
+                {consolidated.length === 0 ? 'Nenhum relatório consolidado gerado.' : 'Nenhum relatório encontrado para os filtros aplicados.'}
+              </div>
             ) : (
               <table className="table">
                 <thead><tr><th>Arquivo</th><th>Análise</th><th>Formato</th><th>Gerado em</th><th>Ações</th></tr></thead>
                 <tbody>
-                  {consolidated.map(r => (
+                  {consolidadoFiltrado.map(r => (
                     <tr key={r.id}>
                       <td style={{ fontSize: 13, fontWeight: 500 }}>{r.filename}</td>
                       <td style={{ color: '#64748b', fontSize: 13 }}>{r.tipo_analise}</td>
@@ -526,7 +560,8 @@ export default function CompanyDetail() {
               </table>
             )}
           </>
-        )}
+          );
+        })()}
 
         {/* Laudos */}
         {aba === 'laudos' && (

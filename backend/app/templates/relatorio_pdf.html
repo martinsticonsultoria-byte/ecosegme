@@ -156,7 +156,7 @@
     <tbody>
       {% for f in fichas %}
       <tr>
-        <td style="text-align:center;">{{ f.laudo_number }}.{{ f.laudo_y }}/{{ year }}</td>
+        <td style="text-align:center;">{{ f.laudo_number }}/{{ year }}</td>
         <td style="text-align:center;">{{ f.funcao or '—' }}</td>
         <td style="text-align:center;">{{ f.local or '—' }}</td>
         <td style="text-align:center;">{{ f.setor or '—' }}</td>
@@ -193,7 +193,7 @@
     </tr>
   </table>
 
-  <h1>Relatório de Ensaio Analítico N. {{ f.laudo_number }}.{{ f.laudo_y }}/{{ year }}</h1>
+  <h1>Relatório de Ensaio Analítico N. {{ f.laudo_number }}/{{ year }}</h1>
 
   <table>
     <tr><td class="label">Razão Social:</td><td>{{ razao_social }}</td></tr>

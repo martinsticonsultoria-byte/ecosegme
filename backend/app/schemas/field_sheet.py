@@ -28,7 +28,7 @@ class FieldSheetCreate(BaseModel):
 
 class FieldSheetOut(BaseModel):
     id: int
-    laudo_number: Optional[int] = None
+    laudo_number: Optional[str] = None
     dosimeter_number: int
     collection_date: date
     tipo_analise: Optional[str] = None
@@ -52,7 +52,6 @@ class FieldSheetOut(BaseModel):
     pos_verificacao_db: Optional[str] = None
     data_relatorio: Optional[date] = None
     conclusao_texto: Optional[str] = None
-    laudo_y: int = 1
     has_sonus: Optional[bool] = False
     sonus_parsed_name: Optional[str] = None
     sonus_name_mismatch: Optional[bool] = None

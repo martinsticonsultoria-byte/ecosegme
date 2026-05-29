@@ -227,11 +227,33 @@ function ConferenceDetail({ group, onBack, onReload }) {
               <>
                 <button className="btn btn-primary"
                   onClick={() => {
-                    const p = new URLSearchParams({ company_id: group.company_id, tipo_analise: group.tipo_analise });
-                    fichasSelecionadas.forEach(id => p.append('field_sheet_ids', id));
-                    blobDownload(`/reports/generate-bulk-pdf?${p}`, `relatorio_${group.tipo_analise}_${group.company_nome?.slice(0,20)}.pdf`, setGenBulkPdf);
-                    setModoSelecao(false);
-                    setFichasSelecionadas([]);
+                    const getPrefix = (laudoNumber) => {
+                      if (!laudoNumber) return '';
+                      const s = String(laudoNumber);
+                      return s.includes('.') ? s.split('.')[0] : s;
+                    };
+                    const prefixosSelecionados = fichasSelecionadas.map(id => {
+                      const f = sheets.find(s => s.id === id);
+                      return f ? getPrefix(f.laudo_number) : '';
+                    }).filter(Boolean);
+                    const prefixosDistintos = [...new Set(prefixosSelecionados)];
+                    const executarGeracao = () => {
+                      const p = new URLSearchParams({ company_id: group.company_id, tipo_analise: group.tipo_analise });
+                      fichasSelecionadas.forEach(id => p.append('field_sheet_ids', id));
+                      blobDownload(`/reports/generate-bulk-pdf?${p}`, `relatorio_${group.tipo_analise}_${group.company_nome?.slice(0,20)}.pdf`, setGenBulkPdf);
+                      setModoSelecao(false);
+                      setFichasSelecionadas([]);
+                    };
+                    if (prefixosDistintos.length > 1) {
+                      const ok = window.confirm(
+                        `As fichas selecionadas pertencem a análises diferentes (${prefixosDistintos.join(', ')}).\n` +
+                        `O relatório pode ser gerado, mas o número na capa não representará uma sequência contínua.\n\n` +
+                        `Deseja continuar?`
+                      );
+                      if (ok) executarGeracao();
+                    } else {
+                      executarGeracao();
+                    }
                   }}
                   disabled={genBulkPdf || fichasSelecionadas.length === 0}>
                   {genBulkPdf ? 'Gerando...' : 'Confirmar e Gerar'}
@@ -293,7 +315,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                       </td>
                     )}
                     <td style={tdStyle}>
-                      {sheet.laudo_number ? <span className="badge badge-blue">{sheet.laudo_number}.{sheet.laudo_y || 1}/{new Date().getFullYear()}</span> : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}
+                      {sheet.laudo_number ? <span className="badge badge-blue">{sheet.laudo_number}/{new Date().getFullYear()}</span> : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}
                     </td>
                     <td style={tdSmall}>{sheet.dosimeter_number}</td>
                     <td style={tdSmall}>{new Date(sheet.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
@@ -337,7 +359,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                               !sheet.laudo_number ? 'Defina o Nº do Laudo antes de aprovar' :
                               !sheet.data_relatorio ? 'Defina a Data do Relatório antes de aprovar' :
                               !sheet.has_sonus ? 'Envie o PDF do SONUS antes de aprovar' :
-                              ''
+                              `Aprovar · Nº ${sheet.laudo_number}/${new Date().getFullYear()}`
                             }>
                             {approving[sheet.id] ? '...' : 'Aprovar'}
                           </button>
@@ -382,7 +404,10 @@ function ConferenceDetail({ group, onBack, onReload }) {
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 12 }}>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Nº do Laudo</label>
-                            <input className="form-input" type="number" value={editForm.laudo_number} onChange={e => setEditForm(f => ({ ...f, laudo_number: parseInt(e.target.value) || '' }))} placeholder="Ex: 42" style={{ width: '120px' }} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <input className="form-input" type="text" value={editForm.laudo_number} onChange={e => setEditForm(f => ({ ...f, laudo_number: e.target.value }))} placeholder="Ex: 123.1" style={{ width: '110px' }} />
+                              <span style={{ color: '#666', fontWeight: 500, fontSize: 13 }}>/{new Date().getFullYear()}</span>
+                            </div>
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Nº Dosímetro</label>

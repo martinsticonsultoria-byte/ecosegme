@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import extract
 from typing import List
 from jinja2 import Template
 from weasyprint import HTML
@@ -39,11 +38,6 @@ def list_pending_field_sheets(db: Session = Depends(get_db), _=Depends(get_curre
     ).order_by(FieldSheet.laudo_number.asc()).all()
     return sheets
 
-@router.get("/next-number", response_model=dict)
-def get_next_laudo_number(db: Session = Depends(get_db), _=Depends(get_current_user)):
-    last = db.query(FieldSheet).order_by(FieldSheet.laudo_number.desc()).first()
-    next_number = (last.laudo_number + 1) if last else 1
-    return {"next_number": next_number}
 
 @router.post("", response_model=FieldSheetOut)
 def create_field_sheet(data: FieldSheetCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -69,16 +63,9 @@ def create_field_sheet(data: FieldSheetCreate, db: Session = Depends(get_db), cu
             db.flush()
             employee_id = new_emp.id
 
-    current_year = datetime.now().year
-    count_this_year = db.query(FieldSheet).filter(
-        FieldSheet.company_id == data.company_id,
-        extract('year', FieldSheet.created_at) == current_year
-    ).count()
-
     payload = data.dict()
     payload['employee_id'] = employee_id
     payload['laudo_number'] = None
-    payload['laudo_y'] = count_this_year + 1
     payload['created_by'] = current_user.id
     # remove campos auxiliares que não existem no modelo
     for key in ('employee_funcao', 'employee_matricula', 'employee_setor', 'employee_local'):
@@ -142,7 +129,7 @@ def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=De
     if new_status not in ("pendente", "aprovada"):
         raise HTTPException(status_code=400, detail="Status invalido")
     if new_status == "aprovada":
-        if not sheet.laudo_number:
+        if not sheet.laudo_number or not str(sheet.laudo_number).strip():
             raise HTTPException(status_code=400, detail="Defina o Nº do Laudo antes de aprovar a ficha")
         if not sheet.data_relatorio:
             raise HTTPException(status_code=400, detail="Defina a Data do Relatório antes de aprovar a ficha")
@@ -163,14 +150,6 @@ def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=De
         from datetime import date
         if not sheet.signature_date:
             sheet.signature_date = date.today()
-        ano_atual = datetime.now().year
-        count = db.query(FieldSheet).filter(
-            FieldSheet.company_id == sheet.company_id,
-            FieldSheet.status == "aprovada",
-            FieldSheet.id != sheet.id,
-            extract('year', FieldSheet.signature_date) == ano_atual,
-        ).count()
-        sheet.laudo_y = count + 1
     db.commit()
     db.refresh(sheet)
     return {"id": sheet.id, "status": sheet.status}
