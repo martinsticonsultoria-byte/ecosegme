@@ -1,4 +1,4 @@
-# EcoSegme — Sistema de Laudos de Dosimetria de Ruído Ocupacional
+# Sistema de Laudos de Dosimetria de Ruído Ocupacional
 
 <div align="center">
 
@@ -22,20 +22,20 @@
 
 ## 🎯 O Problema Resolvido
 
-Uma consultoria ambiental em Manaus/AM processava laudos técnicos de dosimetria de ruído de forma 100% manual:
+Uma consultoria ambiental no Norte do Brasil processava laudos técnicos de dosimetria de ruído de forma 100% manual:
 
 ```
 Dosímetro → exportar PDF → transcrever dados → Excel → formatar → gerar PDF final
 ```
 
-**Resultado:** dias por laudo · podendo a chegar à atraso de 60–90 dias no faturamento devido a demora em geração do relatório final · 80 laudos/mês acumulando
+**Resultado:** dias por laudo · podendo a chegar à atraso de vários dias no faturamento devido a demora em geração do relatório final · dezenas laudos/mês acumulando
 
-**Com o EcoSegme:**
+**Com o sistema:**
 ```
-Dosímetro → upload do PDF → parser automático → conferência → laudo em PDF
+Dosímetro → upload do PDF → parser automático → conferência → Relatório em PDF
 ```
 
-**Resultado:** menos de 10 minutos por laudo · faturamento no prazo · zero retrabalho de transcrição
+**Resultado:** menos de 5 minutos por relatório · faturamento no prazo · zero retrabalho de transcrição
 
 ---
 
@@ -43,9 +43,9 @@ Dosímetro → upload do PDF → parser automático → conferência → laudo e
 
 | Métrica | Antes | Depois |
 |---|---|---|
-| Tempo por laudo | dias | < 10 minutos |
-| Atraso no faturamento | 60–90 dias | Zero |
-| Volume mensal | 80 laudos acumulados | 80 laudos processados |
+| Tempo por laudo | dias | < 5 minutos |
+| Atraso no faturamento | vários dias | Zero |
+| Volume mensal | laudos acumulados | laudos processados |
 | Erros de transcrição | Frequentes | Zero (parser automático) |
 
 ---
@@ -206,8 +206,21 @@ pytest tests/ -v
 
 ## 📄 Licença
 
-Projeto desenvolvido para uso privado da Ecosegme Ambiental.
+Projeto desenvolvido para uso privado da consultoria Ambiental.
 Código disponibilizado para fins de portfólio.
+
+---
+
+## Screenshots 
+
+<img width="947" height="256" alt="image" src="https://github.com/user-attachments/assets/0ec06422-0c81-4874-a395-157eafcbd6f5" />
+<img width="932" height="336" alt="image" src="https://github.com/user-attachments/assets/f5e33889-7f3a-4e47-ba14-a84767632b9f" />
+<img width="889" height="321" alt="image" src="https://github.com/user-attachments/assets/ea7f89e0-23bb-47dc-a19a-631c91088e85" />
+<img width="894" height="216" alt="image" src="https://github.com/user-attachments/assets/096d3eb5-b02b-40f3-b40e-70a42cd52ef1" />
+<img width="904" height="302" alt="image" src="https://github.com/user-attachments/assets/4b0cfaef-a266-4614-8a09-abd21243abb7" />
+<img width="917" height="281" alt="image" src="https://github.com/user-attachments/assets/e9638331-6e4f-4c4f-87d0-8e2a46de5b47" />
+<img width="912" height="289" alt="image" src="https://github.com/user-attachments/assets/c7f34154-1ec5-44c4-8472-72a464f9dcae" />
+
 
 ---
 
