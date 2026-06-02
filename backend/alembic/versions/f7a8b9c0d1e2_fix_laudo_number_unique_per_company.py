@@ -20,12 +20,20 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     # Remove a constraint única global de laudo_number
     op.drop_constraint('field_sheets_laudo_number_key', 'field_sheets', type_='unique')
-    # Adiciona constraint única por empresa (company_id + laudo_number)
-    op.create_unique_constraint(
-        'uq_field_sheets_company_laudo_number',
-        'field_sheets',
-        ['company_id', 'laudo_number']
-    )
+    # Adiciona constraint única por empresa — idempotente
+    op.execute("""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_constraint
+                WHERE conname = 'uq_field_sheets_company_laudo_number'
+            ) THEN
+                ALTER TABLE field_sheets
+                ADD CONSTRAINT uq_field_sheets_company_laudo_number
+                UNIQUE (company_id, laudo_number);
+            END IF;
+        END $$;
+    """)
 
 
 def downgrade() -> None:
