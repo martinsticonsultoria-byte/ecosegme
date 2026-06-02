@@ -18,8 +18,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Dropa constraint unique composta antes de alterar o tipo da coluna
-    op.drop_constraint('uq_field_sheets_company_laudo_number', 'field_sheets', type_='unique')
+    # Dropa constraint unique composta antes de alterar o tipo da coluna (IF EXISTS: seguro se já foi dropada por branch paralela)
+    op.execute("ALTER TABLE field_sheets DROP CONSTRAINT IF EXISTS uq_field_sheets_company_laudo_number")
 
     # Converte laudo_number de INTEGER para VARCHAR(50)
     op.alter_column(
