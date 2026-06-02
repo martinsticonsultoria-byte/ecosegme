@@ -156,6 +156,7 @@ def delete_report(report_id: int, db: Session = Depends(get_db), _=Depends(get_c
     if sheet and sheet.status == "aprovada":
         sheet.status = "pendente"
         sheet.signature_date = None
+        sheet.laudo_y = None
     db.commit()
     return {"ok": True}
 
@@ -227,7 +228,7 @@ def generate_bulk_report(
     capa["M20"] = company.cnpj or ""
     capa["N23"] = period
     laudo_numbers = [s.laudo_number for s in sheets]
-    capa["M3"] = f"{laudo_numbers[0]:04d}-1 ao {laudo_numbers[-1]:04d}-{len(sheets)}"
+    capa["M3"] = f"{str(laudo_numbers[0] or '').zfill(4)}-1 ao {str(laudo_numbers[-1] or '').zfill(4)}-{len(sheets)}"
     # Preenche número das ordens na Capa e apaga placeholders do template
     all_number_cells = [
         "P3","P4","P5","P6","P7","P8","P9","P10","P11","P12",
@@ -238,7 +239,7 @@ def generate_bulk_report(
     ]
     for i, coord in enumerate(all_number_cells):
         if i < len(sheets):
-            capa[coord] = f"{sheets[i].laudo_number:04d}-{i+1}"
+            capa[coord] = f"{str(sheets[i].laudo_number or '').zfill(4)}-{i+1}"
         else:
             capa[coord] = None  # limpa placeholder do template
 
@@ -320,7 +321,7 @@ def generate_bulk_report(
         if ne_val_sheet is not None:
             acao_result = "ACIMA" if ne_val_sheet > 85 else "ABAIXO"
 
-        ws["E1"] = f"{sheet.laudo_number:04d}-{i+1}"
+        ws["E1"] = f"{str(sheet.laudo_number or '').zfill(4)}-{i+1}"
         ws["L1"] = sig_date_str
         ws["B2"] = company.razao_social
         ws["B3"] = company.endereco or ""
@@ -462,6 +463,7 @@ def generate_bulk_pdf(
             sig_date_ext = f"{_now.day:02d} de {_MESES_PT[_now.month-1]} de {_now.year}"
         fichas.append({
             "laudo_number": sheet.laudo_number,
+            "laudo_y": sheet.laudo_y,
             "employee_nome": emp.nome if emp else (sheet.employee_name_text or ""),
             "funcao": emp.funcao if emp else "",
             "matricula": emp.matricula if emp else "",
@@ -519,8 +521,16 @@ def generate_bulk_pdf(
 
     _year = datetime.now().year
     sheets_sorted = sorted(sheets, key=lambda s: s.laudo_number or '')
-    laudo_min = sheets_sorted[0].laudo_number if sheets_sorted else ''
-    laudo_max = sheets_sorted[-1].laudo_number if sheets_sorted else ''
+    sheets_com_y = [s for s in sheets if s.laudo_y is not None]
+    if sheets_com_y:
+        sheets_sorted_y = sorted(sheets_com_y, key=lambda s: s.laudo_y)
+        primeira = sheets_sorted_y[0]
+        ultima = sheets_sorted_y[-1]
+        laudo_min = f"{primeira.laudo_number}.{primeira.laudo_y}"
+        laudo_max = f"{ultima.laudo_number}.{ultima.laudo_y}"
+    else:
+        laudo_min = sheets_sorted[0].laudo_number if sheets_sorted else ''
+        laudo_max = sheets_sorted[-1].laudo_number if sheets_sorted else ''
     nr_texto = f"{laudo_min}/{_year} ao {laudo_max}/{_year}" if laudo_min != laudo_max else f"{laudo_min}/{_year}"
     nr_font_size = calc_font_size(nr_texto, 321.1, font_size_pt=20.0, min_pt=10.0, char_factor=0.65)
 

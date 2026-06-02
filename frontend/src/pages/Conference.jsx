@@ -37,6 +37,13 @@ function ConferenceDetail({ group, onBack, onReload }) {
     return <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: s.bg, color: s.color }}>{s.label}</span>;
   };
 
+  const exibirLaudo = (sheet) => {
+    const ano = new Date().getFullYear();
+    if (!sheet.laudo_number) return 'S/Nº';
+    if (sheet.laudo_y) return `${sheet.laudo_number}.${sheet.laudo_y}/${ano}`;
+    return `${sheet.laudo_number}.?/${ano}`;
+  };
+
   const handleApprove = async (sheetId) => {
     setApproving(a => ({ ...a, [sheetId]: true }));
     try {
@@ -315,7 +322,9 @@ function ConferenceDetail({ group, onBack, onReload }) {
                       </td>
                     )}
                     <td style={tdStyle}>
-                      {sheet.laudo_number ? <span className="badge badge-blue">{sheet.laudo_number}/{new Date().getFullYear()}</span> : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}
+                      {sheet.laudo_number
+                        ? <span className="badge badge-blue">{exibirLaudo(sheet)}</span>
+                        : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}
                     </td>
                     <td style={tdSmall}>{sheet.dosimeter_number}</td>
                     <td style={tdSmall}>{new Date(sheet.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
@@ -359,7 +368,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                               !sheet.laudo_number ? 'Defina o Nº do Laudo antes de aprovar' :
                               !sheet.data_relatorio ? 'Defina a Data do Relatório antes de aprovar' :
                               !sheet.has_sonus ? 'Envie o PDF do SONUS antes de aprovar' :
-                              `Aprovar · Nº ${sheet.laudo_number}/${new Date().getFullYear()}`
+                              `Aprovar · Nº ${sheet.laudo_number}.?/${new Date().getFullYear()}`
                             }>
                             {approving[sheet.id] ? '...' : 'Aprovar'}
                           </button>
@@ -405,8 +414,8 @@ function ConferenceDetail({ group, onBack, onReload }) {
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Nº do Laudo</label>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <input className="form-input" type="text" value={editForm.laudo_number} onChange={e => setEditForm(f => ({ ...f, laudo_number: e.target.value }))} placeholder="Ex: 123.1" style={{ width: '110px' }} />
-                              <span style={{ color: '#666', fontWeight: 500, fontSize: 13 }}>/{new Date().getFullYear()}</span>
+                                <input className="form-input" type="text" inputMode="numeric" pattern="[0-9]*" value={editForm.laudo_number} onChange={e => setEditForm(f => ({ ...f, laudo_number: e.target.value.replace(/[^0-9]/g, '') }))} placeholder="Ex: 047 ou 345" style={{ width: '110px' }} />
+                              <span style={{ color: '#666', fontWeight: 500, fontSize: 13 }}>.?/{new Date().getFullYear()}</span>
                             </div>
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>

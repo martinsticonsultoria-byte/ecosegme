@@ -10,6 +10,7 @@ class FieldSheet(Base):
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=True)
     laudo_number = Column(String(50), nullable=True)
+    laudo_y = Column(Integer, nullable=True)
     dosimeter_number = Column(Integer, nullable=False)
     collection_date = Column(Date, nullable=False)
     epi = Column(String(200), nullable=True)
