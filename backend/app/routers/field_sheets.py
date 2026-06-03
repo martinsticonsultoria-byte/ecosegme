@@ -120,14 +120,12 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
         "laudo_number", "technician_name", "pre_verificacao_db", "dosimeter_number",
         "collection_date", "tipo_analise", "data_relatorio", "conclusao_texto",
     }
-    from datetime import date as date_type
     for key, value in body.items():
         if key not in allowed:
             continue
         if value == "":
             value = None
         if key in ("collection_date", "data_relatorio") and value:
-            from datetime import datetime
             value = datetime.strptime(value, "%Y-%m-%d").date()
         if key == "dosimeter_number" and value:
             value = int(value)
