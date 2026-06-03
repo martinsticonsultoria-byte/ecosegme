@@ -90,29 +90,39 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
 
     novo_xxx = body.get("laudo_number")
     if novo_xxx and str(novo_xxx).strip() and novo_xxx != sheet.laudo_number:
-        from sqlalchemy import extract as sa_extract
+        from sqlalchemy import extract
+        from app.models.consolidated_report import ConsolidatedReport as CR
         ano_atual = datetime.now().year
-        ficha_em_relatorio = db.query(FieldSheet).filter(
-            FieldSheet.laudo_number == novo_xxx,
-            FieldSheet.id != sheet_id,
-            FieldSheet.laudo_y.isnot(None),
-            sa_extract('year', FieldSheet.signature_date) == ano_atual,
-        ).join(
-            GeneratedReport,
-            GeneratedReport.field_sheet_id == FieldSheet.id,
-            isouter=False
-        ).first()
+
+        # BLOQUEAR: xxx em empresa diferente com ficha aprovada no ano atual
         ficha_outra_empresa = db.query(FieldSheet).filter(
             FieldSheet.laudo_number == novo_xxx,
             FieldSheet.id != sheet_id,
             FieldSheet.company_id != sheet.company_id,
             FieldSheet.laudo_y.isnot(None),
-            sa_extract('year', FieldSheet.signature_date) == ano_atual,
+            extract('year', FieldSheet.signature_date) == ano_atual,
         ).first()
-        if ficha_em_relatorio or ficha_outra_empresa:
+
+        if ficha_outra_empresa:
             raise HTTPException(
                 status_code=400,
-                detail=f"O código {novo_xxx} já foi utilizado em outra análise ou empresa em {ano_atual}. Escolha um código diferente."
+                detail=f"O código {novo_xxx} já foi utilizado em outra "
+                       f"empresa em {ano_atual}. Escolha um código diferente."
+            )
+
+        # BLOQUEAR: xxx já aparece em ConsolidatedReport gerado no ano atual
+        relatorio_existente = db.query(CR).filter(
+            CR.company_id == sheet.company_id,
+            extract('year', CR.generated_at) == ano_atual,
+            CR.filename.contains(novo_xxx),
+        ).first()
+
+        if relatorio_existente:
+            raise HTTPException(
+                status_code=400,
+                detail=f"O código {novo_xxx} já foi utilizado em um "
+                       f"relatório consolidado gerado em {ano_atual}. "
+                       f"Escolha um código diferente."
             )
 
     allowed = {
