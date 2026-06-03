@@ -11,8 +11,6 @@ TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "templates", "laudo.html
 
 _MESES_PT = ["janeiro","fevereiro","março","abril","maio","junho",
              "julho","agosto","setembro","outubro","novembro","dezembro"]
-OUTPUT_DIR = os.environ.get("STORAGE_DIR", "/tmp/laudos")
-
 def slugify(text, max_len=20):
     text = text.upper().strip()
     text = re.sub(r"[^A-Z0-9 ]", "", text)
@@ -20,7 +18,8 @@ def slugify(text, max_len=20):
     return text[:max_len]
 
 def generate_laudo(data: dict) -> tuple:
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    storage_dir = os.environ.get('STORAGE_DIR', '/tmp/laudos')
+    os.makedirs(storage_dir, exist_ok=True)
     with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
         template_str = f.read()
     template = Template(template_str)
@@ -49,8 +48,8 @@ def generate_laudo(data: dict) -> tuple:
         data_coleta = raw_date.replace("-", "")
     filename = f"{codigo}_{empresa}_DOSIMETRIA_{data_coleta}.pdf"
 
-    temp_path = os.path.join(OUTPUT_DIR, "temp_" + filename)
-    output_path = os.path.join(OUTPUT_DIR, filename)
+    temp_path = os.path.join(storage_dir, "temp_" + filename)
+    output_path = os.path.join(storage_dir, filename)
 
     HTML(string=html_content).write_pdf(temp_path)
 

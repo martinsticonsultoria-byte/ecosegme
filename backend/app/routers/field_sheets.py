@@ -84,6 +84,34 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
         raise HTTPException(status_code=404, detail="Ficha não encontrada")
     if sheet.status == "aprovada":
         raise HTTPException(status_code=400, detail="Não é possível editar uma ficha já aprovada")
+
+    novo_xxx = body.get("laudo_number")
+    if novo_xxx and str(novo_xxx).strip() and novo_xxx != sheet.laudo_number:
+        from sqlalchemy import extract as sa_extract
+        ano_atual = datetime.now().year
+        ficha_em_relatorio = db.query(FieldSheet).filter(
+            FieldSheet.laudo_number == novo_xxx,
+            FieldSheet.id != sheet_id,
+            FieldSheet.laudo_y.isnot(None),
+            sa_extract('year', FieldSheet.signature_date) == ano_atual,
+        ).join(
+            GeneratedReport,
+            GeneratedReport.field_sheet_id == FieldSheet.id,
+            isouter=False
+        ).first()
+        ficha_outra_empresa = db.query(FieldSheet).filter(
+            FieldSheet.laudo_number == novo_xxx,
+            FieldSheet.id != sheet_id,
+            FieldSheet.company_id != sheet.company_id,
+            FieldSheet.laudo_y.isnot(None),
+            sa_extract('year', FieldSheet.signature_date) == ano_atual,
+        ).first()
+        if ficha_em_relatorio or ficha_outra_empresa:
+            raise HTTPException(
+                status_code=400,
+                detail=f"O código {novo_xxx} já foi utilizado em outra análise ou empresa em {ano_atual}. Escolha um código diferente."
+            )
+
     allowed = {
         "epi", "activity", "machine_noise", "technician_name_2", "pos_verificacao_db",
         "laudo_number", "technician_name", "pre_verificacao_db", "dosimeter_number",

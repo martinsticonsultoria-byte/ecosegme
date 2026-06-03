@@ -41,7 +41,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
     const ano = new Date().getFullYear();
     if (!sheet.laudo_number) return 'S/Nº';
     if (sheet.laudo_y) return `${sheet.laudo_number}.${sheet.laudo_y}/${ano}`;
-    return `${sheet.laudo_number}.?/${ano}`;
+    return sheet.laudo_number;
   };
 
   const handleApprove = async (sheetId) => {
@@ -186,6 +186,10 @@ function ConferenceDetail({ group, onBack, onReload }) {
       if (updated) setSheets(s => s.map(x => x.id === sheetId ? updated : x));
       onReload();
     } catch (err) {
+      if (err.response?.status === 400) {
+        alert(err.response?.data?.detail || 'Código já utilizado. Escolha outro.')
+        return
+      }
       setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao salvar' }));
     } finally { setSaving(false); }
   };
@@ -368,7 +372,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                               !sheet.laudo_number ? 'Defina o Nº do Laudo antes de aprovar' :
                               !sheet.data_relatorio ? 'Defina a Data do Relatório antes de aprovar' :
                               !sheet.has_sonus ? 'Envie o PDF do SONUS antes de aprovar' :
-                              `Aprovar · Nº ${sheet.laudo_number}.?/${new Date().getFullYear()}`
+                              `Aprovar · Nº ${sheet.laudo_number}`
                             }>
                             {approving[sheet.id] ? '...' : 'Aprovar'}
                           </button>
@@ -415,7 +419,6 @@ function ConferenceDetail({ group, onBack, onReload }) {
                             <label className="form-label">Nº do Laudo</label>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <input className="form-input" type="text" inputMode="numeric" pattern="[0-9]*" value={editForm.laudo_number} onChange={e => setEditForm(f => ({ ...f, laudo_number: e.target.value.replace(/[^0-9]/g, '') }))} placeholder="Ex: 047 ou 345" style={{ width: '110px' }} />
-                              <span style={{ color: '#666', fontWeight: 500, fontSize: 13 }}>.?/{new Date().getFullYear()}</span>
                             </div>
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>

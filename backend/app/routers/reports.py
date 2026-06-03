@@ -563,9 +563,11 @@ def generate_bulk_pdf(
     HTML(string=html).write_pdf(tmp.name)
     tmp.close()
 
-    safe_name = company.razao_social.replace(" ", "_")[:25]
-    safe_tipo = tipo_analise.replace(" ", "_")
-    filename = f"relatorio_{safe_name}_{safe_tipo}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    import re as _re
+    _tipo = (sheets[0].tipo_analise or 'Análise').strip()
+    _empresa = _re.sub(r'[\\/:*?"<>|\s]+', '_', company.razao_social or 'Empresa').strip('_')
+    _xxx = sheets_sorted[0].laudo_number or 'SN'
+    filename = f"Relatório_{_tipo}_{_empresa}_{_xxx}.pdf"
 
     with open(tmp.name, "rb") as f:
         pdf_bytes = f.read()
