@@ -205,7 +205,7 @@ def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=De
             sheet.signature_date = date.today()
     db.commit()
     db.refresh(sheet)
-    return {"id": sheet.id, "status": sheet.status}
+    return {"id": sheet.id, "status": sheet.status, "laudo_y": sheet.laudo_y}
 
 @router.get("/{sheet_id}/pdf")
 def download_field_sheet_pdf(sheet_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):

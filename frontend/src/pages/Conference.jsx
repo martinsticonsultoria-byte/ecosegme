@@ -47,8 +47,11 @@ function ConferenceDetail({ group, onBack, onReload }) {
   const handleApprove = async (sheetId) => {
     setApproving(a => ({ ...a, [sheetId]: true }));
     try {
-      await api.patch(`/field-sheets/${sheetId}/status`, { status: 'aprovada' });
-      setSheets(s => s.map(x => x.id === sheetId ? { ...x, status: 'aprovada' } : x));
+      const res = await api.patch(`/field-sheets/${sheetId}/status`, { status: 'aprovada' });
+      setSheets(s => s.map(x => x.id === sheetId
+        ? { ...x, status: 'aprovada', laudo_y: res.data.laudo_y }
+        : x
+      ));
       onReload();
     } catch (err) {
       setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao aprovar' }));
