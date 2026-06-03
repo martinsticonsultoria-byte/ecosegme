@@ -94,13 +94,12 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
         from app.models.consolidated_report import ConsolidatedReport as CR
         ano_atual = datetime.now().year
 
-        # BLOQUEAR: xxx em empresa diferente com ficha aprovada no ano atual
+        # BLOQUEAR: xxx em empresa diferente com ficha aprovada (qualquer ano)
         ficha_outra_empresa = db.query(FieldSheet).filter(
             FieldSheet.laudo_number == novo_xxx,
             FieldSheet.id != sheet_id,
             FieldSheet.company_id != sheet.company_id,
             FieldSheet.laudo_y.isnot(None),
-            extract('year', FieldSheet.signature_date) == ano_atual,
         ).first()
 
         if ficha_outra_empresa:
@@ -186,15 +185,12 @@ def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=De
                         detail=f"Nome no SONUS '{sonus.parsed_employee_name}' diverge do cadastro '{emp_nome}'. Corrija antes de aprovar."
                     )
     if new_status == "aprovada":
-        from sqlalchemy import extract as sa_extract
-        ano_atual = datetime.now().year
         xxx = sheet.laudo_number
         count = db.query(FieldSheet).filter(
             FieldSheet.company_id == sheet.company_id,
             FieldSheet.laudo_number == xxx,
             FieldSheet.laudo_y.isnot(None),
             FieldSheet.id != sheet.id,
-            sa_extract('year', FieldSheet.signature_date) == ano_atual,
         ).count()
         sheet.laudo_y = count + 1
 
