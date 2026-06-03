@@ -1,7 +1,10 @@
 import os
 import tempfile
+import logging
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
+
+logger = logging.getLogger(__name__)
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -141,9 +144,10 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
                 setattr(emp, k, v)
     try:
         db.commit()
-    except Exception:
+    except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Erro ao salvar. Verifique se o Nº do Laudo não está duplicado.")
+        logger.error(f"Erro ao salvar ficha {sheet_id}: {type(e).__name__}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
     db.refresh(sheet)
     return {"ok": True}
 
