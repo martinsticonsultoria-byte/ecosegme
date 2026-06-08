@@ -12,7 +12,10 @@ export function AuthProvider({ children }) {
     if (token) {
       api.get('/auth/me')
         .then(res => setUser(res.data))
-        .catch(() => localStorage.removeItem('token'))
+        .catch(() => {
+          if (navigator.onLine) localStorage.removeItem('token')
+          else setUser({ name: 'Técnico', role: 'technician' })
+        })
         .finally(() => setLoading(false));
     } else {
       setLoading(false);

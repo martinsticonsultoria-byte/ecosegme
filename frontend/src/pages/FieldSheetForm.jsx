@@ -40,9 +40,13 @@ export default function FieldSheetForm() {
 
   useEffect(() => {
     api.get('/companies').then(res => setCompanies(res.data));
-    api.get('/epis').then(res => setEpiOptions([...res.data.predefined, ...res.data.custom]));
+    api.get('/epis').then(res => {
+      const opts = [...res.data.predefined, ...res.data.custom];
+      setEpiOptions(opts);
+    });
     if (prefilledCompanyId) {
-      api.get(`/employees?company_id=${prefilledCompanyId}`).then(res => setEmployees(res.data));
+      api.get(`/employees?company_id=${prefilledCompanyId}`)
+        .then(res => setEmployees(res.data));
     }
   }, []);
 
@@ -52,8 +56,10 @@ export default function FieldSheetForm() {
     setSelectedEmployee(null);
     setEmployeeInput('');
     setNewEmpFields({ funcao: '', matricula: '', setor: '', local: '' });
-    if (company_id) api.get(`/employees?company_id=${company_id}`).then(res => setEmployees(res.data));
-    else setEmployees([]);
+    if (company_id) {
+      api.get(`/employees?company_id=${company_id}`)
+        .then(res => setEmployees(res.data));
+    } else setEmployees([]);
   };
 
   const filteredEmployees = employees.filter(e =>
