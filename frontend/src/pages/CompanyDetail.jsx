@@ -236,7 +236,7 @@ export default function CompanyDetail() {
     setRelFichasSel([]);
     setRelCarregando(true);
     try {
-      const res = await api.get(`/field-sheets?company_id=${id}`);
+      const res = await api.get(`/field-sheets?company_id=${id}&tipo_analise=${encodeURIComponent(genTipo)}`);
       setRelFichas(res.data);
     } catch {
       alert('Erro ao carregar fichas.');
@@ -657,7 +657,7 @@ export default function CompanyDetail() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Nº do Laudo</label>
-                <input className="form-input" type="number" value={editSheetForm.laudo_number} onChange={e => setEditSheetForm(f => ({ ...f, laudo_number: parseInt(e.target.value) || '' }))} placeholder="Ex: 42" />
+                <input className="form-input" type="number" value={editSheetForm.laudo_number} onChange={e => setEditSheetForm(f => ({ ...f, laudo_number: e.target.value }))} placeholder="Ex: 42" />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Nº Dosímetro</label>

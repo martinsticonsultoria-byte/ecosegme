@@ -26,10 +26,16 @@ FICHA_TEMPLATE = os.path.join(os.path.dirname(__file__), "../templates/ficha_cam
 router = APIRouter(prefix="/field-sheets", tags=["field-sheets"])
 
 @router.get("", response_model=List[FieldSheetOut])
-def list_field_sheets(company_id: int = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def list_field_sheets(company_id: int = None, tipo_analise: str = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    from sqlalchemy import or_
     q = db.query(FieldSheet)
     if company_id:
         q = q.filter(FieldSheet.company_id == company_id)
+    if tipo_analise:
+        if tipo_analise == "Ruído":
+            q = q.filter(or_(FieldSheet.tipo_analise == tipo_analise, FieldSheet.tipo_analise.is_(None)))
+        else:
+            q = q.filter(FieldSheet.tipo_analise == tipo_analise)
     return q.order_by(FieldSheet.created_at.desc()).all()
 
 @router.get("/pending", response_model=List[FieldSheetOut])
