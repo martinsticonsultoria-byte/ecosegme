@@ -324,13 +324,20 @@ def approve_chemical_field_sheet(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
-    """Aprova a ficha: define laudo_number, laudo_y, status e signature_date."""
+    """Aprova a ficha: define laudo_number, laudo_y, status e signature_date.
+    laudo_y é calculado como count+1 de fichas já aprovadas com o mesmo laudo_number
+    na mesma empresa — idêntico à regra das fichas de ruído."""
     sheet = _get_sheet_or_404(sheet_id, db)
-    from datetime import datetime
-    now = datetime.now()
-    sheet.laudo_number  = laudo_number
-    sheet.laudo_y       = 1               # sub-serial fixo (equivalente ao ".1" do ruído)
-    sheet.status        = "aprovado"
+    # Conta fichas já aprovadas com mesmo laudo_number na mesma empresa (exceto a atual)
+    count = db.query(ChemicalFieldSheet).filter(
+        ChemicalFieldSheet.company_id == sheet.company_id,
+        ChemicalFieldSheet.laudo_number == laudo_number,
+        ChemicalFieldSheet.laudo_y.isnot(None),
+        ChemicalFieldSheet.id != sheet_id,
+    ).count()
+    sheet.laudo_number   = laudo_number
+    sheet.laudo_y        = count + 1
+    sheet.status         = "aprovado"
     sheet.signature_date = date.today()
     sheet.data_relatorio = date.today()
     db.commit()

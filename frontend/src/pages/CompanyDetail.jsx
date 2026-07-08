@@ -95,6 +95,10 @@ export default function CompanyDetail() {
   const [epiOptionsSheet, setEpiOptionsSheet] = useState([]);
   const [chemSheets, setChemSheets] = useState([]);
   const [chemReportGenerating, setChemReportGenerating] = useState(false);
+  const [editChemModal, setEditChemModal] = useState(false);
+  const [editChemTarget, setEditChemTarget] = useState(null);
+  const [editChemForm, setEditChemForm] = useState({});
+  const [savingChem, setSavingChem] = useState(false);
 
   useEffect(() => {
     const safe = (promise, fallback) => promise.then(r => r.data).catch(() => fallback);
@@ -274,6 +278,46 @@ export default function CompanyDetail() {
       alert(msg);
     } finally {
       setRelGerando(false);
+    }
+  };
+
+  const handleEditChem = (sheet) => {
+    setEditChemTarget(sheet);
+    setEditChemForm({
+      technician_name:     sheet.technician_name || '',
+      collection_date:     sheet.collection_date || '',
+      employee_name_text:  sheet.employee_nome || '',
+      funcao:              sheet.funcao || '',
+      matricula:           sheet.matricula || '',
+      setor:               sheet.setor || '',
+      local:               sheet.local || '',
+      numero_amostrador:   sheet.numero_amostrador || '',
+      tipo_amostrador:     sheet.tipo_amostrador || '',
+      situacao_ambiente:   sheet.situacao_ambiente || '',
+      atividade:           sheet.atividade || '',
+      jornada_trabalho:    sheet.jornada_trabalho || '',
+      volume_ar_amostrado: sheet.volume_ar_amostrado || '',
+      epi:                 sheet.epi || '',
+      observacoes:         sheet.observacoes || '',
+      conclusao_texto:     sheet.conclusao_texto || '',
+      data_relatorio:      sheet.data_relatorio || '',
+    });
+    setEditChemModal(true);
+  };
+
+  const handleSaveChem = async () => {
+    setSavingChem(true);
+    try {
+      const payload = Object.fromEntries(
+        Object.entries(editChemForm).map(([k, v]) => [k, v === '' ? null : v])
+      );
+      const res = await api.patch(`/chemical-field-sheets/${editChemTarget.id}`, payload);
+      setChemSheets(prev => prev.map(s => s.id === editChemTarget.id ? { ...s, ...res.data } : s));
+      setEditChemModal(false);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Erro ao salvar ficha química.');
+    } finally {
+      setSavingChem(false);
     }
   };
 
@@ -519,7 +563,7 @@ export default function CompanyDetail() {
                     <th>Data Coleta</th>
                     <th>Amostrador</th>
                     <th>Agentes</th>
-                    <th>Status</th>
+                    <th style={{ textAlign: 'center' }}>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -544,13 +588,19 @@ export default function CompanyDetail() {
                           <span style={{ fontSize: 11, color: '#94a3b8' }}>—</span>
                         )}
                       </td>
-                      <td>
+                      <td style={{ textAlign: 'center' }}>
                         {s.status === 'aprovado'
                           ? <span style={{ fontSize: 11, background: '#dcfce7', color: '#166534', borderRadius: 10, padding: '2px 8px', fontWeight: 700 }}>Aprovado</span>
                           : <span style={{ fontSize: 11, background: '#fef9c3', color: '#854d0e', borderRadius: 10, padding: '2px 8px', fontWeight: 700 }}>Pendente</span>
                         }
                       </td>
-                      <td>
+                      <td style={{ display: 'flex', gap: 4 }}>
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => handleEditChem(s)}
+                        >
+                          Editar
+                        </button>
                         <button
                           className="btn btn-sm"
                           style={{ background: '#FADADD', color: '#8B0000', border: '1px solid #f5a0a0', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}
@@ -701,6 +751,99 @@ export default function CompanyDetail() {
           </>
         )}
       </div>
+
+      {editChemModal && editChemTarget && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', borderRadius: 8, padding: 24, maxWidth: 680, width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Editar Ficha Química</div>
+
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Identificação</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Técnico Responsável</label>
+                <input className="form-input" value={editChemForm.technician_name} onChange={e => setEditChemForm(f => ({ ...f, technician_name: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Data da Coleta</label>
+                <input className="form-input" type="date" value={editChemForm.collection_date} onChange={e => setEditChemForm(f => ({ ...f, collection_date: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Data do Relatório</label>
+                <input className="form-input" type="date" value={editChemForm.data_relatorio} onChange={e => setEditChemForm(f => ({ ...f, data_relatorio: e.target.value }))} />
+              </div>
+            </div>
+
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Funcionário</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nome</label>
+                <input className="form-input" value={editChemForm.employee_name_text} onChange={e => setEditChemForm(f => ({ ...f, employee_name_text: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Função</label>
+                <input className="form-input" value={editChemForm.funcao} onChange={e => setEditChemForm(f => ({ ...f, funcao: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Matrícula</label>
+                <input className="form-input" value={editChemForm.matricula} onChange={e => setEditChemForm(f => ({ ...f, matricula: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Setor</label>
+                <input className="form-input" value={editChemForm.setor} onChange={e => setEditChemForm(f => ({ ...f, setor: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Local</label>
+                <input className="form-input" value={editChemForm.local} onChange={e => setEditChemForm(f => ({ ...f, local: e.target.value }))} />
+              </div>
+            </div>
+
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Amostragem</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nº Amostrador</label>
+                <input className="form-input" value={editChemForm.numero_amostrador} onChange={e => setEditChemForm(f => ({ ...f, numero_amostrador: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tipo de Amostrador</label>
+                <input className="form-input" value={editChemForm.tipo_amostrador} onChange={e => setEditChemForm(f => ({ ...f, tipo_amostrador: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Jornada de Trabalho</label>
+                <input className="form-input" value={editChemForm.jornada_trabalho} onChange={e => setEditChemForm(f => ({ ...f, jornada_trabalho: e.target.value }))} placeholder="Ex: 44 Horas/Semanais" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Volume de Ar Amostrado</label>
+                <input className="form-input" value={editChemForm.volume_ar_amostrado} onChange={e => setEditChemForm(f => ({ ...f, volume_ar_amostrado: e.target.value }))} placeholder="Ex: 12,5 L" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
+                <label className="form-label">Situação do Ambiente</label>
+                <textarea className="form-input" rows={2} value={editChemForm.situacao_ambiente} onChange={e => setEditChemForm(f => ({ ...f, situacao_ambiente: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Atividade Desenvolvida</label>
+                <textarea className="form-input" rows={2} value={editChemForm.atividade} onChange={e => setEditChemForm(f => ({ ...f, atividade: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">EPI Utilizado</label>
+                <textarea className="form-input" rows={2} value={editChemForm.epi} onChange={e => setEditChemForm(f => ({ ...f, epi: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
+                <label className="form-label">Observações</label>
+                <textarea className="form-input" rows={2} value={editChemForm.observacoes} onChange={e => setEditChemForm(f => ({ ...f, observacoes: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
+                <label className="form-label">Conclusão <span style={{ fontWeight: 400, color: '#94a3b8' }}>(deixe em branco para usar o texto padrão)</span></label>
+                <textarea className="form-input" rows={3} value={editChemForm.conclusao_texto} onChange={e => setEditChemForm(f => ({ ...f, conclusao_texto: e.target.value }))} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-primary" onClick={handleSaveChem} disabled={savingChem}>{savingChem ? 'Salvando...' : 'Salvar'}</button>
+              <button className="btn btn-secondary" onClick={() => setEditChemModal(false)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {editEmpModal && editEmpTarget && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
