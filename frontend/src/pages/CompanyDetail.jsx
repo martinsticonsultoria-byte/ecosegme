@@ -377,8 +377,8 @@ export default function CompanyDetail() {
         <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', background: '#f8fafb' }}>
           {[
             { key: 'funcionarios', label: 'Funcionários', count: employees.length },
-            { key: 'fichas',       label: 'Fichas de Campo', count: fieldSheets.length },
-            { key: 'quimico',      label: 'Químico', count: chemSheets.length },
+            { key: 'fichas',       label: 'Fichas de Campo - Ruído', count: fieldSheets.length },
+            { key: 'quimico',      label: 'Fichas de Campo - Químico', count: chemSheets.length },
             { key: 'relatorios',   label: 'Relatórios', count: consolidated.length },
             { key: 'laudos',       label: 'Laudos', count: reports.length },
           ].map(t => (
@@ -435,12 +435,9 @@ export default function CompanyDetail() {
         {/* Fichas de Campo */}
         {aba === 'fichas' && (
           <>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
               <button className="btn btn-primary btn-sm" onClick={() => navigate(`/field-sheet/new?company_id=${id}`)}>
                 + Nova Ficha de Ruído
-              </button>
-              <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/chemical-field-sheet/new?company_id=${id}`)}>
-                + Nova Ficha Química
               </button>
             </div>
             {fieldSheets.length === 0 ? (
@@ -504,7 +501,7 @@ export default function CompanyDetail() {
                     <tr key={s.id}>
                       <td>
                         {s.laudo_number
-                          ? <span className="badge badge-blue">{s.laudo_number}</span>
+                          ? <span className="badge badge-blue">{s.laudo_number}.{s.laudo_y || 1}/{new Date().getFullYear()}</span>
                           : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>
                         }
                       </td>
