@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Ecosegme — Premium Design System</title>
+  
+  <!-- Fontes Premium: Playfair Display (Display/Serif) e Inter/Outfit (Sans-serif) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN para Estilização Rápida e Utilitária -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: '#0D3C1F',
+            sage: '#3D7F61',
+            peach: '#F69066',
+            orange: '#E35D30',
+            cream: '#FAF9F6',
+            sand: '#FAF5EF',
+          },
+          fontFamily: {
+            display: ['Playfair Display', 'Georgia', 'serif'],
+            body: ['Inter', 'system-ui', 'sans-serif'],
+            outfit: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Lucide Icons Runtime para ícones dinâmicos -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Estilos Customizados do Design System Premium (Combinação Omi + Sondero em Light-Mode) -->
+  <style>
+    :root {
+      --bg-base: #FAF9F6;
+      --bg-alt: #FFFFFF;
+      --surface-1: rgba(13, 60, 31, 0.02);
+      --surface-2: rgba(13, 60, 31, 0.05);
+      --surface-solid: #FFFFFF;
+      --border-dim: rgba(13, 60, 31, 0.06);
+      --border-light: rgba(13, 60, 31, 0.12);
+      
+      --accent-forest: #0D3C1F;
+      --accent-sage: #3D7F61;
+      --accent-peach: #F69066;
+      --accent-orange: #E35D30;
+      
+      --text-main: #0D3C1F;
+      --text-dim: #4A6B5A;
+      --text-muted: #8A9E92;
+      
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-outfit: 'Outfit', sans-serif;
+      
+      --easing-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+      --easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 1. Camadas de Efeito de Fundo Premium */
+    .ambient-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(246, 144, 102, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 90% 60%, rgba(61, 127, 97, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 50% 100%, rgba(246, 144, 102, 0.04) 0%, transparent 50%);
+    }
+
+    .noise-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.02;
+      background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="n"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23n)"/%3E%3C/svg%3E');
+    }
+
+    .grid-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.25;
+      background-image:
+        linear-gradient(rgba(13, 60, 31, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(13, 60, 31, 0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 0%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 80%);
+    }
+
+    /* 2. Animação de Entrada e Revelação */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 1s var(--easing-smooth), transform 1s var(--easing-smooth);
+      will-change: opacity, transform;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 3. Estilos de Botão Premium e Efeitos */
+    .btn-premium {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.5s var(--easing-smooth);
+    }
+    .btn-premium::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.6s var(--easing-smooth);
+    }
+    .btn-premium:hover::before {
+      transform: translateX(100%);
+    }
+
+    /* 4. Gravity Stack 3D Cards */
+    .g-container {
+      perspective: 1200px;
+      width: 100%;
+      height: 480px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .g-stack {
+      position: relative;
+      width: 320px;
+      height: 400px;
+      transform-style: preserve-3d;
+      transition: transform 0.15s ease-out;
+      cursor: pointer;
+    }
+    .g-layer {
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      transform-style: preserve-3d;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(13, 60, 31, 0.08);
+      box-shadow: 0 15px 35px rgba(13, 60, 31, 0.06);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: all 0.6s var(--easing-smooth);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .g-layer-3 { z-index: 1; opacity: 0.45; }
+    .g-layer-2 { z-index: 2; opacity: 0.75; }
+    .g-layer-1 { z-index: 3; }
+    
+    .g-container:hover .g-layer-1 {
+      transform: translate3d(0, -35px, 60px) rotateX(2deg) !important;
+      box-shadow: 0 35px 70px rgba(13, 60, 31, 0.12);
+      border-color: rgba(61, 127, 97, 0.3);
+    }
+    .g-container:hover .g-layer-2 {
+      transform: translate3d(0, 15px, -30px) rotateX(1deg) !important;
+      opacity: 0.9;
+    }
+    .g-container:hover .g-layer-3 {
+      transform: translate3d(0, 65px, -110px) rotateX(0deg) !important;
+      opacity: 0.85;
+    }
+
+    /* 5. Painel Neural */
+    .neural-panel {
+      background: var(--surface-solid);
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 15px 40px rgba(13, 60, 31, 0.05);
+    }
+    .np-pulse {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 40px;
+      height: 100%;
+      opacity: 0;
+      transform: translateX(-40px);
+    }
+    .np-pulse.peach-pulse {
+      background: linear-gradient(90deg, transparent, var(--accent-peach), transparent);
+      box-shadow: 0 0 15px var(--accent-peach);
+    }
+    .np-pulse.sage-pulse {
+      background: linear-gradient(90deg, transparent, var(--accent-sage), transparent);
+      box-shadow: 0 0 15px var(--accent-sage);
+    }
+    .np-pulse.fire {
+      animation: pulse-travel 0.75s ease-out forwards;
+      opacity: 1;
+    }
+    @keyframes pulse-travel {
+      0% { transform: translateX(-40px); }
+      100% { transform: translateX(450px); }
+    }
+
+    .np-toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: rgba(13, 60, 31, 0.08);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.35s;
+    }
+    .np-toggle.active {
+      background: var(--accent-sage);
+    }
+    .np-toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.3s var(--easing-smooth);
+    }
+    .np-toggle.active .np-toggle-thumb {
+      transform: translateX(20px);
+    }
+
+    /* 6. Botão de Sinal Bouncy (ls-btn) */
+    .ls-btn {
+      position: relative;
+      background: #FFFFFF;
+      border: 1px solid rgba(13, 60, 31, 0.1);
+      padding: 16px 36px;
+      border-radius: 100px;
+      cursor: pointer;
+      z-index: 2;
+      transition: all 0.4s var(--easing-smooth);
+      box-shadow: 0 8px 24px rgba(13, 60, 31, 0.05);
+    }
+    .ls-btn::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      z-index: -1;
+      opacity: 0;
+      border-radius: 100px;
+      background: conic-gradient(from 0deg, transparent 0deg, var(--accent-peach) 90deg, transparent 180deg);
+      animation: ls-spin 3s linear infinite;
+      transition: opacity 0.4s;
+    }
+    .ls-btn::after {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      background: #FFFFFF;
+      border-radius: 100px;
+      z-index: -1;
+    }
+    .ls-btn:hover {
+      border-color: var(--accent-peach);
+      transform: scale(1.03) translateY(-1px);
+      box-shadow: 0 12px 32px rgba(246, 144, 102, 0.15);
+    }
+    .ls-btn:hover::before {
+      opacity: 1;
+    }
+    .ls-char {
+      display: inline-block;
+      transition: transform 0.4s var(--easing-bounce), color 0.3s;
+    }
+    .ls-btn:hover .ls-char {
+      transform: translateY(calc(var(--rand) * -5px));
+      color: var(--accent-peach);
+    }
+    .ls-burst-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      border: 2px solid var(--accent-peach);
+      border-radius: 100px;
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .ls-burst-ring.active {
+      animation: ls-burst 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes ls-spin {
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes ls-burst {
+      0% {
+        width: 100%;
+        height: 100%;
+        opacity: 0.8;
+      }
+      100% {
+        width: 160%;
+        height: 240%;
+        opacity: 0;
+      }
+    }
+
+    /* Typewriter blink cursor */
+    @keyframes blink-cursor {
+      0%, 100% { border-color: transparent; }
+      50% { border-color: var(--accent-forest); }
+    }
+    .animate-blink {
+      animation: blink-cursor 0.9s step-end infinite;
+    }
+
+    /* Scan Laser Animação */
+    @keyframes secScan {
+      0% { transform: translateY(-100%); }
+      50% { transform: translateY(100%); }
+      100% { transform: translateY(-100%); }
+    }
+    .animate-scan {
+      animation: secScan 4s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="antialiased min-h-screen relative font-body selection:bg-peach/10 text-forest">
+
+  <!-- Fundo Estético Integrado -->
+  <div class="ambient-glow"></div>
+  <div class="grid-layer"></div>
+  <div class="noise-layer"></div>
+
+  <!-- Header / Navbar Dinâmico -->
+  <header class="fixed top-0 inset-x-0 z-50 transition-all duration-500 h-[80px] flex items-center border-b border-transparent" id="navbar">
+    <div class="absolute inset-0 bg-[#FAF9F6]/80 backdrop-blur-xl opacity-0 transition-opacity duration-500 pointer-events-none" id="navbar-bg">
+      <div class="absolute bottom-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-sage/20 to-transparent"></div>
+    </div>
+    <div class="max-w-7xl mx-auto px-6 w-full flex justify-between items-center relative z-10">
+      <a class="flex items-center gap-2 select-none" href="#">
+        <div class="w-8 h-8 rounded-lg bg-forest flex items-center justify-center text-white font-display text-lg font-bold shadow-md shadow-forest/10">E</div>
+        <span class="font-outfit font-bold text-lg tracking-wider text-forest uppercase">Ecosegme</span>
+      </a>
+      
+      <!-- Nav Links -->
+      <nav class="hidden md:flex items-center gap-8">
+        <a class="text-sm font-semibold tracking-wide text-forest/70 hover:text-forest transition-colors relative group py-2" href="#hero">
+          Showcase
+          <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-peach transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a class="text-sm font-semibold tracking-wide text-forest/70 hover:text-forest transition-colors relative group py-2" href="#typography">
+          Tipografia
+          <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-peach transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a class="text-sm font-semibold tracking-wide text-forest/70 hover:text-forest transition-colors relative group py-2" href="#colors">
+          Cores
+          <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-peach transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a class="text-sm font-semibold tracking-wide text-forest/70 hover:text-forest transition-colors relative group py-2" href="#components">
+          Componentes
+          <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-peach transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a class="text-sm font-semibold tracking-wide text-forest/70 hover:text-forest transition-colors relative group py-2" href="#icons">
+          Ícones
+          <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-peach transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a class="text-sm font-semibold tracking-wide text-forest/70 hover:text-forest transition-colors relative group py-2" href="#animations">
+          Movimento
+          <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-peach transition-all duration-300 group-hover:w-full"></span>
+        </a>
+      </nav>
+
+      <!-- CTA -->
+      <div class="hidden md:flex items-center">
+        <a class="btn-premium group inline-flex items-center justify-center text-xs font-semibold tracking-widest text-white uppercase bg-forest px-6 h-10 rounded-full transition-all duration-300 shadow-md shadow-forest/10 hover:shadow-lg hover:shadow-forest/20 hover:-translate-y-[1px]" href="#components">
+          Explorar Spec
+        </a>
+      </div>
+      
+      <!-- Mobile menu button -->
+      <button class="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded-full bg-forest/5 relative z-50" id="mobile-menu-btn">
+        <span class="w-[18px] h-[1.5px] bg-forest rounded-full transition-transform duration-300 -translate-y-[4px]" id="bar-top"></span>
+        <span class="w-[18px] h-[1.5px] bg-forest rounded-full transition-opacity duration-300 my-[2.5px]" id="bar-mid"></span>
+        <span class="w-[18px] h-[1.5px] bg-forest rounded-full transition-transform duration-300 translate-y-[4px]" id="bar-bot"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Menu Drawer -->
+  <div class="fixed inset-0 z-40 bg-cream/95 backdrop-blur-2xl opacity-0 pointer-events-none transition-all duration-500 flex flex-col pt-32 px-10 pb-16 overflow-hidden" id="mobile-menu">
+    <nav class="flex flex-col gap-6 relative z-10 text-2xl font-display font-medium">
+      <a class="border-b border-forest/10 pb-4 text-forest/80 hover:text-forest hover:pl-2 transition-all duration-300" href="#hero">Showcase</a>
+      <a class="border-b border-forest/10 pb-4 text-forest/80 hover:text-forest hover:pl-2 transition-all duration-300" href="#typography">Tipografia</a>
+      <a class="border-b border-forest/10 pb-4 text-forest/80 hover:text-forest hover:pl-2 transition-all duration-300" href="#colors">Cores</a>
+      <a class="border-b border-forest/10 pb-4 text-forest/80 hover:text-forest hover:pl-2 transition-all duration-300" href="#components">Componentes</a>
+      <a class="border-b border-forest/10 pb-4 text-forest/80 hover:text-forest hover:pl-2 transition-all duration-300" href="#icons">Ícones</a>
+      <a class="border-b border-forest/10 pb-4 text-forest/80 hover:text-forest hover:pl-2 transition-all duration-300" href="#animations">Movimento</a>
+    </nav>
+    <div class="mt-auto relative z-10">
+      <a class="flex items-center justify-center h-14 rounded-xl bg-forest text-white font-semibold uppercase tracking-widest text-xs shadow-lg shadow-forest/15 hover:bg-forest/90 transition-all duration-300" href="#components">Solicitar Acesso</a>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- SEÇÃO 1: HERO SHOWCASE (PRIMEIRA DOBRA) -->
+  <!-- ========================================== -->
+  <section class="min-h-screen pt-36 pb-20 flex items-center relative overflow-hidden" id="hero">
+    <div class="max-w-7xl mx-auto px-6 w-full relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      
+      <!-- Textos da Hero -->
+      <div class="reveal visible flex flex-col items-start">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-forest/5 border border-forest/10 mb-8 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-peach shadow-[0_0_8px_rgba(246,144,102,0.8)]"></span>
+          <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-forest/80">Premium Design System v1.0</span>
+        </div>
+        
+        <h1 class="font-display font-medium text-5xl md:text-7xl leading-[1.05] tracking-tight text-forest mb-6">
+          Sistemas de Design que tornam marcas <br>
+          <span class="inline-block border-r-[3px] border-forest pr-1 animate-blink font-semibold text-transparent bg-clip-text bg-gradient-to-r from-forest to-sage" id="word-carousel">memoráveis</span>
+        </h1>
+        
+        <p class="text-base md:text-lg text-dim leading-relaxed max-w-xl mb-10 font-body">
+          Combinando a sofisticação da lógica espacial tridimensional com uma estética clássica light-mode. Arquitetura fluida com verde floresta, sálvia e pêssego.
+        </p>
+        
+        <!-- Ações do Hero -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+          <!-- Botão Principal Especial -->
+          <a class="group relative inline-flex h-[52px] rounded-full no-underline cursor-pointer outline-none text-[13px] font-semibold tracking-wider uppercase text-white shadow-lg shadow-forest/15 transition-all duration-300" href="#components">
+            <div class="absolute inset-[-3px] bg-peach/10 blur-[12px] opacity-0 rounded-full transition-all duration-500 pointer-events-none group-hover:opacity-100 group-hover:bg-peach/30"></div>
+            <div class="relative z-10 flex h-full rounded-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] bg-forest group-hover:bg-forest/95 group-hover:-translate-y-[2px] items-center px-8">
+              <span class="tracking-widest">Ver Componentes</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1"></i>
+            </div>
+          </a>
+          <!-- Botão Secundário Glass -->
+          <a class="inline-flex h-[52px] rounded-full items-center justify-center px-8 border border-forest/15 hover:border-forest/30 text-[13px] font-semibold tracking-wider uppercase text-forest hover:bg-forest/[0.02] hover:-translate-y-[2px] transition-all duration-300" href="#typography">
+            Especificações
+          </a>
+        </div>
+      </div>
+
+      <!-- Visual da Hero: Globo Canvas Light -->
+      <div class="reveal visible flex justify-center items-center relative min-h-[450px] lg:min-h-[550px] w-full">
+        <!-- Detalhes do Background do Globo -->
+        <div class="absolute w-[80%] h-[80%] rounded-full bg-gradient-to-tr from-sage/5 to-peach/5 blur-3xl -z-10 animate-pulse"></div>
+        <canvas id="hero-globe" class="w-full max-w-[500px] h-[500px] block cursor-grab active:cursor-grabbing"></canvas>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ========================================== -->
+  <!-- SEÇÃO 2: ESPECIFICAÇÃO DE TIPOGRAFIA -->
+  <!-- ========================================== -->
+  <section class="py-24 border-t border-forest/5 bg-white relative z-10" id="typography">
+    <div class="max-w-7xl mx-auto px-6 w-full">
+      <div class="flex flex-col items-start mb-16 max-w-2xl reveal">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest/5 text-forest/70 font-semibold text-xs tracking-wider uppercase mb-4">
+          02 // Diretrizes
+        </div>
+        <h2 class="font-display font-medium text-4xl md:text-5xl tracking-tight text-forest mb-4">Arquitetura de Tipografia</h2>
+        <p class="text-dim leading-relaxed">
+          O Ecosegme Design System emprega uma hierarquia refinada de fontes que equilibra perfeitamente o impacto editorial da família com serifa e a utilidade legível da família sem serifa.
+        </p>
+      </div>
+
+      <!-- Grid de Tipos -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        
+        <!-- Cartão Tipo 1: Escala Principal (Display) -->
+        <div class="lg:col-span-2 bg-cream/40 border border-forest/5 rounded-3xl p-8 md:p-10 flex flex-col justify-between reveal">
+          <div>
+            <h3 class="text-xs font-bold tracking-widest text-muted uppercase mb-8">Escala de Títulos // Playfair Display</h3>
+            <div class="space-y-6">
+              <div class="flex flex-col md:flex-row md:items-baseline justify-between border-b border-forest/5 pb-4">
+                <span class="text-xs font-mono text-muted uppercase tracking-wider mb-2 md:mb-0">H1 Display</span>
+                <span class="font-display font-medium text-5xl text-forest">Título H1 Display</span>
+              </div>
+              <div class="flex flex-col md:flex-row md:items-baseline justify-between border-b border-forest/5 pb-4">
+                <span class="text-xs font-mono text-muted uppercase tracking-wider mb-2 md:mb-0">H2 Editorial</span>
+                <span class="font-display font-medium text-3xl text-forest">Subtítulo H2 Editorial</span>
+              </div>
+              <div class="flex flex-col md:flex-row md:items-baseline justify-between border-b border-forest/5 pb-4">
+                <span class="text-xs font-mono text-muted uppercase tracking-wider mb-2 md:mb-0">H3 Section</span>
+                <span class="font-display font-medium text-2xl text-forest">Cabeçalho H3 Section</span>
+              </div>
+              <div class="flex flex-col md:flex-row md:items-baseline justify-between border-b border-forest/5 pb-4">
+                <span class="text-xs font-mono text-muted uppercase tracking-wider mb-2 md:mb-0">H4 Component</span>
+                <span class="font-display font-semibold text-xl text-forest">Cabeçalho H4 Component</span>
+              </div>
+              <div class="flex flex-col md:flex-row md:items-baseline justify-between border-b border-forest/5 pb-4">
+                <span class="text-xs font-mono text-muted uppercase tracking-wider mb-2 md:mb-0">H5 / H6 Subtext</span>
+                <span class="font-display font-semibold text-lg text-forest">Sub-cabeçalho H5 e H6</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cartão Tipo 2: Escala Funcional (Body) -->
+        <div class="bg-cream/40 border border-forest/5 rounded-3xl p-8 flex flex-col justify-between reveal">
+          <div>
+            <h3 class="text-xs font-bold tracking-widest text-muted uppercase mb-8">Escala Funcional // Inter</h3>
+            
+            <div class="space-y-8">
+              <div>
+                <div class="flex justify-between text-[11px] font-mono text-muted tracking-widest uppercase mb-2">
+                  <span>body-lg</span>
+                  <span>18px / lh 1.7</span>
+                </div>
+                <p class="text-forest text-[18px] leading-relaxed font-light">
+                  Uma leitura imersiva e de destaque para introduções de impacto.
+                </p>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-[11px] font-mono text-muted tracking-widest uppercase mb-2">
+                  <span>body-base</span>
+                  <span>15px / lh 1.6</span>
+                </div>
+                <p class="text-dim text-[15px] leading-relaxed">
+                  O padrão estável para leitura contínua, parágrafos de texto, documentação técnica e descrições detalhadas de sistemas.
+                </p>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-[11px] font-mono text-muted tracking-widest uppercase mb-2">
+                  <span>body-sm & helper</span>
+                  <span>13px / lh 1.5</span>
+                </div>
+                <p class="text-muted text-[13px] leading-normal font-medium">
+                  Ideal para notas secundárias, microcópias de interface, legendas e textos auxiliares de formulários.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Detalhamento de Spec da Tipografia -->
+      <div class="mt-10 overflow-x-auto bg-cream/10 border border-forest/5 rounded-2xl p-6 reveal">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-forest/10 text-xs font-mono tracking-widest uppercase text-muted">
+              <th class="pb-3">Papel de Texto</th>
+              <th class="pb-3">Fonte</th>
+              <th class="pb-3">Peso</th>
+              <th class="pb-3">Tamanho</th>
+              <th class="pb-3">Altura Linha</th>
+              <th class="pb-3">Letter Spacing</th>
+            </tr>
+          </thead>
+          <tbody class="font-mono text-xs text-dim">
+            <tr class="border-b border-forest/5">
+              <td class="py-3 font-semibold text-forest">H1 Display</td>
+              <td class="py-3 font-sans">Playfair Display</td>
+              <td class="py-3">500 (Medium)</td>
+              <td class="py-3">72px / 4.5rem</td>
+              <td class="py-3">1.05</td>
+              <td class="py-3">-0.03em</td>
+            </tr>
+            <tr class="border-b border-forest/5">
+              <td class="py-3 font-semibold text-forest">H2 Editorial</td>
+              <td class="py-3 font-sans">Playfair Display</td>
+              <td class="py-3">500 (Medium)</td>
+              <td class="py-3">36px / 2.25rem</td>
+              <td class="py-3">1.15</td>
+              <td class="py-3">-0.02em</td>
+            </tr>
+            <tr class="border-b border-forest/5">
+              <td class="py-3 font-semibold text-forest">Body Large</td>
+              <td class="py-3 font-sans">Inter</td>
+              <td class="py-3">300 (Light)</td>
+              <td class="py-3">18px / 1.125rem</td>
+              <td class="py-3">1.70</td>
+              <td class="py-3">0</td>
+            </tr>
+            <tr class="border-b border-forest/5">
+              <td class="py-3 font-semibold text-forest">Body Base</td>
+              <td class="py-3 font-sans">Inter</td>
+              <td class="py-3">400 (Regular)</td>
+              <td class="py-3">15px / 0.938rem</td>
+              <td class="py-3">1.60</td>
+              <td class="py-3">0</td>
+            </tr>
+            <tr>
+              <td class="py-3 font-semibold text-forest">Micro Captions</td>
+              <td class="py-3 font-sans">Inter</td>
+              <td class="py-3">600 (SemiBold)</td>
+              <td class="py-3">11px / 0.688rem</td>
+              <td class="py-3">1.40</td>
+              <td class="py-3">0.15em (Caps)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ========================================== -->
+  <!-- SEÇÃO 3: SISTEMA DE CORES -->
+  <!-- ========================================== -->
+  <section class="py-24 border-t border-forest/5 relative z-10" id="colors">
+    <div class="max-w-7xl mx-auto px-6 w-full">
+      <div class="flex flex-col items-start mb-16 max-w-2xl reveal">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest/5 text-forest/70 font-semibold text-xs tracking-wider uppercase mb-4">
+          03 // Brand Identity
+        </div>
+        <h2 class="font-display font-medium text-4xl md:text-5xl tracking-tight text-forest mb-4">Paleta Cromática Integrada</h2>
+        <p class="text-dim leading-relaxed">
+          Tons nobres e refinados baseados no verde floresta e sálvia, com toques contrastantes de pêssego e laranja para dar dinamismo a interações importantes.
+        </p>
+      </div>
+
+      <!-- Color Swatches Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 reveal">
+        
+        <!-- Swatch 1: Verde Floresta -->
+        <div class="bg-white border border-forest/5 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[220px]">
+          <div class="w-full h-24 rounded-2xl bg-forest shadow-inner flex items-center justify-end p-4">
+            <span class="text-white/60 font-mono text-[10px] tracking-widest uppercase">Primary Accent</span>
+          </div>
+          <div class="mt-4">
+            <h4 class="font-display font-bold text-forest text-lg">Verde Floresta</h4>
+            <div class="mt-2 space-y-1 font-mono text-[11px] text-muted">
+              <div class="flex justify-between"><span>HEX:</span><span class="text-forest">#0D3C1F</span></div>
+              <div class="flex justify-between"><span>RGB:</span><span class="text-forest">13, 60, 31</span></div>
+              <div class="flex justify-between"><span>HSL:</span><span class="text-forest">143°, 64%, 14%</span></div>
+              <div class="flex justify-between border-t border-forest/5 pt-1.5 mt-1.5"><span class="font-bold text-forest">Contrast Intent:</span><span class="text-sage font-bold">AAA Pass</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Swatch 2: Verde Sálvia -->
+        <div class="bg-white border border-forest/5 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[220px]">
+          <div class="w-full h-24 rounded-2xl bg-sage shadow-inner flex items-center justify-end p-4">
+            <span class="text-white/60 font-mono text-[10px] tracking-widest uppercase">Secondary</span>
+          </div>
+          <div class="mt-4">
+            <h4 class="font-display font-bold text-forest text-lg">Verde Sálvia</h4>
+            <div class="mt-2 space-y-1 font-mono text-[11px] text-muted">
+              <div class="flex justify-between"><span>HEX:</span><span class="text-forest">#3D7F61</span></div>
+              <div class="flex justify-between"><span>RGB:</span><span class="text-forest">61, 127, 97</span></div>
+              <div class="flex justify-between"><span>HSL:</span><span class="text-forest">153°, 35%, 37%</span></div>
+              <div class="flex justify-between border-t border-forest/5 pt-1.5 mt-1.5"><span class="font-bold text-forest">Contrast Intent:</span><span class="text-sage font-bold">AA Pass</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Swatch 3: Pêssego Vibrante -->
+        <div class="bg-white border border-forest/5 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[220px]">
+          <div class="w-full h-24 rounded-2xl bg-peach shadow-inner flex items-center justify-end p-4">
+            <span class="text-white/80 font-mono text-[10px] tracking-widest uppercase">Active Accent</span>
+          </div>
+          <div class="mt-4">
+            <h4 class="font-display font-bold text-forest text-lg">Pêssego</h4>
+            <div class="mt-2 space-y-1 font-mono text-[11px] text-muted">
+              <div class="flex justify-between"><span>HEX:</span><span class="text-forest">#F69066</span></div>
+              <div class="flex justify-between"><span>RGB:</span><span class="text-forest">246, 144, 98</span></div>
+              <div class="flex justify-between"><span>HSL:</span><span class="text-forest">19°, 88%, 68%</span></div>
+              <div class="flex justify-between border-t border-forest/5 pt-1.5 mt-1.5"><span class="font-bold text-forest">Contrast Intent:</span><span class="text-sage font-bold">UI Element Glow</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Swatch 4: Creme Base -->
+        <div class="bg-white border border-forest/5 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[220px]">
+          <div class="w-full h-24 rounded-2xl bg-[#FAF9F6] border border-forest/5 shadow-inner flex items-center justify-end p-4">
+            <span class="text-forest/40 font-mono text-[10px] tracking-widest uppercase">Base Background</span>
+          </div>
+          <div class="mt-4">
+            <h4 class="font-display font-bold text-forest text-lg">Creme Off-White</h4>
+            <div class="mt-2 space-y-1 font-mono text-[11px] text-muted">
+              <div class="flex justify-between"><span>HEX:</span><span class="text-forest">#FAF9F6</span></div>
+              <div class="flex justify-between"><span>RGB:</span><span class="text-forest">250, 249, 246</span></div>
+              <div class="flex justify-between"><span>HSL:</span><span class="text-forest">45°, 20%, 97%</span></div>
+              <div class="flex justify-between border-t border-forest/5 pt-1.5 mt-1.5"><span class="font-bold text-forest">Contrast Intent:</span><span class="text-sage font-bold">Background</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Gradientes Participantes -->
+      <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 reveal">
+        <div class="bg-cream/40 border border-forest/5 rounded-2xl p-6">
+          <h4 class="text-xs font-mono uppercase tracking-wider text-muted mb-4">Gradiente Orgânico Principal</h4>
+          <div class="h-12 w-full rounded-xl bg-gradient-to-r from-forest to-sage flex items-center px-4 justify-between">
+            <span class="text-white text-xs font-mono font-medium">#0D3C1F</span>
+            <span class="text-white text-xs font-mono font-medium">#3D7F61</span>
+          </div>
+        </div>
+        <div class="bg-cream/40 border border-forest/5 rounded-2xl p-6">
+          <h4 class="text-xs font-mono uppercase tracking-wider text-muted mb-4">Gradiente de Alerta & Hover</h4>
+          <div class="h-12 w-full rounded-xl bg-gradient-to-r from-peach to-orange flex items-center px-4 justify-between">
+            <span class="text-white text-xs font-mono font-medium">#F69066</span>
+            <span class="text-white text-xs font-mono font-medium">#E35D30</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ========================================== -->
+  <!-- SEÇÃO 4: UI COMPONENTS (COM ANIMAÇÕES) -->
+  <!-- ========================================== -->
+  <section class="py-24 border-t border-forest/5 bg-white relative z-10" id="components">
+    <div class="max-w-7xl mx-auto px-6 w-full">
+      <div class="flex flex-col items-start mb-16 max-w-2xl reveal">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest/5 text-forest/70 font-semibold text-xs tracking-wider uppercase mb-4">
+          04 // UI Specs
+        </div>
+        <h2 class="font-display font-medium text-4xl md:text-5xl tracking-tight text-forest mb-4">Componentes Funcionais de UI</h2>
+        <p class="text-dim leading-relaxed">
+          Exibição interativa e documentada de nossos componentes estruturais com animações e lógicas internas ativas por Javascript.
+        </p>
+      </div>
+
+      <!-- Component Blocks Showcase -->
+      <div class="space-y-16">
+        
+        <!-- Bloco 1: Buttons Spec -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 border-b border-forest/5 pb-16 reveal">
+          <div class="flex flex-col justify-between">
+            <div>
+              <h3 class="font-display font-medium text-2xl text-forest mb-2">Botões Interativos</h3>
+              <p class="text-dim text-sm leading-relaxed">
+                Nossos botões contêm micro-animações de entrada, transições elásticas e luzes de transição internas no hover. O botão "Signal" é o nosso ápice tátil interativo.
+              </p>
+            </div>
+            <div class="mt-8 font-mono text-[11px] text-muted space-y-1 border-l border-forest/10 pl-4">
+              <div>Classe Base: <span class="text-forest">.btn</span></div>
+              <div>Primary: <span class="text-forest">.bg-forest .text-white</span></div>
+              <div>Signal: <span class="text-forest">.ls-btn</span></div>
+            </div>
+          </div>
+          
+          <div class="lg:col-span-2 bg-cream/40 border border-forest/5 rounded-3xl p-8 flex flex-wrap items-center justify-center gap-6">
+            <!-- Primary Button -->
+            <button class="btn-premium px-6 h-12 bg-forest text-white text-xs font-semibold tracking-widest uppercase rounded-full shadow-md shadow-forest/10 hover:shadow-lg hover:shadow-forest/20 hover:-translate-y-0.5 transition-all">
+              Primary Action
+            </button>
+            
+            <!-- Secondary Button -->
+            <button class="px-6 h-12 bg-[#FAF9F6] border border-forest/15 hover:border-forest/30 text-forest text-xs font-semibold tracking-widest uppercase rounded-full hover:bg-forest/[0.02] hover:-translate-y-0.5 transition-all">
+              Secondary Action
+            </button>
+
+            <!-- Signal Bouncy Button (Interativo!) -->
+            <div class="relative" id="ls-container">
+              <button class="ls-btn" id="ls-btn">
+                <span class="ls-text font-outfit font-semibold text-xs tracking-widest text-forest" id="ls-text">DISPARAR SINAL</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 2: Inputs, Toggles & Sliders Spec -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 border-b border-forest/5 pb-16 reveal">
+          <div class="flex flex-col justify-between">
+            <div>
+              <h3 class="font-display font-medium text-2xl text-forest mb-2">Inputs, Sliders & Toggles</h3>
+              <p class="text-dim text-sm leading-relaxed">
+                Elementos interativos de formulários com estados focados que emitem ondas dinâmicas e conectores com pulso.
+              </p>
+            </div>
+            <div class="mt-8 font-mono text-[11px] text-muted space-y-1 border-l border-forest/10 pl-4">
+              <div>Foco: <span class="text-forest">focus:border-peach</span></div>
+              <div>Pulse Light: <span class="text-forest">.np-pulse.fire</span></div>
+              <div>Toggle Active: <span class="text-forest">.bg-sage</span></div>
+            </div>
+          </div>
+          
+          <div class="lg:col-span-2 bg-cream/40 border border-forest/5 rounded-3xl p-8 flex flex-col gap-8 justify-center">
+            
+            <!-- Caixa de Texto -->
+            <div class="w-full max-w-md">
+              <label class="block text-[11px] font-mono uppercase tracking-widest text-muted mb-2">Entrada de Texto</label>
+              <input class="w-full bg-white border border-forest/10 rounded-xl px-4 py-3 text-sm text-forest placeholder-muted focus:outline-none focus:border-peach focus:ring-1 focus:ring-peach transition-all" placeholder="Digite seu e-mail..." type="text"/>
+            </div>
+
+            <!-- Painel Neural Interativo com Sliders e Toggles -->
+            <div class="neural-panel max-w-lg">
+              <div class="flex justify-between items-center border-b border-forest/5 pb-4 mb-6">
+                <span class="font-outfit font-bold text-xs tracking-wider uppercase text-forest">Painel de Lógica Ativa</span>
+                <div class="flex items-center gap-2 text-xs font-mono text-sage">
+                  <span class="w-1.5 h-1.5 rounded-full bg-sage animate-pulse"></span>
+                  Monitorando Fluxos
+                </div>
+              </div>
+              
+              <!-- Slider Neural -->
+              <div class="flex items-center gap-6 mb-6">
+                <div class="flex-1">
+                  <div class="flex justify-between text-[10px] font-mono text-muted uppercase mb-2">
+                    <span>Taxa de Compressão</span>
+                    <span class="text-forest font-semibold" id="val-flux">50%</span>
+                  </div>
+                  <input class="w-full accent-sage h-1 bg-forest/5 rounded-lg appearance-none cursor-pointer" id="inp-flux" max="100" min="0" type="range" value="50"/>
+                </div>
+                <!-- Conector com Pulse -->
+                <div class="w-20 h-[2px] bg-forest/5 relative overflow-hidden flex-shrink-0">
+                  <div class="np-pulse peach-pulse" id="pulse-flux"></div>
+                </div>
+                <!-- Status Node -->
+                <div class="w-32 bg-white border border-forest/5 rounded-lg p-3 flex items-center gap-3" id="mod-flux">
+                  <span class="w-2 h-2 rounded-full bg-forest/25 flex-shrink-0 transition-colors duration-300" id="light-flux"></span>
+                  <div class="overflow-hidden">
+                    <div class="text-[10px] font-bold text-forest leading-none">Modulo Ingestão</div>
+                    <span class="text-[9px] text-muted block truncate mt-1" id="sub-flux">Aguardando...</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Toggle Neural -->
+              <div class="flex items-center gap-6">
+                <div class="flex-1 flex justify-between items-center bg-[#FAF9F6] p-4 border border-forest/5 rounded-xl">
+                  <div class="text-[11px] font-mono text-muted uppercase">
+                    <span>Desvio de Rota de Segurança</span>
+                    <span class="block text-forest font-bold font-sans text-xs mt-1" id="val-relay">DESATIVADO</span>
+                  </div>
+                  <div class="np-toggle" id="inp-relay">
+                    <div class="np-toggle-thumb"></div>
+                  </div>
+                </div>
+                <!-- Conector -->
+                <div class="w-20 h-[2px] bg-forest/5 relative overflow-hidden flex-shrink-0">
+                  <div class="np-pulse sage-pulse" id="pulse-relay"></div>
+                </div>
+                <!-- Module Node -->
+                <div class="w-32 bg-white border border-forest/5 rounded-lg p-3 flex items-center gap-3" id="mod-relay">
+                  <span class="w-2 h-2 rounded-full bg-forest/25 flex-shrink-0 transition-colors duration-300" id="light-relay"></span>
+                  <div class="overflow-hidden">
+                    <div class="text-[10px] font-bold text-forest leading-none">Segurança Central</div>
+                    <span class="text-[9px] text-muted block truncate mt-1" id="sub-relay">Protocolo Bloqueado</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Bloco 3: Gravity Stack 3D Cards Spec -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 border-b border-forest/5 pb-16 reveal">
+          <div class="flex flex-col justify-between">
+            <div>
+              <h3 class="font-display font-medium text-2xl text-forest mb-2">Cartões Espaciais (Gravity Stack)</h3>
+              <p class="text-dim text-sm leading-relaxed">
+                Uma matriz tridimensional de z-index variável em tempo real. Os cartões flutuam, seguem elasticamente a orientação tridimensional do cursor e se desmembram fisicamente com a aproximação, criando foco dinâmico.
+              </p>
+            </div>
+            <div class="mt-8 font-mono text-[11px] text-muted space-y-1 border-l border-forest/10 pl-4">
+              <div>Classe Recipiente: <span class="text-forest">.g-container</span></div>
+              <div>Camadas Stack: <span class="text-forest">.g-layer-1 / -2 / -3</span></div>
+              <div>Rotação 3D: <span class="text-forest">translate3d() rotateX()</span></div>
+            </div>
+          </div>
+          
+          <div class="lg:col-span-2 bg-cream/40 border border-forest/5 rounded-3xl p-8 flex items-center justify-center">
+            
+            <div class="g-container" id="g-container">
+              <div class="g-stack" id="g-stack">
+                
+                <!-- Camada 3 (Atrás) -->
+                <div class="g-layer g-layer-3">
+                  <div class="g-header flex justify-between text-[10px] font-mono text-muted">
+                    <span>Nível 03</span>
+                  </div>
+                  <div class="my-auto">
+                    <div class="w-12 h-12 rounded-full bg-forest/5 flex items-center justify-center text-forest/40 mb-4">
+                      <i data-lucide="shield" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="text-lg font-display text-forest/40">Criptografia Base</h4>
+                    <p class="text-xs text-muted leading-relaxed">Camada profunda de assinaturas de payload imutáveis.</p>
+                  </div>
+                </div>
+
+                <!-- Camada 2 (Meio) -->
+                <div class="g-layer g-layer-2">
+                  <div class="g-header flex justify-between text-[10px] font-mono text-muted">
+                    <span>Nível 02</span>
+                  </div>
+                  <div class="my-auto">
+                    <div class="w-12 h-12 rounded-full bg-forest/5 flex items-center justify-center text-forest/70 mb-4">
+                      <i data-lucide="network" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="text-lg font-display text-forest/70">Subsistema de Rota</h4>
+                    <p class="text-xs text-muted leading-relaxed">Conexão sináptica multirregião e pipelines ativos.</p>
+                  </div>
+                </div>
+
+                <!-- Camada 1 (Frente) -->
+                <div class="g-layer g-layer-1">
+                  <div class="g-header flex justify-between items-center text-[10px] font-mono text-muted">
+                    <span>SETOR 04</span>
+                    <div class="flex items-center gap-1.5 text-sage">
+                      <span class="w-1.5 h-1.5 rounded-full bg-sage shadow-[0_0_8px_rgba(61,127,97,0.6)]"></span>
+                      ATIVO
+                    </div>
+                  </div>
+                  
+                  <div class="my-auto">
+                    <div class="w-12 h-12 rounded-full bg-forest/5 flex items-center justify-center text-forest mb-4">
+                      <i data-lucide="cpu" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="text-xl font-display text-forest font-semibold">Matriz Espacial</h4>
+                    <p class="text-xs text-dim leading-relaxed">Simulação física ativa. Passe o mouse para testar a rotação 3D elástica.</p>
+                  </div>
+                  
+                  <div class="mt-auto border-t border-forest/5 pt-4 flex justify-between text-[11px] font-mono text-muted">
+                    <span>Latência: 1.2ms</span>
+                    <span>100% Determinístico</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Bloco 4: Pipeline Curves Spec -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 border-b border-forest/5 pb-16 reveal">
+          <div class="flex flex-col justify-between">
+            <div>
+              <h3 class="font-display font-medium text-2xl text-forest mb-2">Fluxo Pipeline (Linhas SVG Sinuosas)</h3>
+              <p class="text-dim text-sm leading-relaxed">
+                Uma narrativa visual conectada. Processos operacionais isolados encontram-se estruturalmente através de caminhos vetoriais com glows direcionais ativos.
+              </p>
+            </div>
+            <div class="mt-8 font-mono text-[11px] text-muted space-y-1 border-l border-forest/10 pl-4">
+              <div>Desenho: <span class="text-forest">&lt;path d="M... C..."&gt;</span></div>
+              <div>Glow: <span class="text-forest">stroke="url(#grad)"</span></div>
+              <div>Cartões: <span class="text-forest">.pipeline-card</span></div>
+            </div>
+          </div>
+          
+          <div class="lg:col-span-2 bg-cream/40 border border-forest/5 rounded-3xl p-8 flex justify-center relative overflow-hidden">
+            
+            <div class="relative w-full max-w-lg flex flex-col gap-12 py-10 z-10" id="pipeline-stack">
+              <!-- SVG Conector Line -->
+              <svg class="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-visible">
+                <defs>
+                  <linearGradient id="light-glow-grad" x1="0%" x2="0%" y1="0%" y2="100%">
+                    <stop offset="0%" stop-color="rgba(61, 127, 97, 0.15)"></stop>
+                    <stop offset="50%" stop-color="rgba(246, 144, 98, 0.8)"></stop>
+                    <stop offset="100%" stop-color="rgba(61, 127, 97, 0.15)"></stop>
+                  </linearGradient>
+                </defs>
+                <path d="M 50 40 C 200 40, 20 220, 170 220" fill="none" stroke="rgba(13,60,31,0.06)" stroke-width="2"></path>
+                <path d="M 50 40 C 200 40, 20 220, 170 220" fill="none" stroke="url(#light-glow-grad)" stroke-dasharray="240" stroke-dashoffset="0" stroke-width="2" class="animate-[ls-spin_5s_linear_infinite]"></path>
+              </svg>
+              
+              <!-- Card 1 -->
+              <div class="pipeline-card self-start w-[80%] max-w-[280px] bg-white border border-forest/5 rounded-2xl p-6 shadow-sm relative z-10 hover:-translate-y-1 hover:border-peach hover:shadow-lg transition-all duration-500">
+                <div class="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-3 rounded-full border border-peach bg-peach shadow-[0_0_10px_rgba(246,144,102,0.8)] z-20"></div>
+                <span class="text-[9px] font-mono tracking-widest text-sage uppercase">Etapa 01</span>
+                <h4 class="font-display font-bold text-forest text-base mt-1">Síntese de Sandbox</h4>
+                <p class="text-xs text-dim mt-1.5 leading-relaxed">Criação automatizada e isolamento criptográfico de chaves.</p>
+              </div>
+
+              <!-- Card 2 -->
+              <div class="pipeline-card self-end w-[80%] max-w-[280px] bg-white border border-forest/5 rounded-2xl p-6 shadow-sm relative z-10 hover:-translate-y-1 hover:border-peach hover:shadow-lg transition-all duration-500">
+                <div class="absolute top-1/2 -translate-y-1/2 -left-1.5 w-3 h-3 rounded-full border border-peach bg-peach shadow-[0_0_10px_rgba(246,144,102,0.8)] z-20"></div>
+                <span class="text-[9px] font-mono tracking-widest text-sage uppercase">Etapa 02</span>
+                <h4 class="font-display font-bold text-forest text-base mt-1">Acoplamento Neural</h4>
+                <p class="text-xs text-dim mt-1.5 leading-relaxed">Sincronização de webhooks em runtime determinístico.</p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Bloco 5: Navbar, Modal, Badges & Tooltips Spec -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 reveal">
+          <div class="flex flex-col justify-between">
+            <div>
+              <h3 class="font-display font-medium text-2xl text-forest mb-2">Compostos de Experiência</h3>
+              <p class="text-dim text-sm leading-relaxed">
+                Diálogos com desfoque de fundo de alta densidade, badges de micro-sinalização ativa e balões de informações contextuais ("Tooltips").
+              </p>
+            </div>
+            <div class="mt-8 font-mono text-[11px] text-muted space-y-1 border-l border-forest/10 pl-4">
+              <div>Modal: <span class="text-forest">backdrop-blur-xl opacity-100</span></div>
+              <div>Tooltip: <span class="text-forest">.group-hover:opacity-100</span></div>
+              <div>Badges: <span class="text-forest">animate-pulse</span></div>
+            </div>
+          </div>
+          
+          <div class="lg:col-span-2 bg-cream/40 border border-forest/5 rounded-3xl p-8 flex flex-col gap-8 items-center justify-center">
+            
+            <!-- Badges e Tooltips -->
+            <div class="flex flex-wrap items-center gap-6 justify-center">
+              
+              <!-- Badge Ativo -->
+              <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-forest/5 shadow-sm text-xs font-semibold text-forest">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sage opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-sage"></span>
+                </span>
+                Subsistema Online
+              </div>
+
+              <!-- Badge Alerta -->
+              <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-forest/5 shadow-sm text-xs font-semibold text-forest">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-peach opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-peach"></span>
+                </span>
+                Atenção Crítica
+              </div>
+
+              <!-- Tooltip Interativo (Passe o mouse) -->
+              <div class="relative group cursor-help py-2 px-4 bg-white border border-forest/5 rounded-xl shadow-sm text-xs font-medium text-forest">
+                Pairar para Info
+                <!-- Balão de Tooltip -->
+                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-forest text-white text-[10px] font-mono tracking-wider uppercase rounded-lg opacity-0 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-[-4px] shadow-lg shadow-forest/25 w-max">
+                  Informação Contextual Ativa
+                  <div class="absolute top-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-t-forest"></div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Modal Trigger Button -->
+            <button class="px-6 h-12 bg-forest text-white text-xs font-semibold tracking-widest uppercase rounded-full shadow-lg shadow-forest/15 hover:bg-forest/90 transition-all" id="modal-trigger">
+              Simular Abertura de Modal
+            </button>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal Component Element (Inicialmente Oculto) -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-500" id="modal-container">
+    <!-- Backdrop com desfoque -->
+    <div class="absolute inset-0 bg-forest/20 backdrop-blur-md" id="modal-backdrop"></div>
+    
+    <!-- Caixa do Modal -->
+    <div class="relative z-10 w-full max-w-md bg-white border border-forest/10 rounded-3xl p-8 shadow-2xl shadow-forest/20 mx-4 transform translate-y-8 transition-transform duration-500" id="modal-box">
+      <!-- Decorativo -->
+      <div class="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-peach to-transparent"></div>
+      
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <span class="text-[9px] font-mono tracking-widest text-muted uppercase">Protocolo de Confirmação</span>
+          <h3 class="font-display font-bold text-forest text-2xl mt-1">Autorizar Acesso Secundário</h3>
+        </div>
+        <button class="w-8 h-8 rounded-full bg-forest/5 flex items-center justify-center text-forest hover:bg-forest/10 transition-colors" id="modal-close" aria-label="Fechar modal">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <p class="text-sm text-dim leading-relaxed mb-8">
+        Ambientes de execução criptograficamente protegidos. Esta operação requer verificação de conformidade de hardware ativo.
+      </p>
+
+      <div class="flex flex-col gap-3">
+        <button class="w-full h-12 bg-forest text-white text-xs font-semibold tracking-widest uppercase rounded-full hover:bg-forest/95 transition-colors">
+          Confirmar e Assinar
+        </button>
+        <button class="w-full h-12 border border-forest/10 text-forest text-xs font-semibold tracking-widest uppercase rounded-full hover:bg-forest/[0.02] transition-colors" id="modal-cancel">
+          Cancelar Operação
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- SEÇÃO 5: ÍCONES EM MOVIMENTO -->
+  <!-- ========================================== -->
+  <section class="py-24 border-t border-forest/5 bg-white relative z-10" id="icons">
+    <div class="max-w-7xl mx-auto px-6 w-full">
+      <div class="flex flex-col items-start mb-16 max-w-2xl reveal">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest/5 text-forest/70 font-semibold text-xs tracking-wider uppercase mb-4">
+          05 // Visual Assets
+        </div>
+        <h2 class="font-display font-medium text-4xl md:text-5xl tracking-tight text-forest mb-4">Ícones Dinâmicos & Funcionais</h2>
+        <p class="text-dim leading-relaxed">
+          Nossa biblioteca de ícones integra-se de forma ativa. Passar o mouse ativa micro-animações exclusivas de física para cada ícone.
+        </p>
+      </div>
+
+      <!-- Icons Row Showcase -->
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 reveal">
+        
+        <!-- Ícone 1: Escudo -->
+        <div class="group bg-[#FAF9F6] border border-forest/5 rounded-2xl p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:border-peach hover:shadow-md hover:shadow-peach/5">
+          <div class="w-12 h-12 rounded-xl bg-white border border-forest/5 flex items-center justify-center text-forest group-hover:text-peach transition-colors duration-300 mb-4">
+            <i data-lucide="shield" class="w-6 h-6 transition-transform duration-500 group-hover:scale-110"></i>
+          </div>
+          <span class="text-xs font-mono text-muted tracking-wider uppercase">Segurança</span>
+          <span class="text-[10px] text-muted/60 mt-1 block">Escudo Fixo</span>
+        </div>
+
+        <!-- Ícone 2: Engrenagem (Rotativa) -->
+        <div class="group bg-[#FAF9F6] border border-forest/5 rounded-2xl p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:border-peach hover:shadow-md hover:shadow-peach/5">
+          <div class="w-12 h-12 rounded-xl bg-white border border-forest/5 flex items-center justify-center text-forest group-hover:text-peach transition-colors duration-300 mb-4">
+            <i data-lucide="settings" class="w-6 h-6 transition-transform duration-700 ease-out group-hover:rotate-180"></i>
+          </div>
+          <span class="text-xs font-mono text-muted tracking-wider uppercase">Ajustes</span>
+          <span class="text-[10px] text-muted/60 mt-1 block">Gira 180°</span>
+        </div>
+
+        <!-- Ícone 3: Raio (Pulsante) -->
+        <div class="group bg-[#FAF9F6] border border-forest/5 rounded-2xl p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:border-peach hover:shadow-md hover:shadow-peach/5">
+          <div class="w-12 h-12 rounded-xl bg-white border border-forest/5 flex items-center justify-center text-forest group-hover:text-peach transition-colors duration-300 mb-4">
+            <i data-lucide="zap" class="w-6 h-6 transition-all duration-300 group-hover:scale-110 group-hover:animate-pulse"></i>
+          </div>
+          <span class="text-xs font-mono text-muted tracking-wider uppercase">Energia</span>
+          <span class="text-[10px] text-muted/60 mt-1 block">Pulso Ativo</span>
+        </div>
+
+        <!-- Ícone 4: Globo (Rotativo Completo) -->
+        <div class="group bg-[#FAF9F6] border border-forest/5 rounded-2xl p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:border-peach hover:shadow-md hover:shadow-peach/5">
+          <div class="w-12 h-12 rounded-xl bg-white border border-forest/5 flex items-center justify-center text-forest group-hover:text-peach transition-colors duration-300 mb-4">
+            <i data-lucide="globe" class="w-6 h-6 transition-transform duration-1000 ease-in-out group-hover:rotate-[360deg]"></i>
+          </div>
+          <span class="text-xs font-mono text-muted tracking-wider uppercase">Global</span>
+          <span class="text-[10px] text-muted/60 mt-1 block">Gira 360°</span>
+        </div>
+
+        <!-- Ícone 5: Sino (Bouncy Swing) -->
+        <div class="group bg-[#FAF9F6] border border-forest/5 rounded-2xl p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:border-peach hover:shadow-md hover:shadow-peach/5">
+          <div class="w-12 h-12 rounded-xl bg-white border border-forest/5 flex items-center justify-center text-forest group-hover:text-peach transition-colors duration-300 mb-4">
+            <i data-lucide="bell" class="w-6 h-6 transition-transform duration-500 origin-top group-hover:animate-[spin_1s_ease-in-out_infinite] group-hover:rotate-12"></i>
+          </div>
+          <span class="text-xs font-mono text-muted tracking-wider uppercase">Sinal</span>
+          <span class="text-[10px] text-muted/60 mt-1 block">Swing origin-top</span>
+        </div>
+
+        <!-- Ícone 6: Sparkles -->
+        <div class="group bg-[#FAF9F6] border border-forest/5 rounded-2xl p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:border-peach hover:shadow-md hover:shadow-peach/5">
+          <div class="w-12 h-12 rounded-xl bg-white border border-forest/5 flex items-center justify-center text-forest group-hover:text-peach transition-colors duration-300 mb-4">
+            <i data-lucide="sparkles" class="w-6 h-6 transition-transform duration-500 group-hover:translate-y-[-2px] group-hover:scale-110"></i>
+          </div>
+          <span class="text-xs font-mono text-muted tracking-wider uppercase">Síntese</span>
+          <span class="text-[10px] text-muted/60 mt-1 block">Glow & Flutua</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ========================================== -->
+  <!-- SEÇÃO 6: BIBLIOTECA DE ANIMAÇÕES -->
+  <!-- ========================================== -->
+  <section class="py-24 border-t border-forest/5 relative z-10" id="animations">
+    <div class="max-w-7xl mx-auto px-6 w-full">
+      <div class="flex flex-col items-start mb-16 max-w-2xl reveal">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest/5 text-forest/70 font-semibold text-xs tracking-wider uppercase mb-4">
+          06 // Motion Library
+        </div>
+        <h2 class="font-display font-medium text-4xl md:text-5xl tracking-tight text-forest mb-4">Sistema de Movimento & Transições</h2>
+        <p class="text-dim leading-relaxed">
+          Nossa física visual é baseada em curvas naturais de atenuação. Abaixo estão as classes prontas com simuladores de disparo ativo para teste.
+        </p>
+      </div>
+
+      <!-- Motion Grid Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10 reveal">
+        
+        <!-- Cartão 1: Máquina de Escrever & Cursor -->
+        <div class="bg-white border border-forest/5 rounded-3xl p-8 flex flex-col justify-between min-h-[300px]">
+          <div>
+            <div class="flex justify-between items-center mb-6">
+              <span class="text-xs font-mono text-muted uppercase tracking-wider">01 // Typewriter</span>
+              <span class="px-2.5 py-1 bg-peach/10 text-peach rounded-full font-mono text-[9px] tracking-wider uppercase">Ativo</span>
+            </div>
+            <h4 class="font-display font-bold text-forest text-xl mb-3">Word Typewriter & Blink</h4>
+            <p class="text-dim text-sm leading-relaxed mb-6 font-body">
+              Usado para títulos hero de impacto, gerando narrativas sequenciais através de carrosséis de texto fluidos.
+            </p>
+            <div class="h-14 bg-cream/40 border border-forest/5 rounded-xl flex items-center px-4">
+              <span class="font-display text-lg text-forest">Sistemas <span class="border-r-2 border-forest pr-0.5 animate-blink text-sage font-bold" id="typewriter-demo-text">seguros.</span></span>
+            </div>
+          </div>
+          <div class="mt-6 flex gap-4">
+            <button class="px-4 py-2 border border-forest/10 hover:border-forest/30 text-xs font-mono text-forest tracking-wider uppercase rounded-lg hover:bg-forest/[0.02]" id="btn-trigger-typewriter">
+              Reiniciar Ciclo
+            </button>
+          </div>
+        </div>
+
+        <!-- Cartão 2: Laser Security Scan -->
+        <div class="bg-white border border-forest/5 rounded-3xl p-8 flex flex-col justify-between min-h-[300px]">
+          <div>
+            <div class="flex justify-between items-center mb-6">
+              <span class="text-xs font-mono text-muted uppercase tracking-wider">02 // Laser Scan</span>
+              <span class="px-2.5 py-1 bg-sage/10 text-sage rounded-full font-mono text-[9px] tracking-wider uppercase">CSS Keyframe</span>
+            </div>
+            <h4 class="font-display font-bold text-forest text-xl mb-3">Scanning Laser Glow</h4>
+            <p class="text-dim text-sm leading-relaxed mb-6 font-body">
+              Uma máscara gradiente linear que desliza continuamente de cima para baixo sobre elementos circulares de segurança, simulando escaneamento físico.
+            </p>
+            <!-- Simulador Visual -->
+            <div class="w-full h-16 rounded-xl border border-forest/5 bg-[#FAF9F6] relative overflow-hidden flex items-center justify-center">
+              <span class="text-xs font-mono tracking-widest text-forest/40">Status: Protegido</span>
+              <!-- Linha Laser -->
+              <div class="absolute inset-x-0 h-1/2 bg-gradient-to-b from-peach/0 via-peach/25 to-peach/5 blur-sm pointer-events-none animate-scan"></div>
+            </div>
+          </div>
+          <div class="mt-6 flex gap-4">
+            <span class="text-[10px] font-mono text-muted">Classe CSS: <span class="text-forest">.animate-scan</span></span>
+          </div>
+        </div>
+
+        <!-- Cartão 3: Scroll Reveal Observer -->
+        <div class="bg-white border border-forest/5 rounded-3xl p-8 flex flex-col justify-between min-h-[300px]">
+          <div>
+            <div class="flex justify-between items-center mb-6">
+              <span class="text-xs font-mono text-muted uppercase tracking-wider">03 // Scroll Reveal</span>
+              <span class="px-2.5 py-1 bg-forest/5 text-forest rounded-full font-mono text-[9px] tracking-wider uppercase">Intersection Observer</span>
+            </div>
+            <h4 class="font-display font-bold text-forest text-xl mb-3">Fade-Up & Slide-In</h4>
+            <p class="text-dim text-sm leading-relaxed mb-6 font-body">
+              Garante que seções e componentes entrem de forma suave na viewport apenas quando requisitados, atenuando a carga visual de carregamento.
+            </p>
+            
+            <div class="h-16 bg-cream/40 border border-forest/5 rounded-xl flex items-center justify-center p-4">
+              <div class="opacity-30 border border-dashed border-forest/20 rounded-lg p-2 text-[10px] font-mono" id="reveal-demo-element">
+                Demonstração de Elemento
+              </div>
+            </div>
+          </div>
+          <div class="mt-6 flex gap-4">
+            <button class="px-4 py-2 bg-forest text-white text-xs font-semibold tracking-widest uppercase rounded-lg hover:bg-forest/90" id="btn-trigger-reveal">
+              Disparar Animação
+            </button>
+          </div>
+        </div>
+
+        <!-- Cartão 4: Magnetic / Pulse Glow -->
+        <div class="bg-white border border-forest/5 rounded-3xl p-8 flex flex-col justify-between min-h-[300px]">
+          <div>
+            <div class="flex justify-between items-center mb-6">
+              <span class="text-xs font-mono text-muted uppercase tracking-wider">04 // Pulse Glow</span>
+              <span class="px-2.5 py-1 bg-peach/10 text-peach rounded-full font-mono text-[9px] tracking-wider uppercase">Física de Mola</span>
+            </div>
+            <h4 class="font-display font-bold text-forest text-xl mb-3">Radial Glow Ripple</h4>
+            <p class="text-dim text-sm leading-relaxed mb-6 font-body">
+              Surgimento de auréolas luminosas suaves que aumentam a dimensão física no hover e geram pulsações suaves em botões de destaque.
+            </p>
+            
+            <div class="h-16 bg-cream/40 border border-forest/5 rounded-xl flex items-center justify-center">
+              <div class="relative group cursor-pointer">
+                <div class="absolute inset-0 bg-peach/40 rounded-full blur-[10px] group-hover:scale-150 transition-transform duration-500 opacity-60"></div>
+                <div class="relative z-10 w-8 h-8 rounded-full bg-forest flex items-center justify-center text-white text-xs font-mono shadow-md">
+                  P
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-6 flex gap-4">
+            <span class="text-[10px] font-mono text-muted">Efeito tátil nativo em botões e badges</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Footer -->
+  <footer class="bg-forest pt-16 pb-12 text-white relative z-10">
+    <div class="max-w-7xl mx-auto px-6 w-full">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-12 border-b border-white/10 pb-12">
+        <a class="flex items-center gap-2 select-none" href="#">
+          <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-forest font-display text-lg font-bold">E</div>
+          <span class="font-outfit font-bold text-lg tracking-wider text-white uppercase">Ecosegme</span>
+        </a>
+        <div class="flex flex-wrap justify-center gap-8 text-xs font-semibold tracking-wider uppercase text-white/60">
+          <a class="hover:text-white transition-colors" href="#hero">Showcase</a>
+          <a class="hover:text-white transition-colors" href="#typography">Tipografia</a>
+          <a class="hover:text-white transition-colors" href="#colors">Cores</a>
+          <a class="hover:text-white transition-colors" href="#components">Componentes</a>
+        </div>
+      </div>
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white/40">
+        <p>Copyright © 2026 Ecosegme. Todos os direitos reservados.</p>
+        <p class="font-mono">Premium Design System Specs</p>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ========================================== -->
+  <!-- SCRIPTS & INTERATIVIDADE JAVASCRIPT -->
+  <!-- ========================================== -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      // Inicializar Ícones Lucide
+      lucide.createIcons({
+        attrs: { 'stroke-width': 1.5 }
+      });
+
+      // ------------------------------------------
+      // 1. HEADER SCROLL & BACKDROP
+      // ------------------------------------------
+      const navbar = document.getElementById('navbar');
+      const navbarBg = document.getElementById('navbar-bg');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 40) {
+          navbar.classList.add('h-[70px]');
+          navbar.classList.remove('h-[80px]');
+          navbarBg.style.opacity = '1';
+        } else {
+          navbar.classList.add('h-[80px]');
+          navbar.classList.remove('h-[70px]');
+          navbarBg.style.opacity = '0';
+        }
+      });
+
+      // ------------------------------------------
+      // 2. MOBILE MENU DRAWER
+      // ------------------------------------------
+      const mobileBtn = document.getElementById('mobile-menu-btn');
+      const mobileMenu = document.getElementById('mobile-menu');
+      const barTop = document.getElementById('bar-top');
+      const barMid = document.getElementById('bar-mid');
+      const barBot = document.getElementById('bar-bot');
+      let menuOpen = false;
+
+      mobileBtn.addEventListener('click', () => {
+        menuOpen = !menuOpen;
+        if (menuOpen) {
+          mobileMenu.classList.add('opacity-100', 'pointer-events-auto');
+          barTop.classList.add('rotate-45', 'translate-y-[4.5px]');
+          barMid.classList.add('opacity-0');
+          barBot.classList.add('-rotate-45', '-translate-y-[4.5px]');
+        } else {
+          mobileMenu.classList.remove('opacity-100', 'pointer-events-auto');
+          barTop.classList.remove('rotate-45', 'translate-y-[4.5px]');
+          barMid.classList.remove('opacity-0');
+          barBot.classList.remove('-rotate-45', '-translate-y-[4.5px]');
+        }
+      });
+      // Fechar menu mobile ao clicar nos links
+      document.querySelectorAll('#mobile-menu nav a').forEach(link => {
+        link.addEventListener('click', () => {
+          menuOpen = false;
+          mobileMenu.classList.remove('opacity-100', 'pointer-events-auto');
+          barTop.classList.remove('rotate-45', 'translate-y-[4.5px]');
+          barMid.classList.remove('opacity-0');
+          barBot.classList.remove('-rotate-45', '-translate-y-[4.5px]');
+        });
+      });
+
+      // ------------------------------------------
+      // 3. REVEAL OBSERVER ON SCROLL
+      // ------------------------------------------
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+      // ------------------------------------------
+      // 4. TYPEWRITER (HERO & DEMO)
+      // ------------------------------------------
+      function runTypewriter(elemId, wordsList) {
+        const wordElement = document.getElementById(elemId);
+        if (!wordElement) return;
+        
+        let wordIndex = 0;
+        let currentText = '';
+        let isDeleting = false;
+        
+        function type() {
+          const fullWord = wordsList[wordIndex];
+          if (isDeleting) {
+            currentText = fullWord.substring(0, currentText.length - 1);
+          } else {
+            currentText = fullWord.substring(0, currentText.length + 1);
+          }
+          
+          wordElement.textContent = currentText;
+          
+          let speed = 90;
+          if (isDeleting) speed /= 2;
+          
+          if (!isDeleting && currentText === fullWord) {
+            speed = 2000; // Tempo de repouso no final
+            isDeleting = true;
+          } else if (isDeleting && currentText === '') {
+            isDeleting = false;
+            wordIndex = (wordIndex + 1) % wordsList.length;
+            speed = 500; // Pequeno repouso antes do próximo
+          }
+          
+          setTimeout(type, speed);
+        }
+        
+        setTimeout(type, 800);
+      }
+      // Rodar Typewriter Hero
+      runTypewriter('word-carousel', ['memoráveis.', 'espaciais.', 'estratégicos.', 'limpos.', 'dinâmicos.']);
+      // Rodar Typewriter Demo
+      runTypewriter('typewriter-demo-text', ['seguros.', 'rápidos.', 'consistentes.', 'fluidos.']);
+
+      // Reiniciar Ciclo Typewriter Manual
+      const btnTriggerTypewriter = document.getElementById('btn-trigger-typewriter');
+      if(btnTriggerTypewriter) {
+        btnTriggerTypewriter.addEventListener('click', () => {
+          const el = document.getElementById('typewriter-demo-text');
+          if (el) {
+            el.textContent = '';
+            // Forçamos resincronização limpando a animação
+            el.classList.remove('animate-blink');
+            void el.offsetWidth;
+            el.classList.add('animate-blink');
+          }
+        });
+      }
+
+      // ------------------------------------------
+      // 5. GLOBO INTERATIVO EM CANVAS (LIGHT STATE)
+      // ------------------------------------------
+      const canvas = document.getElementById('hero-globe');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let width = canvas.parentElement.clientWidth;
+        let height = canvas.parentElement.clientHeight || 500;
+        
+        const globeNodes = [];
+        const arcs = [];
+        const numNodes = 750;
+        const globeRadius = 190;
+        
+        // Distribuir nós esfericamente usando a sequência Fibonacci
+        const phi = Math.PI * (3 - Math.sqrt(5));
+        for (let i = 0; i < numNodes; i++) {
+          const y = 1 - (i / (numNodes - 1)) * 2;
+          const radius = Math.sqrt(1 - y * y);
+          const theta = phi * i;
+          
+          const x = Math.cos(theta) * radius;
+          const z = Math.sin(theta) * radius;
+          const isHighlight = Math.random() > 0.94;
+          
+          const depthOffset = 1 + (Math.random() * 0.05 - 0.025);
+          
+          globeNodes.push({
+            x: x * depthOffset,
+            y: y * depthOffset,
+            z: z * depthOffset,
+            baseRadius: isHighlight ? 2 : 0.8,
+            // Nós em verde floresta, com highlights em pêssego
+            color: isHighlight ? '#F69066' : 'rgba(13, 60, 31, 0.45)'
+          });
+        }
+
+        // Criar Arcos Conectores Virtuais
+        for (let i = 0; i < 15; i++) {
+          arcs.push({
+            n1: Math.floor(Math.random() * numNodes),
+            n2: Math.floor(Math.random() * numNodes),
+            progress: Math.random(),
+            speed: 0.003 + Math.random() * 0.004
+          });
+        }
+
+        // Configuração DPR para telas Retina de alta densidade
+        function resizeCanvas() {
+          width = canvas.parentElement.clientWidth;
+          height = canvas.parentElement.clientHeight || 500;
+          const dpr = window.devicePixelRatio || 1;
+          canvas.width = width * dpr;
+          canvas.height = height * dpr;
+          canvas.style.width = `${width}px`;
+          canvas.style.height = `${height}px`;
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.scale(dpr, dpr);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let angleY = 0;
+        let angleX = 0.3;
+        let targetAngleY = 0;
+        let targetAngleX = 0.3;
+        let isDragging = false;
+        let lastX, lastY;
+
+        // Suporte a arraste para girar o globo
+        canvas.addEventListener('mousedown', (e) => {
+          isDragging = true;
+          lastX = e.clientX;
+          lastY = e.clientY;
+        });
+        window.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          const deltaX = e.clientX - lastX;
+          const deltaY = e.clientY - lastY;
+          targetAngleY += deltaX * 0.008;
+          targetAngleX += deltaY * 0.008;
+          lastX = e.clientX;
+          lastY = e.clientY;
+        });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        function renderGlobe() {
+          ctx.clearRect(0, 0, width, height);
+          
+          // Rotação constante amortecida
+          if (!isDragging) {
+            targetAngleY += 0.0015;
+          }
+          angleY += (targetAngleY - angleY) * 0.1;
+          angleX += (targetAngleX - angleX) * 0.1;
+
+          const cx = width / 2;
+          const cy = height / 2;
+          const fov = 700;
+
+          // Desenhar Glow de Fundo no Canvas
+          const gradient = ctx.createRadialGradient(cx, cy, globeRadius * 0.5, cx, cy, globeRadius * 1.5);
+          gradient.addColorStop(0, 'rgba(61, 127, 97, 0.08)');
+          gradient.addColorStop(0.5, 'rgba(246, 144, 102, 0.02)');
+          gradient.addColorStop(1, 'transparent');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, width, height);
+
+          const sinY = Math.sin(angleY);
+          const cosY = Math.cos(angleY);
+          const sinX = Math.sin(angleX);
+          const cosX = Math.cos(angleX);
+
+          // Renderizar Linhas de Grade e Paralelos com atenuação
+          ctx.lineWidth = 0.75;
+          ctx.strokeStyle = 'rgba(13, 60, 31, 0.04)';
+          ctx.setLineDash([2, 5]);
+
+          for (let lat = -3; lat <= 3; lat++) {
+            const y = lat * 0.28;
+            const r = Math.sqrt(1 - y * y) * globeRadius;
+            ctx.beginPath();
+            for (let lon = 0; lon <= Math.PI * 2.01; lon += 0.12) {
+              const x = Math.cos(lon) * r;
+              const z = Math.sin(lon) * r;
+              const x1 = x * cosY - z * sinY;
+              const z1 = x * sinY + z * cosY;
+              const y1 = (y * globeRadius) * cosX - z1 * sinX;
+              const z2 = (y * globeRadius) * sinX + z1 * cosX;
+              const scale = fov / (fov + z2);
+              const px = cx + x1 * scale;
+              const py = cy + y1 * scale;
+              if (lon === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+          }
+          ctx.setLineDash([]);
+
+          // Projetar nós no espaço bidimensional
+          const projectedNodes = [];
+          for (let i = 0; i < numNodes; i++) {
+            const n = globeNodes[i];
+            const x1 = n.x * cosY - n.z * sinY;
+            const z1 = n.x * sinY + n.z * cosY;
+            const y1 = n.y * cosX - z1 * sinX;
+            const z2 = n.y * sinX + z1 * cosX;
+
+            const scale = fov / (fov + z2 * globeRadius);
+            const px = cx + x1 * globeRadius * scale;
+            const py = cy + y1 * globeRadius * scale;
+
+            projectedNodes.push({
+              px, py, z: z2, scale,
+              color: n.color,
+              r: n.baseRadius
+            });
+          }
+
+          // Desenhar conexões de Arcos dinâmicas
+          ctx.lineWidth = 1;
+          arcs.forEach((arc) => {
+            arc.progress += arc.speed;
+            if (arc.progress > 1) arc.progress = 0;
+
+            const pn1 = projectedNodes[arc.n1];
+            const pn2 = projectedNodes[arc.n2];
+
+            // Apenas renderizar se estiverem voltados para frente da câmera
+            if (pn1.z > -0.3 && pn2.z > -0.3) {
+              ctx.beginPath();
+              ctx.moveTo(pn1.px, pn1.py);
+
+              // Cálculo de ponto de controle central para curva orgânica
+              const mx = (pn1.px + pn2.px) / 2;
+              const my = (pn1.py + pn2.py) / 2 - 25 * pn1.scale;
+
+              ctx.quadraticCurveTo(mx, my, pn2.px, pn2.py);
+
+              // Gradiente de cor para flash móvel do arco
+              const grad = ctx.createLinearGradient(pn1.px, pn1.py, pn2.px, pn2.py);
+              grad.addColorStop(0, 'rgba(61, 127, 97, 0)');
+              grad.addColorStop(arc.progress, 'rgba(246, 144, 98, 0.5)');
+              grad.addColorStop(Math.min(1, arc.progress + 0.12), 'rgba(61, 127, 97, 0)');
+
+              ctx.strokeStyle = grad;
+              ctx.stroke();
+            }
+          });
+
+          // Ordenar nós por profundidade z (Pintura de trás para frente)
+          projectedNodes.sort((a, b) => b.z - a.z);
+
+          // Renderizar os nós físicos
+          for (let i = 0; i < projectedNodes.length; i++) {
+            const p = projectedNodes[i];
+            const alpha = Math.min(1, Math.max(0.08, p.z + 1.2));
+
+            ctx.beginPath();
+            ctx.arc(p.px, p.py, p.r * p.scale, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = alpha;
+            ctx.fill();
+
+            // Desenhar halo brilhante em nós de destaque
+            if (p.r > 1.8 && alpha > 0.4) {
+              ctx.beginPath();
+              ctx.arc(p.px, p.py, p.r * 3 * p.scale, 0, Math.PI * 2);
+              ctx.fillStyle = 'rgba(246, 144, 102, 0.25)';
+              ctx.fill();
+            }
+          }
+
+          ctx.globalAlpha = 1;
+          requestAnimationFrame(renderGlobe);
+        }
+
+        renderGlobe();
+      }
+
+      // ------------------------------------------
+      // 6. CONTROLADORES DO PAINEL NEURAL
+      // ------------------------------------------
+      const inpFlux = document.getElementById('inp-flux');
+      const valFlux = document.getElementById('val-flux');
+      const modFlux = document.getElementById('mod-flux');
+      const subFlux = document.getElementById('sub-flux');
+      const lightFlux = document.getElementById('light-flux');
+      const pulseFlux = document.getElementById('pulse-flux');
+      let fluxTimeout;
+
+      if (inpFlux) {
+        inpFlux.addEventListener('input', (e) => {
+          const val = e.target.value;
+          valFlux.innerText = `${val}%`;
+          
+          // Re-disparar animação de pulso no conector
+          pulseFlux.classList.remove('fire');
+          void pulseFlux.offsetWidth;
+          pulseFlux.classList.add('fire');
+
+          // Atualizar nó do status visual
+          modFlux.classList.add('border-peach', 'shadow-md', 'shadow-peach/5');
+          lightFlux.style.backgroundColor = 'var(--accent-peach)';
+          subFlux.innerText = `Ingerindo ${val}TB/s...`;
+
+          clearTimeout(fluxTimeout);
+          fluxTimeout = setTimeout(() => {
+            modFlux.classList.remove('border-peach', 'shadow-md', 'shadow-peach/5');
+            lightFlux.style.backgroundColor = 'rgba(13, 60, 31, 0.25)';
+            subFlux.innerText = `Estável em ${val}%.`;
+          }, 800);
+        });
+      }
+
+      // Toggle Neural
+      const inpRelay = document.getElementById('inp-relay');
+      const valRelay = document.getElementById('val-relay');
+      const modRelay = document.getElementById('mod-relay');
+      const subRelay = document.getElementById('sub-relay');
+      const lightRelay = document.getElementById('light-relay');
+      const pulseRelay = document.getElementById('pulse-relay');
+      let relayActive = false;
+
+      if(inpRelay) {
+        inpRelay.addEventListener('click', () => {
+          relayActive = !relayActive;
+
+          if (relayActive) {
+            inpRelay.classList.add('active');
+            valRelay.innerText = 'ATIVADO';
+            valRelay.style.color = 'var(--accent-sage)';
+          } else {
+            inpRelay.classList.remove('active');
+            valRelay.innerText = 'DESATIVADO';
+            valRelay.style.color = 'var(--text-main)';
+          }
+
+          // Disparar pulso
+          pulseRelay.classList.remove('fire');
+          void pulseRelay.offsetWidth;
+          pulseRelay.classList.add('fire');
+
+          setTimeout(() => {
+            if (relayActive) {
+              modRelay.classList.add('border-sage', 'shadow-md');
+              lightRelay.style.backgroundColor = 'var(--accent-sage)';
+              subRelay.innerText = 'Protocolo ativado. Bypass OK';
+            } else {
+              modRelay.classList.remove('border-sage', 'shadow-md');
+              lightRelay.style.backgroundColor = 'rgba(13, 60, 31, 0.25)';
+              subRelay.innerText = 'Protocolo bloqueado.';
+            }
+          }, 350);
+        });
+      }
+
+      // ------------------------------------------
+      // 7. INTERATIVIDADE GRAVITY STACK 3D CARDS
+      // ------------------------------------------
+      const gContainer = document.getElementById('g-container');
+      const gStack = document.getElementById('g-stack');
+      const gLayers = document.querySelectorAll('.g-layer');
+      
+      let targetX = 0;
+      let targetY = 0;
+      let currentX = [0, 0, 0];
+      let currentY = [0, 0, 0];
+      const lerpSpeeds = [0.12, 0.07, 0.03]; // Velocidades de amortecimento diferentes para gerar paralaxe
+
+      if (gContainer && gStack) {
+        gContainer.addEventListener('mousemove', (e) => {
+          const rect = gContainer.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width - 0.5;
+          const y = (e.clientY - rect.top) / rect.height - 0.5;
+          
+          gStack.style.transform = `rotateX(${-y * 12}deg) rotateY(${x * 12}deg)`;
+          targetX = x * 20;
+          targetY = y * 20;
+        });
+
+        gContainer.addEventListener('mouseleave', () => {
+          gStack.style.transform = 'rotateX(0deg) rotateY(0deg)';
+          targetX = 0;
+          targetY = 0;
+        });
+
+        function animateGravityLayers() {
+          for (let i = 0; i < 3; i++) {
+            currentX[i] += (targetX - currentX[i]) * lerpSpeeds[i];
+            currentY[i] += (targetY - currentY[i]) * lerpSpeeds[i];
+
+            // Apenas aplica deslocamento extra aos elementos internos se não estiver expandido
+            const zOffset = i === 0 ? 0 : i === 1 ? -30 : -60;
+            const scale = i === 0 ? 1 : i === 1 ? 0.97 : 0.94;
+            const yTrans = i === 0 ? 0 : i === 1 ? 28 : 54;
+            
+            // Só aplicamos paralaxe ao pairar
+            if (targetX !== 0 || targetY !== 0) {
+              gLayers[2 - i].style.transform = `translate3d(${currentX[i] * (i + 1)}px, ${currentY[i] * (i + 1) + yTrans}px, ${zOffset}px) scale(${scale})`;
+            } else {
+              gLayers[2 - i].style.transform = `translate3d(0, ${yTrans}px, ${zOffset}px) scale(${scale})`;
+            }
+          }
+          requestAnimationFrame(animateGravityLayers);
+        }
+        animateGravityLayers();
+      }
+
+      // ------------------------------------------
+      // 8. BOTAO DE SINAL BOUNCY & PULSE RADIAL
+      // ------------------------------------------
+      const lsBtn = document.getElementById('ls-btn');
+      const lsText = document.getElementById('ls-text');
+      const lsContainer = document.getElementById('ls-container');
+
+      if (lsText && lsBtn) {
+        const textVal = lsText.innerText;
+        
+        function formatSpans(text) {
+          lsText.innerHTML = '';
+          text.split('').forEach((char) => {
+            const span = document.createElement('span');
+            span.className = 'ls-char';
+            span.innerText = char === ' ' ? '\u00A0' : char;
+            span.style.setProperty('--rand', Math.random());
+            lsText.appendChild(span);
+          });
+        }
+        formatSpans(textVal);
+
+        lsBtn.addEventListener('click', () => {
+          // Criar anel expansivo radial (Wave)
+          const ring = document.createElement('div');
+          ring.className = 'ls-burst-ring active';
+          lsContainer.appendChild(ring);
+
+          lsText.innerText = 'EXECUTANDO...';
+          lsText.style.color = 'var(--accent-peach)';
+
+          setTimeout(() => {
+            formatSpans(textVal);
+            lsText.style.color = 'var(--text-main)';
+          }, 1500);
+
+          setTimeout(() => ring.remove(), 800);
+        });
+      }
+
+      // ------------------------------------------
+      // 9. DIÁLOGO MODAL FUNCIONAL
+      // ------------------------------------------
+      const modalTrigger = document.getElementById('modal-trigger');
+      const modalContainer = document.getElementById('modal-container');
+      const modalClose = document.getElementById('modal-close');
+      const modalCancel = document.getElementById('modal-cancel');
+      const modalBackdrop = document.getElementById('modal-backdrop');
+      const modalBox = document.getElementById('modal-box');
+
+      function openModal() {
+        modalContainer.classList.remove('pointer-events-none');
+        modalContainer.classList.add('opacity-100');
+        modalBox.classList.remove('translate-y-8');
+        modalBox.classList.add('translate-y-0');
+      }
+
+      function closeModal() {
+        modalContainer.classList.add('pointer-events-none');
+        modalContainer.classList.remove('opacity-100');
+        modalBox.classList.remove('translate-y-0');
+        modalBox.classList.add('translate-y-8');
+      }
+
+      if(modalTrigger) modalTrigger.addEventListener('click', openModal);
+      if(modalClose) modalClose.addEventListener('click', closeModal);
+      if(modalCancel) modalCancel.addEventListener('click', closeModal);
+      if(modalBackdrop) modalBackdrop.addEventListener('click', closeModal);
+
+      // ------------------------------------------
+      // 10. DISPARADORES DE ANIMAÇÃO MANUAL (SEÇÃO 6)
+      // ------------------------------------------
+      const btnTriggerReveal = document.getElementById('btn-trigger-reveal');
+      const revealDemo = document.getElementById('reveal-demo-element');
+      if (btnTriggerReveal && revealDemo) {
+        btnTriggerReveal.addEventListener('click', () => {
+          revealDemo.style.transition = 'none';
+          revealDemo.style.opacity = '0';
+          revealDemo.style.transform = 'translateY(15px)';
+          void revealDemo.offsetHeight; // Forçar Reflow
+          revealDemo.style.transition = 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+          revealDemo.style.opacity = '1';
+          revealDemo.style.transform = 'translateY(0)';
+        });
+      }
+
+    });
+  </script>
+</body>
+</html>

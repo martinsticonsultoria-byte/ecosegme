@@ -295,39 +295,39 @@
   </table>
 
   <h2>Resultados dos Agentes Químicos</h2>
-  <table style="table-layout:fixed;">
+  <table style="table-layout:fixed; width:100%;">
     <thead>
       <tr>
-        <th style="background:#c6efce; width:22%; text-align:center;">Agente Químico</th>
-        <th style="background:#c6efce; width:9%;  text-align:center;">Nº CAS</th>
-        <th style="background:#c6efce; width:7%;  text-align:center;">Unidade</th>
-        <th style="background:#c6efce; width:13%; text-align:center;">Valor Encontrado</th>
-        <th style="background:#c6efce; width:11%; text-align:center;">LT NR-15</th>
-        <th style="background:#c6efce; width:12%; text-align:center;">TLV-TWA ACGIH</th>
-        <th style="background:#c6efce; width:10%; text-align:center;">LQ</th>
-        <th style="background:#c6efce; width:16%; text-align:center;">Resultado</th>
+        <th rowspan="2" style="background:#c6efce; width:24%; text-align:center; vertical-align:middle;">Agente Químico<br/><span style="font-weight:400; font-size:7pt;">Código e-Social</span></th>
+        <th rowspan="2" style="background:#c6efce; width:10%; text-align:center; vertical-align:middle;">Valor<br/>Encontrado</th>
+        <th rowspan="2" style="background:#c6efce; width:7%;  text-align:center; vertical-align:middle;">Unidade</th>
+        <th colspan="2"  style="background:#c6efce; width:16%; text-align:center;">ACGIH</th>
+        <th rowspan="2" style="background:#c6efce; width:8%;  text-align:center; vertical-align:middle;">NR 15</th>
+        <th rowspan="2" style="background:#c6efce; width:35%; text-align:center; vertical-align:middle;">Bases de<br/>Efeitos Críticos</th>
+      </tr>
+      <tr>
+        <th style="background:#c6efce; width:8%;  text-align:center;">TWA</th>
+        <th style="background:#c6efce; width:8%;  text-align:center;">STEL</th>
       </tr>
     </thead>
     <tbody>
       {% for a in f.agents %}
       <tr>
-        <td>{{ a.agent_nome or '—' }}</td>
-        <td style="text-align:center; font-size:7pt;">{{ a.agent_cas or '—' }}</td>
-        <td style="text-align:center;">{{ a.agent_unidade or '—' }}</td>
-        <td style="text-align:center;">{{ a.valor_encontrado or '—' }}</td>
-        <td style="text-align:center;">{{ a.agent_nr15 or '—' }}</td>
-        <td style="text-align:center;">{{ a.agent_acgih_twa or '—' }}</td>
-        <td style="text-align:center; font-size:7pt;">{{ a.agent_lq or '—' }}</td>
-        <td style="text-align:center;">
-          {% if a.resultado_status == 'dentro_limite' %}<span class="status-ok">Dentro do Limite</span>
-          {% elif a.resultado_status == 'acima_limite' %}<span class="status-nc">Acima do Limite</span>
-          {% elif a.resultado_status == 'nao_detectado' %}<span class="status-nd">Não Detectado</span>
-          {% else %}<span class="status-pend">Pendente</span>{% endif %}
+        <td style="font-size:7.5pt; line-height:1.4;">
+          <strong>{{ a.agent_nome or '—' }}</strong>
+          {% if a.agent_metodo %}<br/><span style="color:#555; font-size:7pt;">{{ a.agent_metodo }}</span>{% endif %}
+          {% if a.agent_esocial %}<br/><span style="color:#555; font-size:7pt;">Cód. e-Social: {{ a.agent_esocial }}</span>{% endif %}
         </td>
+        <td style="text-align:center;">{{ a.valor_encontrado or '—' }}</td>
+        <td style="text-align:center;">{{ a.agent_unidade or '—' }}</td>
+        <td style="text-align:center;">{{ a.agent_acgih_twa or '—' }}</td>
+        <td style="text-align:center;">{{ a.agent_acgih_stel or '—' }}</td>
+        <td style="text-align:center;">{{ a.agent_nr15 or '—' }}</td>
+        <td style="font-size:7.5pt; text-align:justify; line-height:1.4;">{{ a.bases_efeitos_criticos or '—' }}</td>
       </tr>
       {% endfor %}
       {% if not f.agents %}
-      <tr><td colspan="8" style="text-align:center; color:#94a3b8;">Nenhum agente vinculado</td></tr>
+      <tr><td colspan="7" style="text-align:center; color:#94a3b8;">Nenhum agente vinculado</td></tr>
       {% endif %}
     </tbody>
   </table>

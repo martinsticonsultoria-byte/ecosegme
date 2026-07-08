@@ -17,11 +17,12 @@ class ChemicalSheetAgent(Base):
     agent_id          = Column(Integer, ForeignKey("chemical_agents.id"), nullable=False)
 
     # Resultado da medição
-    valor_encontrado  = Column(String(50))   # ex: "0,045" ou "< 0,011"
-    resultado_status  = Column(String(50), default='pendente')
+    valor_encontrado       = Column(String(50))   # ex: "0,045" ou "< 0,011"
+    resultado_status       = Column(String(50), default='pendente')
     # Valores possíveis: pendente | dentro_limite | acima_limite | nao_detectado
 
-    observacao        = Column(Text)
+    bases_efeitos_criticos = Column(Text)    # editável por ficha; fallback em ChemicalAgent.efeito_critico
+    observacao             = Column(Text)
     created_at        = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
     __table_args__ = (UniqueConstraint('chemical_sheet_id', 'agent_id'),)

@@ -169,14 +169,16 @@ def generate_chemical_pdf_report(
             ag = sa.agent
             rs = sa.resultado_status or "pendente"
             agents_data.append({
-                "agent_nome":      ag.nome if ag else "—",
-                "agent_cas":       ag.numero_cas if ag else "—",
-                "agent_unidade":   ag.unidade if ag else "—",
-                "agent_nr15":      ag.nr15_valor if ag else "—",
-                "agent_acgih_twa": ag.acgih_twa if ag else "—",
-                "agent_lq":        ag.lq if ag else "—",
-                "valor_encontrado": sa.valor_encontrado or "—",
-                "resultado_status": rs,
+                "agent_nome":              ag.nome if ag else "—",
+                "agent_esocial":           ag.esocial if ag else "—",
+                "agent_metodo":            ag.metodo if ag else "—",
+                "agent_unidade":           ag.unidade if ag else "—",
+                "agent_nr15":              ag.nr15_valor if ag else "—",
+                "agent_acgih_twa":         ag.acgih_twa if ag else "—",
+                "agent_acgih_stel":        ag.acgih_stel if ag else "—",
+                "bases_efeitos_criticos":  sa.bases_efeitos_criticos or (ag.efeito_critico if ag else "") or "—",
+                "valor_encontrado":        sa.valor_encontrado or "—",
+                "resultado_status":        rs,
             })
             p = _PRIO.get(rs, 0)
             if p > pior_prio:
@@ -240,7 +242,7 @@ def generate_chemical_pdf_report(
     # ── Carrega imagens e template ────────────────────────────────────────────
     tmpl_dir   = os.path.join(os.path.dirname(__file__), "../templates")
     logo_path  = os.path.join(tmpl_dir, "logo.png")
-    assin_path = os.path.join(tmpl_dir, "relatório_assinatura.png")
+    assin_path = os.path.join(tmpl_dir, "Assinatura Almerélio Gonçalves .png")
     fundo_path = os.path.join(tmpl_dir, "images", "capa_fundo_químico.png")
     tmpl_path  = os.path.join(tmpl_dir, "relatorio_quimico_pdf.html")
 

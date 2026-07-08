@@ -33,27 +33,30 @@ class ChemicalAgentOut(BaseModel):
 # ──────────────────────────────────────────
 
 class ChemicalSheetAgentCreate(BaseModel):
-    agent_id:         int
-    valor_encontrado: Optional[str] = None
-    resultado_status: Optional[str] = None
-    observacao:       Optional[str] = None
+    agent_id:                int
+    valor_encontrado:        Optional[str] = None
+    resultado_status:        Optional[str] = None
+    bases_efeitos_criticos:  Optional[str] = None
+    observacao:              Optional[str] = None
 
 
 class ChemicalSheetAgentUpdate(BaseModel):
-    valor_encontrado: Optional[str] = None
-    resultado_status: Optional[str] = None
-    observacao:       Optional[str] = None
+    valor_encontrado:        Optional[str] = None
+    resultado_status:        Optional[str] = None
+    bases_efeitos_criticos:  Optional[str] = None
+    observacao:              Optional[str] = None
 
 
 class ChemicalSheetAgentOut(BaseModel):
-    id:               int
-    chemical_sheet_id: int
-    agent_id:         int
-    valor_encontrado: Optional[str] = None
-    resultado_status: Optional[str] = None
-    observacao:       Optional[str] = None
-    agent:            Optional[ChemicalAgentOut] = None
-    created_at:       datetime
+    id:                      int
+    chemical_sheet_id:       int
+    agent_id:                int
+    valor_encontrado:        Optional[str] = None
+    resultado_status:        Optional[str] = None
+    bases_efeitos_criticos:  Optional[str] = None
+    observacao:              Optional[str] = None
+    agent:                   Optional[ChemicalAgentOut] = None
+    created_at:              datetime
 
     class Config:
         from_attributes = True
