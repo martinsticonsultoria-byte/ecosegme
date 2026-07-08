@@ -97,7 +97,7 @@ export default function Navbar() {
                     onMouseEnter={e => e.currentTarget.style.background = '#f0fdf4'}
                     onMouseLeave={e => e.currentTarget.style.background = 'none'}
                   >
-                    <span style={{ fontSize: 16 }}>🎧</span> Ruído
+                    Ruído
                   </button>
                   <button
                     onClick={() => { setFichaDropdown(false); navigate('/chemical-field-sheet/new'); }}
@@ -110,7 +110,7 @@ export default function Navbar() {
                     onMouseEnter={e => e.currentTarget.style.background = '#f0fdf4'}
                     onMouseLeave={e => e.currentTarget.style.background = 'none'}
                   >
-                    <span style={{ fontSize: 16 }}>🧪</span> Químico
+                    Químico
                   </button>
                 </div>
               )}
