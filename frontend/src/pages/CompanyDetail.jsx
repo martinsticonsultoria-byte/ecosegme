@@ -431,9 +431,12 @@ export default function CompanyDetail() {
         {/* Fichas de Campo */}
         {aba === 'fichas' && (
           <>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button className="btn btn-primary btn-sm" onClick={() => navigate(`/field-sheet/new?company_id=${id}`)}>
-                + Nova Ficha de Campo
+                + Nova Ficha de Ruído
+              </button>
+              <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/chemical-field-sheet/new?company_id=${id}`)}>
+                + Nova Ficha Química
               </button>
             </div>
             {fieldSheets.length === 0 ? (

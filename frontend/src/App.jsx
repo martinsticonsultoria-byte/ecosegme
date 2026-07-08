@@ -9,6 +9,7 @@ import Employees from './pages/Employees';
 import Conference from './pages/Conference';
 import FieldSheetForm from './pages/FieldSheetForm';
 import FieldSheetMobile from './pages/FieldSheetMobile';
+import ChemicalFieldSheetForm from './pages/ChemicalFieldSheetForm';
 import Reports from './pages/Reports';
 import Users from './pages/Users';
 
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/employees" element={<PrivateRoute adminOnly><Employees /></PrivateRoute>} />
           <Route path="/field-sheet/new" element={<PrivateRoute><FieldSheetMobile /></PrivateRoute>} />
           <Route path="/field-sheet/admin" element={<PrivateRoute adminOnly><FieldSheetForm /></PrivateRoute>} />
+          <Route path="/chemical-field-sheet/new" element={<PrivateRoute><ChemicalFieldSheetForm /></PrivateRoute>} />
           <Route path="/conference" element={<PrivateRoute adminOnly><Conference /></PrivateRoute>} />
           <Route path="/reports" element={<PrivateRoute adminOnly><Reports /></PrivateRoute>} />
           <Route path="/users" element={<PrivateRoute adminOnly><Users /></PrivateRoute>} />
