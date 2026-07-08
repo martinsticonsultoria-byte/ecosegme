@@ -4,6 +4,7 @@ from alembic import context
 from app.database import Base
 from app.config import settings
 from app.models import user, company, employee, field_sheet, sonus_upload, generated_report, audit_log
+from app.models import chemical_agent, chemical_field_sheet, chemical_sheet_agent  # Feature Químico
 
 config = context.config
 if config.config_file_name is not None:
