@@ -601,15 +601,6 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
     });
     return vals;
   });
-  const [basesValues, setBasesValues] = useState(() => {
-    const vals = {};
-    group.sheets.forEach(s => {
-      (s.agents || []).forEach(a => {
-        vals[`${s.id}-${a.agent_id}`] = a.bases_efeitos_criticos || '';
-      });
-    });
-    return vals;
-  });
   const [modalSheet, setModalSheet] = useState(null);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -649,26 +640,6 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
         }));
       } catch {
         setErrors(e => ({ ...e, [sheetId]: 'Erro ao salvar valor do agente' }));
-      }
-    }, 500);
-  };
-
-  const handleBasesChange = (sheetId, agentId, bases) => {
-    const key = `${sheetId}-${agentId}`;
-    setBasesValues(v => ({ ...v, [key]: bases }));
-    const debounceKey = `bases-${key}`;
-    if (saveDebounceRefs.current[debounceKey]) clearTimeout(saveDebounceRefs.current[debounceKey]);
-    saveDebounceRefs.current[debounceKey] = setTimeout(async () => {
-      try {
-        await api.patch(`/chemical-field-sheets/${sheetId}/agents/${agentId}`, { bases_efeitos_criticos: bases });
-        setAgentsMap(m => ({
-          ...m,
-          [sheetId]: m[sheetId].map(a => a.agent_id === agentId
-            ? { ...a, bases_efeitos_criticos: bases }
-            : a),
-        }));
-      } catch {
-        setErrors(e => ({ ...e, [sheetId]: 'Erro ao salvar bases de efeitos críticos' }));
       }
     }, 500);
   };
@@ -1000,7 +971,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                             <thead>
                               <tr>
                                 {['Nome', 'Valor Encontrado', 'Unidade', 'ACGIH TWA', 'ACGIH STEL', 'NR-15', 'Bases de Efeitos Críticos', 'Resultado', ''].map((h, i) => (
-                                  <th key={i} style={{ padding: '6px 8px', textAlign: 'left', fontWeight: 600, fontSize: 11, color: '#0369a1', borderBottom: '1px solid #bae6fd', background: '#e0f2fe' }}>{h}</th>
+                                  <th key={i} style={{ padding: '6px 8px', textAlign: 'left', fontWeight: 600, fontSize: 11, color: '#0369a1', borderBottom: '1px solid #bae6fd', background: '#e0f2fe', maxWidth: h === 'Bases de Efeitos Críticos' ? 200 : undefined }}>{h}</th>
                                 ))}
                               </tr>
                             </thead>
@@ -1008,7 +979,6 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                               {agents.map(sa => {
                                 const key = `${sheet.id}-${sa.agent_id}`;
                                 const val = agentValues[key] !== undefined ? agentValues[key] : (sa.valor_encontrado || '');
-                                const bases = basesValues[key] !== undefined ? basesValues[key] : (sa.bases_efeitos_criticos || '');
                                 return (
                                   <tr key={sa.id}>
                                     <td style={{ padding: '6px 8px', color: '#0f172a', fontWeight: 500 }}>
@@ -1025,14 +995,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                                     <td style={{ padding: '6px 8px', color: '#64748b' }}>{sa.agent?.acgih_twa || '—'}</td>
                                     <td style={{ padding: '6px 8px', color: '#64748b' }}>{sa.agent?.acgih_stel || '—'}</td>
                                     <td style={{ padding: '6px 8px', color: '#64748b' }}>{sa.agent?.nr15_valor || '—'}</td>
-                                    <td style={{ padding: '6px 8px' }}>
-                                      <textarea
-                                        value={bases}
-                                        onChange={e => handleBasesChange(sheet.id, sa.agent_id, e.target.value)}
-                                        placeholder="Bases de efeitos críticos..."
-                                        rows={2}
-                                        style={{ width: '100%', minWidth: 160, padding: '4px 8px', fontSize: 11, borderRadius: 4, border: '1px solid #cbd5e1', resize: 'vertical' }} />
-                                    </td>
+                                    <td style={{ padding: '6px 8px', color: '#374151', fontSize: 11, maxWidth: 200 }}>{sa.agent?.efeito_critico || '—'}</td>
                                     <td style={{ padding: '6px 8px' }}><ResultBadge status={sa.resultado_status} /></td>
                                     <td style={{ padding: '6px 8px' }}>
                                       <button onClick={() => handleRemoveAgent(sheet.id, sa.agent_id)}

@@ -14,7 +14,7 @@
   .label { font-weight: bold; white-space: nowrap; width: 1%; background: #f0faf6; }
   h1 { text-align: center; font-size: 10pt; background: #1f9c74; color: white; padding: 3px; border: 1px solid #167a5a; margin: 3px 0; }
   h2 { text-align: center; font-size: 8.5pt; background: #1f9c74; color: white; padding: 2px; border: 1px solid #167a5a; margin: 6px 0 0 0; }
-  p { font-size: 8pt; margin: 2px 0; }
+  p { font-size: 8pt; margin: 4px 0; text-align: justify; }
 
   /* Resumo */
   .resumo th { background: #c6efce; text-align: center; font-weight: bold; font-size: 8pt; }
@@ -108,66 +108,12 @@
 
   <h1>Relatório de Monitoramento de Agentes Químicos</h1>
 
-  <table style="margin-bottom:6px;">
-    <tr>
-      <td class="label">Empresa:</td>
-      <td>{{ razao_social }}</td>
-    </tr>
-    {% if endereco %}
-    <tr>
-      <td class="label">Endereço:</td>
-      <td>{{ endereco }}</td>
-    </tr>
-    {% endif %}
-    {% if cnpj %}
-    <tr>
-      <td class="label">CNPJ:</td>
-      <td>{{ cnpj }}</td>
-    </tr>
-    {% endif %}
-    <tr>
-      <td class="label">Período de Amostragem:</td>
-      <td>{{ period }}</td>
-    </tr>
-    <tr>
-      <td class="label">Data de Emissão:</td>
-      <td>{{ report_date }}</td>
-    </tr>
-  </table>
-
   <h2>1. Objetivo</h2>
-  <table><tr><td style="text-align:justify; line-height:1.55;">
-    Este relatório tem como objetivo apresentar os resultados do monitoramento de agentes químicos
-    ocupacionais realizado nas dependências da empresa <strong>{{ razao_social }}</strong>, avaliando
-    a exposição dos trabalhadores a substâncias químicas presentes no ambiente de trabalho, em
-    conformidade com as Normas Regulamentadoras vigentes do Ministério do Trabalho e Emprego (MTE).
-  </td></tr></table>
-
-  <h2>2. Metodologia e Normas de Referência</h2>
-  <table><tr><td style="text-align:justify; line-height:1.55;">
-    As coletas foram realizadas por técnico habilitado, utilizando amostradores de lapela passivos ou
-    ativos, conforme o agente químico avaliado. As amostras foram encaminhadas a laboratório acreditado
-    pelo INMETRO para análise química quantitativa. Os resultados foram comparados com os Limites de
-    Tolerância (LT) estabelecidos pelo Anexo 11 e Anexo 13 da NR-15, bem como com os Valores Limite de
-    Limiar (TLV-TWA) da ACGIH — American Conference of Governmental Industrial Hygienists.
-  </td></tr></table>
-
-  <h2>3. Normas e Referências Técnicas</h2>
-  <table><tr><td style="font-size:8pt; line-height:1.6;">
-    <strong>NR-15</strong> — Atividades e Operações Insalubres (Anexos 11 e 13) — Portaria MTb nº 3.214/1978 e atualizações.<br/>
-    <strong>NR-9</strong> — Avaliação e Controle das Exposições Ocupacionais a Agentes Físicos, Químicos e Biológicos.<br/>
-    <strong>ACGIH</strong> — Threshold Limit Values (TLV) and Biological Exposure Indices (BEI) — edição vigente.<br/>
-    <strong>ABHO / NHO-08</strong> — Coleta de Material Particulado Sólido Suspenso no Ar de Ambientes de Trabalho.<br/>
-    <strong>INMETRO</strong> — Normas de acreditação laboratorial para análises ambientais ocupacionais.
-  </td></tr></table>
-
-  <h2>4. Responsabilidade Técnica</h2>
-  <table><tr><td style="text-align:justify; line-height:1.55;">
-    Os serviços de monitoramento foram executados pela <strong>Ecosegme Consultoria Ambiental Ltda</strong>,
-    empresa especializada em Higiene Ocupacional e Meio Ambiente, com equipe técnica habilitada e
-    equipamentos calibrados conforme exigências normativas. Os laudos e relatórios emitidos são de
-    responsabilidade técnica exclusiva da Ecosegme, sendo vedada qualquer reprodução parcial ou total
-    sem autorização expressa.
+  <table><tr><td style="line-height:1.6; padding:5px 8px;">
+    <p>A avaliação de agentes químicos no ambiente de trabalho tem como objetivo identificar e avaliar os riscos associados à exposição a substâncias químicas no local de trabalho, visando à prevenção de doenças ocupacionais e à promoção da saúde e segurança dos trabalhadores.</p>
+    <p>Os agentes químicos presentes no ambiente de trabalho podem incluir substâncias tóxicas, irritantes, corrosivas, inflamáveis, cancerígenas, entre outras. A exposição a esses agentes pode ocorrer por inalação, contato dérmico ou ingestão, e pode levar a uma série de efeitos adversos à saúde, como irritação das vias respiratórias, danos ao sistema nervoso, câncer, entre outros.</p>
+    <p>Este trabalho visa atender, principalmente, às recomendações do Programa de Gerenciamento de Riscos - PGR e a Norma Regulamentadora N.15 - Atividades e Operações Insalubres da Portaria 3.214 do Ministério do Trabalho.</p>
+    <p>Em resumo, o objetivo da avaliação de agentes químicos no ambiente de trabalho é garantir a saúde e segurança dos trabalhadores, identificando os riscos relacionados à exposição a substâncias químicas e implementando medidas de controle eficazes para prevenir doenças ocupacionais.</p>
   </td></tr></table>
 </div>
 
@@ -222,6 +168,22 @@
       {% endfor %}
     </tbody>
   </table>
+
+  <h2>Normas e Referências Técnicas</h2>
+  <table><tr><td style="font-size:8pt; line-height:1.7; padding:4px 8px;">
+    <strong>NR-15</strong> — Atividades e Operações Insalubres (Anexos 11 e 13) — Portaria MTb nº 3.214/1978 e atualizações.<br/>
+    <strong>NR-9</strong> — Avaliação e Controle das Exposições Ocupacionais a Agentes Físicos, Químicos e Biológicos.<br/>
+    <strong>ACGIH</strong> — Threshold Limit Values (TLV) and Biological Exposure Indices (BEI) — edição vigente.<br/>
+    <strong>ABHO / NHO-08</strong> — Coleta de Material Particulado Sólido Suspenso no Ar de Ambientes de Trabalho.<br/>
+    <strong>INMETRO</strong> — Normas de acreditação laboratorial para análises ambientais ocupacionais.
+  </td></tr></table>
+
+  <h2>Notas</h2>
+  <table><tr><td style="font-size:8pt; line-height:1.7; padding:4px 8px;">
+    Foram utilizados os dados fornecidos pelo interessado. O resultado de cada parâmetro está em função do volume de ar amostrado.<br/>
+    Equipamento Utilizado na Coleta: Bomba Gravimétrica. Os resultados são válidos exclusivamente para a amostra analisada.<br/>
+    Códigos retirados da "Tabela 24: Agentes Nocivos e Atividades - Aposentadoria Especial" do eSocial Versão S-1.0 de 2021.
+  </td></tr></table>
 </div>
 
 <!-- ══════════════════ FICHAS INDIVIDUAIS ══════════════════ -->
@@ -296,18 +258,27 @@
 
   <h2>Resultados dos Agentes Químicos</h2>
   <table style="table-layout:fixed; width:100%;">
+    <colgroup>
+      <col style="width:24%"/><!-- Agente Químico -->
+      <col style="width:10%"/><!-- Valor Encontrado -->
+      <col style="width:7%"/> <!-- Unidade -->
+      <col style="width:8%"/> <!-- TWA -->
+      <col style="width:8%"/> <!-- STEL -->
+      <col style="width:8%"/> <!-- NR 15 -->
+      <col style="width:35%"/><!-- Bases de Efeitos Críticos -->
+    </colgroup>
     <thead>
       <tr>
-        <th rowspan="2" style="background:#c6efce; width:24%; text-align:center; vertical-align:middle;">Agente Químico<br/><span style="font-weight:400; font-size:7pt;">Código e-Social</span></th>
-        <th rowspan="2" style="background:#c6efce; width:10%; text-align:center; vertical-align:middle;">Valor<br/>Encontrado</th>
-        <th rowspan="2" style="background:#c6efce; width:7%;  text-align:center; vertical-align:middle;">Unidade</th>
-        <th colspan="2"  style="background:#c6efce; width:16%; text-align:center;">ACGIH</th>
-        <th rowspan="2" style="background:#c6efce; width:8%;  text-align:center; vertical-align:middle;">NR 15</th>
-        <th rowspan="2" style="background:#c6efce; width:35%; text-align:center; vertical-align:middle;">Bases de<br/>Efeitos Críticos</th>
+        <th rowspan="2" style="background:#c6efce; text-align:center; vertical-align:middle;">Agente Químico<br/><span style="font-weight:400; font-size:7pt;">Código e-Social</span></th>
+        <th rowspan="2" style="background:#c6efce; text-align:center; vertical-align:middle;">Valor<br/>Encontrado</th>
+        <th rowspan="2" style="background:#c6efce; text-align:center; vertical-align:middle;">Unidade</th>
+        <th colspan="2"  style="background:#c6efce; text-align:center;">ACGIH</th>
+        <th rowspan="2" style="background:#c6efce; text-align:center; vertical-align:middle;">NR 15</th>
+        <th rowspan="2" style="background:#c6efce; text-align:center; vertical-align:middle;">Bases de<br/>Efeitos Críticos</th>
       </tr>
       <tr>
-        <th style="background:#c6efce; width:8%;  text-align:center;">TWA</th>
-        <th style="background:#c6efce; width:8%;  text-align:center;">STEL</th>
+        <th style="background:#c6efce; text-align:center;">TWA</th>
+        <th style="background:#c6efce; text-align:center;">STEL</th>
       </tr>
     </thead>
     <tbody>
