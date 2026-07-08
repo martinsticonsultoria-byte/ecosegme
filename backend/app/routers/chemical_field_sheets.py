@@ -107,6 +107,192 @@ def create_chemical_field_sheet(
     return sheet
 
 
+@router.get("/report/xlsx")
+def generate_chemical_xlsx_report(
+    company_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Gera relatório XLSX consolidado das fichas químicas de uma empresa."""
+    import io, re as _re
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    from fastapi.responses import StreamingResponse
+    from datetime import datetime
+    from app.models.company import Company
+    from app.models.consolidated_report import ConsolidatedReport
+    from app import supabase_storage
+
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa não encontrada")
+
+    sheets = (
+        db.query(ChemicalFieldSheet)
+        .filter(ChemicalFieldSheet.company_id == company_id)
+        .order_by(ChemicalFieldSheet.laudo_number, ChemicalFieldSheet.collection_date)
+        .all()
+    )
+    if not sheets:
+        raise HTTPException(status_code=404, detail="Nenhuma ficha química encontrada para esta empresa")
+
+    year = datetime.now().year
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Agentes Químicos"
+
+    # ── Estilos ──────────────────────────────────────────────
+    _green      = "1A7A3C"
+    header_fill = PatternFill(start_color=_green, end_color=_green, fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=10)
+    center_al   = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left_al     = Alignment(horizontal="left",   vertical="center", wrap_text=True)
+    thin        = Side(style="thin", color="CCCCCC")
+    thin_border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    STATUS_LABEL = {
+        "dentro_limite": "Dentro do Limite",
+        "acima_limite":  "Acima do Limite",
+        "nao_detectado": "Não Detectado",
+        "pendente":      "Pendente",
+    }
+    STATUS_FILL = {
+        "dentro_limite": ("D1FAE5", "166534"),
+        "acima_limite":  ("FEE2E2", "991B1B"),
+        "nao_detectado": ("DBEAFE", "1E40AF"),
+        "pendente":      ("FEF9C3", "854D0E"),
+    }
+
+    # ── Cabeçalho do documento ────────────────────────────────
+    NUM_COLS = 15
+    last_col = get_column_letter(NUM_COLS)
+
+    ws.merge_cells(f"A1:{last_col}1")
+    ws["A1"] = "RELATÓRIO DE MONITORAMENTO DE AGENTES QUÍMICOS"
+    ws["A1"].font = Font(bold=True, size=14, color=_green)
+    ws["A1"].alignment = center_al
+
+    ws.merge_cells(f"A2:{last_col}2")
+    ws["A2"] = company.razao_social
+    ws["A2"].font = Font(bold=True, size=12)
+    ws["A2"].alignment = center_al
+
+    ws.merge_cells(f"A3:{last_col}3")
+    ws["A3"] = f"CNPJ: {company.cnpj or '—'}   |   Endereço: {company.endereco or '—'}"
+    ws["A3"].alignment = center_al
+    ws["A3"].font = Font(size=10, color="475569")
+
+    ws.merge_cells(f"A4:{last_col}4")
+    ws["A4"] = f"Emitido em: {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    ws["A4"].alignment = center_al
+    ws["A4"].font = Font(size=9, color="94A3B8")
+
+    ws.append([])  # linha em branco (linha 5)
+
+    # ── Cabeçalho da tabela (linha 6) ─────────────────────────
+    headers = [
+        "Nº Laudo", "Funcionário", "Função", "Setor", "Local",
+        "Data Coleta", "Amostrador", "Tipo Amostrador",
+        "Agente Químico", "Nº CAS", "Unidade",
+        "Valor Encontrado", "LT NR-15", "TLV-TWA ACGIH",
+        "Resultado",
+    ]
+    ws.append(headers)
+    hdr_row = ws.max_row
+    for cell in ws[hdr_row]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_al
+        cell.border = thin_border
+    ws.row_dimensions[hdr_row].height = 32
+
+    # ── Linhas de dados ───────────────────────────────────────
+    for sheet in sheets:
+        laudo_str = (
+            f"{sheet.laudo_number}.{sheet.laudo_y or 1}/{year}"
+            if sheet.laudo_number else "S/Nº"
+        )
+        date_str = sheet.collection_date.strftime("%d/%m/%Y") if sheet.collection_date else ""
+        emp_nome = (sheet.employee.nome if sheet.employee else sheet.employee_name_text) or "—"
+        agents   = sheet.agents or []
+
+        def write_row(extra_cols, _sheet=sheet, _laudo=laudo_str, _emp=emp_nome, _date=date_str):
+            row_data = [
+                _laudo, _emp, _sheet.funcao or "—", _sheet.setor or "—", _sheet.local or "—",
+                _date, _sheet.numero_amostrador or "—", _sheet.tipo_amostrador or "—",
+            ] + extra_cols
+            ws.append(row_data)
+            r = ws.max_row
+            for cell in ws[r]:
+                cell.alignment = left_al
+                cell.border = thin_border
+            return r
+
+        if not agents:
+            write_row(["—", "—", "—", "—", "—", "—", "—"])
+        else:
+            for sa in agents:
+                ag = sa.agent
+                result_key = sa.resultado_status or "pendente"
+                row_idx = write_row([
+                    ag.nome if ag else "—",
+                    ag.numero_cas if ag else "—",
+                    ag.unidade if ag else "—",
+                    sa.valor_encontrado or "—",
+                    ag.nr15_valor if ag else "—",
+                    ag.acgih_twa if ag else "—",
+                    STATUS_LABEL.get(result_key, result_key),
+                ])
+                fill_color, font_color = STATUS_FILL.get(result_key, ("FFFFFF", "000000"))
+                rc = ws.cell(row=row_idx, column=15)
+                rc.fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+                rc.font = Font(bold=True, color=font_color, size=10)
+
+    # ── Larguras das colunas ──────────────────────────────────
+    col_widths = [14, 24, 18, 16, 16, 12, 20, 20, 32, 14, 10, 16, 12, 14, 20]
+    for i, w in enumerate(col_widths, 1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+
+    ws.row_dimensions[1].height = 22
+    ws.freeze_panes = "A7"  # congela cabeçalhos ao rolar
+
+    # ── Serializa e salva ──────────────────────────────────────
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    xlsx_bytes = output.read()
+
+    safe_name = _re.sub(r'[\\/:*?"<>|\s]+', '_', company.razao_social or 'Empresa').strip('_')[:20]
+    filename   = f"Relatório_Químico_{safe_name}_{datetime.now().strftime('%Y%m%d')}.xlsx"
+
+    storage_path = filename
+    if supabase_storage.is_configured():
+        try:
+            supabase_storage.upload_pdf(xlsx_bytes, filename)
+            storage_path = f"supabase://{filename}"
+        except Exception:
+            pass
+
+    rec = ConsolidatedReport(
+        company_id=company_id,
+        tipo_analise="Químico",
+        format="xlsx",
+        filename=filename,
+        storage_path=storage_path,
+        generated_by=current_user.id,
+    )
+    db.add(rec)
+    db.commit()
+
+    return StreamingResponse(
+        io.BytesIO(xlsx_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
 @router.get("/{sheet_id}", response_model=ChemicalFieldSheetOut)
 def get_chemical_field_sheet(
     sheet_id: int,

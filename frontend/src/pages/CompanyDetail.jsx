@@ -94,6 +94,7 @@ export default function CompanyDetail() {
   const [savingSheet, setSavingSheet] = useState(false);
   const [epiOptionsSheet, setEpiOptionsSheet] = useState([]);
   const [chemSheets, setChemSheets] = useState([]);
+  const [chemReportGenerating, setChemReportGenerating] = useState(false);
 
   useEffect(() => {
     const safe = (promise, fallback) => promise.then(r => r.data).catch(() => fallback);
@@ -273,6 +274,29 @@ export default function CompanyDetail() {
       alert(msg);
     } finally {
       setRelGerando(false);
+    }
+  };
+
+  const handleGerarXlsxQuimico = async () => {
+    setChemReportGenerating(true);
+    try {
+      const res = await api.get(`/chemical-field-sheets/report/xlsx?company_id=${id}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Relatório_Químico_${company?.razao_social?.slice(0, 20)}.xlsx`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      const updated = await api.get(`/reports/consolidated/${id}`);
+      setConsolidated(updated.data);
+    } catch (err) {
+      let msg = 'Erro ao gerar relatório Excel.';
+      if (err.response?.data instanceof Blob) {
+        try { const t = await err.response.data.text(); msg = JSON.parse(t).detail || msg; } catch {}
+      }
+      alert(msg);
+    } finally {
+      setChemReportGenerating(false);
     }
   };
 
@@ -476,9 +500,12 @@ export default function CompanyDetail() {
         {/* Fichas Químicas */}
         {aba === 'quimico' && (
           <>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 8 }}>
               <button className="btn btn-primary btn-sm" onClick={() => navigate(`/chemical-field-sheet/new?company_id=${id}`)}>
                 + Nova Ficha Química
+              </button>
+              <button className="btn btn-secondary btn-sm" onClick={handleGerarXlsxQuimico} disabled={chemReportGenerating}>
+                {chemReportGenerating ? 'Gerando...' : 'Gerar Relatório Excel'}
               </button>
             </div>
             {chemSheets.length === 0 ? (
