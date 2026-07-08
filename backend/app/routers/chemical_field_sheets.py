@@ -107,6 +107,203 @@ def create_chemical_field_sheet(
     return sheet
 
 
+@router.get("/report/pdf")
+def generate_chemical_pdf_report(
+    company_id: int,
+    field_sheet_ids: Optional[List[int]] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Gera relatório PDF das fichas químicas de uma empresa (com capa e fichas individuais)."""
+    import os, io, math, tempfile, re as _re, base64
+    from fastapi.responses import StreamingResponse
+    from datetime import datetime
+    from jinja2 import Template
+    from weasyprint import HTML
+    from app.models.company import Company
+    from app.models.consolidated_report import ConsolidatedReport
+    from app import supabase_storage
+
+    _MESES_PT = ["janeiro","fevereiro","março","abril","maio","junho",
+                 "julho","agosto","setembro","outubro","novembro","dezembro"]
+
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa não encontrada")
+
+    q = db.query(ChemicalFieldSheet).filter(ChemicalFieldSheet.company_id == company_id)
+    if field_sheet_ids:
+        q = q.filter(ChemicalFieldSheet.id.in_(field_sheet_ids))
+    sheets = q.order_by(ChemicalFieldSheet.laudo_number, ChemicalFieldSheet.laudo_y).all()
+
+    if not sheets:
+        raise HTTPException(status_code=404, detail="Nenhuma ficha química encontrada para esta empresa")
+
+    sem_numero = [s for s in sheets if not s.laudo_number]
+    if sem_numero:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{len(sem_numero)} ficha(s) sem Nº do Laudo. Aprove todas as fichas antes de gerar o relatório."
+        )
+
+    year = datetime.now().year
+    dates = [s.collection_date for s in sheets]
+    period = f"{min(dates).strftime('%d/%m/%Y')} à {max(dates).strftime('%d/%m/%Y')}"
+
+    # ── Prioridade de resultado: acima_limite > pendente > dentro_limite > nao_detectado ──
+    _PRIO = {"acima_limite": 3, "pendente": 2, "dentro_limite": 1, "nao_detectado": 0}
+
+    fichas = []
+    for sheet in sheets:
+        sig_d = sheet.data_relatorio or sheet.signature_date
+        if sig_d:
+            sig_date_ext = f"{sig_d.day:02d} de {_MESES_PT[sig_d.month-1]} de {sig_d.year}"
+        else:
+            _now = datetime.now()
+            sig_date_ext = f"{_now.day:02d} de {_MESES_PT[_now.month-1]} de {_now.year}"
+
+        agents_data = []
+        pior_prio = -1
+        resultado_geral = "pendente"
+        for sa in (sheet.agents or []):
+            ag = sa.agent
+            rs = sa.resultado_status or "pendente"
+            agents_data.append({
+                "agent_nome":      ag.nome if ag else "—",
+                "agent_cas":       ag.numero_cas if ag else "—",
+                "agent_unidade":   ag.unidade if ag else "—",
+                "agent_nr15":      ag.nr15_valor if ag else "—",
+                "agent_acgih_twa": ag.acgih_twa if ag else "—",
+                "agent_lq":        ag.lq if ag else "—",
+                "valor_encontrado": sa.valor_encontrado or "—",
+                "resultado_status": rs,
+            })
+            p = _PRIO.get(rs, 0)
+            if p > pior_prio:
+                pior_prio = p
+                resultado_geral = rs
+        if not agents_data:
+            resultado_geral = "pendente"
+
+        fichas.append({
+            "laudo_number":       sheet.laudo_number,
+            "laudo_y":            sheet.laudo_y or 1,
+            "employee_nome":      (sheet.employee.nome if sheet.employee else sheet.employee_name_text) or "—",
+            "funcao":             sheet.funcao or "—",
+            "matricula":          sheet.matricula or "—",
+            "setor":              sheet.setor or "—",
+            "local":              sheet.local or "—",
+            "collection_date":    sheet.collection_date.strftime("%d/%m/%Y"),
+            "technician_name":    sheet.technician_name or "—",
+            "numero_amostrador":  sheet.numero_amostrador or "—",
+            "tipo_amostrador":    sheet.tipo_amostrador or "—",
+            "situacao_ambiente":  sheet.situacao_ambiente or "",
+            "atividade":          sheet.atividade or "",
+            "jornada_trabalho":   sheet.jornada_trabalho or "",
+            "volume_ar_amostrado": sheet.volume_ar_amostrado or "",
+            "epi":                sheet.epi or "",
+            "observacoes":        sheet.observacoes or "",
+            "conclusao_texto":    sheet.conclusao_texto or "",
+            "signature_date_ext": sig_date_ext,
+            "agents":             agents_data,
+            "resultado_geral":    resultado_geral,
+        })
+
+    # ── Calcula fontes e range de laudos (mesma lógica do relatório de ruído) ──
+    def calc_font_size(texto, max_width_pt, font_size_pt=16.5, min_pt=9.0, char_factor=0.55):
+        while font_size_pt > min_pt:
+            if math.ceil(len(texto) / (max_width_pt / (char_factor * font_size_pt))) <= 2:
+                break
+            font_size_pt -= 0.5
+        return f'{font_size_pt}pt'
+
+    empresa_font_size  = calc_font_size(company.razao_social or '', 375.9)
+    endereco_font_size = calc_font_size(company.endereco or '', 329.7)
+
+    sheets_com_y = [s for s in sheets if s.laudo_y is not None]
+    if sheets_com_y:
+        sorted_y = sorted(sheets_com_y, key=lambda s: (s.laudo_number or '', s.laudo_y))
+        laudo_min = f"{sorted_y[0].laudo_number}.{sorted_y[0].laudo_y}"
+        laudo_max = f"{sorted_y[-1].laudo_number}.{sorted_y[-1].laudo_y}"
+    else:
+        sorted_all = sorted(sheets, key=lambda s: s.laudo_number or '')
+        laudo_min = sorted_all[0].laudo_number or 'SN'
+        laudo_max = sorted_all[-1].laudo_number or 'SN'
+
+    nr_texto     = f"{laudo_min}/{year} ao {laudo_max}/{year}" if laudo_min != laudo_max else f"{laudo_min}/{year}"
+    nr_font_size = calc_font_size(nr_texto, 321.1, font_size_pt=20.0, min_pt=10.0, char_factor=0.65)
+
+    _rel_dates = [s.data_relatorio for s in sheets if s.data_relatorio]
+    _ref_date  = max(_rel_dates) if _rel_dates else datetime.now().date()
+    signature_date_ext = f"{_ref_date.day:02d} de {_MESES_PT[_ref_date.month-1]} de {_ref_date.year}"
+
+    # ── Carrega imagens e template ────────────────────────────────────────────
+    tmpl_dir   = os.path.join(os.path.dirname(__file__), "../templates")
+    logo_path  = os.path.join(tmpl_dir, "logo.png")
+    assin_path = os.path.join(tmpl_dir, "relatório_assinatura.png")
+    fundo_path = os.path.join(tmpl_dir, "images", "capa_fundo.png.png")
+    tmpl_path  = os.path.join(tmpl_dir, "relatorio_quimico_pdf.html")
+
+    with open(logo_path,  "rb") as f: logo_b64       = base64.b64encode(f.read()).decode()
+    with open(assin_path, "rb") as f: assinatura_b64 = base64.b64encode(f.read()).decode()
+    with open(fundo_path, "rb") as f: capa_fundo_b64 = base64.b64encode(f.read()).decode()
+    with open(tmpl_path,  "r", encoding="utf-8") as f: tmpl = Template(f.read())
+
+    html = tmpl.render(
+        razao_social=company.razao_social,
+        cnpj=company.cnpj or "",
+        endereco=company.endereco or "",
+        period=period,
+        report_date=datetime.now().strftime("%m.%Y"),
+        year=year,
+        laudo_min=laudo_min,
+        laudo_max=laudo_max,
+        logo_b64=logo_b64,
+        assinatura_b64=assinatura_b64,
+        capa_fundo_b64=capa_fundo_b64,
+        empresa_font_size=empresa_font_size,
+        endereco_font_size=endereco_font_size,
+        nr_font_size=nr_font_size,
+        signature_date_ext=signature_date_ext,
+        fichas=fichas,
+    )
+
+    tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+    HTML(string=html).write_pdf(tmp.name)
+    tmp.close()
+    with open(tmp.name, "rb") as f: pdf_bytes = f.read()
+    os.unlink(tmp.name)
+
+    safe_name = _re.sub(r'[\\/:*?"<>|\s]+', '_', company.razao_social or 'Empresa').strip('_')[:20]
+    first_num  = sorted_y[0].laudo_number if sheets_com_y else (sheets[0].laudo_number or 'SN')
+    filename   = f"Relatório_Químico_{safe_name}_{first_num}.pdf"
+
+    storage_path = filename
+    if supabase_storage.is_configured():
+        try:
+            supabase_storage.upload_pdf(pdf_bytes, filename)
+            storage_path = f"supabase://{filename}"
+        except Exception:
+            pass
+
+    rec = ConsolidatedReport(
+        company_id=company_id,
+        tipo_analise="Químico",
+        format="pdf",
+        filename=filename,
+        storage_path=storage_path,
+        generated_by=current_user.id,
+    )
+    db.add(rec)
+    db.commit()
+
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
 @router.get("/report/xlsx")
 def generate_chemical_xlsx_report(
     company_id: int,

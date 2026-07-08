@@ -95,6 +95,7 @@ export default function CompanyDetail() {
   const [epiOptionsSheet, setEpiOptionsSheet] = useState([]);
   const [chemSheets, setChemSheets] = useState([]);
   const [chemReportGenerating, setChemReportGenerating] = useState(false);
+  const [chemPdfGenerating, setChemPdfGenerating] = useState(false);
   const [editChemModal, setEditChemModal] = useState(false);
   const [editChemTarget, setEditChemTarget] = useState(null);
   const [editChemForm, setEditChemForm] = useState({});
@@ -318,6 +319,29 @@ export default function CompanyDetail() {
       alert(err.response?.data?.detail || 'Erro ao salvar ficha química.');
     } finally {
       setSavingChem(false);
+    }
+  };
+
+  const handleGerarPdfQuimico = async () => {
+    setChemPdfGenerating(true);
+    try {
+      const res = await api.get(`/chemical-field-sheets/report/pdf?company_id=${id}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Relatório_Químico_${company?.razao_social?.slice(0, 20)}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      const updated = await api.get(`/reports/consolidated/${id}`);
+      setConsolidated(updated.data);
+    } catch (err) {
+      let msg = 'Erro ao gerar relatório PDF.';
+      if (err.response?.data instanceof Blob) {
+        try { const t = await err.response.data.text(); msg = JSON.parse(t).detail || msg; } catch {}
+      }
+      alert(msg);
+    } finally {
+      setChemPdfGenerating(false);
     }
   };
 
@@ -547,6 +571,9 @@ export default function CompanyDetail() {
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 8 }}>
               <button className="btn btn-primary btn-sm" onClick={() => navigate(`/chemical-field-sheet/new?company_id=${id}`)}>
                 + Nova Ficha Química
+              </button>
+              <button className="btn btn-primary btn-sm" onClick={handleGerarPdfQuimico} disabled={chemPdfGenerating}>
+                {chemPdfGenerating ? 'Gerando...' : 'Gerar Relatório PDF'}
               </button>
               <button className="btn btn-secondary btn-sm" onClick={handleGerarXlsxQuimico} disabled={chemReportGenerating}>
                 {chemReportGenerating ? 'Gerando...' : 'Gerar Relatório Excel'}

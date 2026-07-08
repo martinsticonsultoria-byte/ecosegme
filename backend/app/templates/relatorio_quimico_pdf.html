@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: A4; margin: 10mm 12mm; }
+  @page :first { margin: 0; }
+
+  body { font-family: Arial, sans-serif; font-size: 8.5pt; margin: 0; color: #000; }
+  .page-break { page-break-before: always; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+  td, th { border: 1px solid #aaa; padding: 2px 5px; font-size: 8pt; vertical-align: middle; }
+  .label { font-weight: bold; white-space: nowrap; width: 1%; background: #f0faf6; }
+  h1 { text-align: center; font-size: 10pt; background: #1f9c74; color: white; padding: 3px; border: 1px solid #167a5a; margin: 3px 0; }
+  h2 { text-align: center; font-size: 8.5pt; background: #1f9c74; color: white; padding: 2px; border: 1px solid #167a5a; margin: 6px 0 0 0; }
+  p { font-size: 8pt; margin: 2px 0; }
+
+  /* Resumo */
+  .resumo th { background: #c6efce; text-align: center; font-weight: bold; font-size: 8pt; }
+  .resumo td { text-align: center; }
+  .status-ok   { font-weight: bold; color: #166534; }
+  .status-nc   { font-weight: bold; color: #991b1b; }
+  .status-nd   { font-weight: bold; color: #1e40af; }
+  .status-pend { font-weight: bold; color: #854d0e; }
+
+  /* Capa */
+  .cover {
+    position: relative;
+    width: 595pt; height: 842pt; min-height: 842pt;
+    page-break-after: always;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+  }
+  .cover-spacer { display: block; height: 842pt; width: 1px; }
+  .cover-bg { position: absolute; top: 0; left: 0; width: 595pt; height: 842pt; }
+  .cover-field {
+    position: absolute;
+    font-family: Arial, sans-serif;
+    font-weight: 700;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow: hidden;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ CAPA ══════════════════ -->
+<div class="cover">
+  <span class="cover-spacer"></span>
+  <img class="cover-bg" src="data:image/png;base64,{{ capa_fundo_b64 }}">
+
+  <div class="cover-field" style="
+      left:93.4pt; top:383.2pt;
+      max-width:375.9pt; max-height:50pt;
+      font-size:{{ empresa_font_size }};
+      color:#005d50;">{{ razao_social }}</div>
+
+  <div class="cover-field" style="
+      left:93.4pt; top:443.0pt;
+      max-width:329.6pt; max-height:40pt;
+      font-size:{{ endereco_font_size }};
+      color:#005d50;">{{ endereco or '—' }}</div>
+
+  <div class="cover-field" style="
+      left:93.4pt; top:503.2pt;
+      max-width:215.9pt; max-height:30pt;
+      font-size:16.5pt;
+      color:#005d50;">{{ cnpj or '—' }}</div>
+
+  <div class="cover-field" style="
+      left:45.2pt; top:599.3pt;
+      max-width:321.0pt; max-height:70pt;
+      font-size:{{ nr_font_size }};
+      line-height:1.1;
+      color:#ffffff; font-weight:700;">
+    {% if laudo_min == laudo_max %}
+      {{ laudo_min }}/{{ year }}
+    {% else %}
+      {{ laudo_min }}/{{ year }} ao {{ laudo_max }}/{{ year }}
+    {% endif %}
+  </div>
+
+  <div class="cover-field" style="
+      left:82.1pt; top:685.9pt;
+      max-width:120pt;
+      font-size:11pt;
+      color:#ffffff; font-weight:400;">{{ report_date }}</div>
+</div>
+
+<!-- ══════════════════ RESUMO ══════════════════ -->
+<div class="page-break">
+  <table style="border:none; border-bottom:1.5px solid #1f9c74; margin-bottom:6px; width:100%; padding-bottom:4px;">
+    <tr>
+      <td style="border:none; vertical-align:middle;">
+        <img src="data:image/png;base64,{{ logo_b64 }}" style="height:38px;" alt="EcoSegme" />
+      </td>
+    </tr>
+  </table>
+  <table style="border:none; margin-bottom:6px;">
+    <tr>
+      <td style="border:none;"><strong>Empresa:</strong> {{ razao_social }}</td>
+      <td style="border:none; text-align:right;"><strong>Período de Amostragem:</strong> {{ period }}</td>
+    </tr>
+    {% if endereco %}<tr><td colspan="2" style="border:none;"><strong>Endereço:</strong> {{ endereco }}</td></tr>{% endif %}
+  </table>
+
+  <table class="resumo" style="table-layout:fixed; width:100%;">
+    <thead>
+      <tr>
+        <th colspan="6" style="background:#1f9c74; color:white; text-align:center; font-size:10pt; padding:3px; border:1px solid #167a5a; font-weight:bold;">
+          Resumo do Monitoramento de Agentes Químicos
+        </th>
+      </tr>
+      <tr>
+        <th style="width:14%;">Nº de Laudo</th>
+        <th style="width:22%;">Funcionário</th>
+        <th style="width:18%;">Cargo/Função</th>
+        <th style="width:20%;">Amostrador</th>
+        <th style="width:8%;">Agentes</th>
+        <th style="width:18%;">Resultado Geral</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in fichas %}
+      <tr>
+        <td>{{ f.laudo_number }}.{{ f.laudo_y }}/{{ year }}</td>
+        <td>{{ f.employee_nome or '—' }}</td>
+        <td>{{ f.funcao or '—' }}</td>
+        <td>{{ f.numero_amostrador or '—' }}</td>
+        <td style="text-align:center;">{{ f.agents|length }}</td>
+        <td>
+          {% if f.resultado_geral == 'acima_limite' %}<span class="status-nc">Acima do Limite</span>
+          {% elif f.resultado_geral == 'dentro_limite' %}<span class="status-ok">Dentro do Limite</span>
+          {% elif f.resultado_geral == 'nao_detectado' %}<span class="status-nd">Não Detectado</span>
+          {% else %}<span class="status-pend">Pendente</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════ FICHAS INDIVIDUAIS ══════════════════ -->
+{% for f in fichas %}
+<div class="page-break">
+
+  <!-- Cabeçalho -->
+  <table style="border:none; border-bottom:1.5px solid #1f9c74; margin-bottom:6px; width:100%; padding-bottom:4px;">
+    <tr>
+      <td style="border:none; vertical-align:middle; width:38%;">
+        <img src="data:image/png;base64,{{ logo_b64 }}" style="height:38px;" alt="EcoSegme" />
+      </td>
+      <td style="border:none; vertical-align:middle; text-align:right; font-size:7pt; color:#333; line-height:1.55;">
+        <strong style="font-size:8pt;">Ecosegme Consultoria Ambiental Ltda</strong><br/>
+        Rua Professor Antônio Giulesse, 354 - Alvorada II<br/>
+        CNPJ: 08.584.308/0001-33 &nbsp;|&nbsp; Fone: (92) 3657-7043<br/>
+        CEP: 69042-060 - Manaus / AM<br/>
+        E-mail: ecosegme@ecosegme.com.br &nbsp;|&nbsp; Página: www.ecosegme.com.br
+      </td>
+    </tr>
+  </table>
+
+  <h1>Relatório de Monitoramento de Agentes Químicos N. {{ f.laudo_number }}.{{ f.laudo_y }}/{{ year }}</h1>
+
+  <table>
+    <tr><td class="label">Razão Social:</td><td>{{ razao_social }}</td></tr>
+    <tr><td class="label">Endereço:</td><td>{{ endereco or '—' }}</td></tr>
+    <tr><td class="label">Serviço:</td><td>Monitoramento de Agentes Químicos Ocupacionais.</td></tr>
+  </table>
+
+  <h2>Informações do Colaborador (a)</h2>
+  <table>
+    <tr>
+      <td class="label">Colaborador (a):</td><td>{{ f.employee_nome or '—' }}</td>
+      <td class="label">Matrícula:</td><td>{{ f.matricula or '—' }}</td>
+    </tr>
+    <tr>
+      <td class="label">Cargo/Função:</td><td>{{ f.funcao or '—' }}</td>
+      <td class="label">Setor:</td><td>{{ f.setor or '—' }}</td>
+    </tr>
+    <tr>
+      <td class="label">Local:</td><td colspan="3">{{ f.local or '—' }}</td>
+    </tr>
+  </table>
+
+  <h2>Dados de Campo</h2>
+  <table>
+    <tr>
+      <td class="label">Data da Coleta:</td><td>{{ f.collection_date }}</td>
+      <td class="label">Técnico Responsável:</td><td>{{ f.technician_name or '—' }}</td>
+    </tr>
+    <tr>
+      <td class="label">Nº do Amostrador:</td><td>{{ f.numero_amostrador or '—' }}</td>
+      <td class="label">Tipo de Amostrador:</td><td>{{ f.tipo_amostrador or '—' }}</td>
+    </tr>
+    {% if f.jornada_trabalho or f.volume_ar_amostrado %}
+    <tr>
+      <td class="label">Jornada de Trabalho:</td><td>{{ f.jornada_trabalho or '—' }}</td>
+      <td class="label">Volume de Ar Amostrado:</td><td>{{ f.volume_ar_amostrado or '—' }}</td>
+    </tr>
+    {% endif %}
+    {% if f.situacao_ambiente %}
+    <tr><td class="label">Situação do Ambiente:</td><td colspan="3">{{ f.situacao_ambiente }}</td></tr>
+    {% endif %}
+    {% if f.atividade %}
+    <tr><td class="label">Atividade Desenvolvida:</td><td colspan="3">{{ f.atividade }}</td></tr>
+    {% endif %}
+    {% if f.epi %}
+    <tr><td class="label">EPI Utilizado:</td><td colspan="3">{{ f.epi }}</td></tr>
+    {% endif %}
+  </table>
+
+  <h2>Resultados dos Agentes Químicos</h2>
+  <table style="table-layout:fixed;">
+    <thead>
+      <tr>
+        <th style="background:#c6efce; width:22%; text-align:center;">Agente Químico</th>
+        <th style="background:#c6efce; width:9%;  text-align:center;">Nº CAS</th>
+        <th style="background:#c6efce; width:7%;  text-align:center;">Unidade</th>
+        <th style="background:#c6efce; width:13%; text-align:center;">Valor Encontrado</th>
+        <th style="background:#c6efce; width:11%; text-align:center;">LT NR-15</th>
+        <th style="background:#c6efce; width:12%; text-align:center;">TLV-TWA ACGIH</th>
+        <th style="background:#c6efce; width:10%; text-align:center;">LQ</th>
+        <th style="background:#c6efce; width:16%; text-align:center;">Resultado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in f.agents %}
+      <tr>
+        <td>{{ a.agent_nome or '—' }}</td>
+        <td style="text-align:center; font-size:7pt;">{{ a.agent_cas or '—' }}</td>
+        <td style="text-align:center;">{{ a.agent_unidade or '—' }}</td>
+        <td style="text-align:center;">{{ a.valor_encontrado or '—' }}</td>
+        <td style="text-align:center;">{{ a.agent_nr15 or '—' }}</td>
+        <td style="text-align:center;">{{ a.agent_acgih_twa or '—' }}</td>
+        <td style="text-align:center; font-size:7pt;">{{ a.agent_lq or '—' }}</td>
+        <td style="text-align:center;">
+          {% if a.resultado_status == 'dentro_limite' %}<span class="status-ok">Dentro do Limite</span>
+          {% elif a.resultado_status == 'acima_limite' %}<span class="status-nc">Acima do Limite</span>
+          {% elif a.resultado_status == 'nao_detectado' %}<span class="status-nd">Não Detectado</span>
+          {% else %}<span class="status-pend">Pendente</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not f.agents %}
+      <tr><td colspan="8" style="text-align:center; color:#94a3b8;">Nenhum agente vinculado</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  {% if f.observacoes %}
+  <h2>Observações</h2>
+  <table><tr><td style="text-align:justify;">{{ f.observacoes }}</td></tr></table>
+  {% endif %}
+
+  <h2>Referências Normativas</h2>
+  <table>
+    <tr>
+      <td style="font-size:7.5pt; text-align:justify;">
+        NR-15 (Anexo 11 e 13) — Limites de Tolerância para Substâncias Químicas.
+        &nbsp;|&nbsp;
+        ACGIH — Threshold Limit Values (TLV) and Biological Exposure Indices (BEI).
+        &nbsp;|&nbsp;
+        ABHO — Normas de Higiene Ocupacional (NHO).
+        &nbsp;|&nbsp;
+        NR-9 — Programa de Prevenção de Riscos Ambientais.
+      </td>
+    </tr>
+  </table>
+
+  <h2>Conclusão</h2>
+  <table>
+    <tr>
+      <td style="text-align:justify;">
+        {% if f.conclusao_texto %}
+          {{ f.conclusao_texto }}
+        {% else %}
+          De acordo com os resultados encontrados é possível afirmar que as concentrações dos agentes monitorados, encontram-se dentro dos limites exigidos pelas referências acima, índices esses também aceitos pela Associação Brasileira de Higienistas Ocupacionais - ABHO e Ministério do Trabalho e Emprego.
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+
+  <div style="text-align:center; margin-top:20pt;">
+    <p style="font-size:11pt; color:#1a1a1a; margin:0 0 24pt 0; font-family:Arial, sans-serif;">
+      Manaus, {{ f.signature_date_ext }}
+    </p>
+    <img src="data:image/png;base64,{{ assinatura_b64 }}"
+         style="width:220pt; height:auto; display:block; margin:0 auto;"/>
+  </div>
+
+</div>
+{% endfor %}
+
+</body>
+</html>
