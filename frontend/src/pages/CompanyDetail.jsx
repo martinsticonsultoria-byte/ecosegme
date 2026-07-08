@@ -93,6 +93,7 @@ export default function CompanyDetail() {
   const [editSheetForm, setEditSheetForm] = useState({});
   const [savingSheet, setSavingSheet] = useState(false);
   const [epiOptionsSheet, setEpiOptionsSheet] = useState([]);
+  const [chemSheets, setChemSheets] = useState([]);
 
   useEffect(() => {
     const safe = (promise, fallback) => promise.then(r => r.data).catch(() => fallback);
@@ -102,12 +103,14 @@ export default function CompanyDetail() {
       safe(api.get(`/reports/list/${id}`), []),
       safe(api.get(`/field-sheets?company_id=${id}`), []),
       safe(api.get(`/reports/consolidated/${id}`), []),
-    ]).then(([company, employees, reports, sheets, consolidated]) => {
+      safe(api.get(`/chemical-field-sheets?company_id=${id}`), []),
+    ]).then(([company, employees, reports, sheets, consolidated, chem]) => {
       setCompany(company);
       setEmployees(employees);
       setReports(reports);
       setFieldSheets(sheets);
       setConsolidated(consolidated);
+      setChemSheets(chem);
     }).finally(() => setLoading(false));
   }, [id]);
 
@@ -375,6 +378,7 @@ export default function CompanyDetail() {
           {[
             { key: 'funcionarios', label: 'Funcionários', count: employees.length },
             { key: 'fichas',       label: 'Fichas de Campo', count: fieldSheets.length },
+            { key: 'quimico',      label: 'Químico', count: chemSheets.length },
             { key: 'relatorios',   label: 'Relatórios', count: consolidated.length },
             { key: 'laudos',       label: 'Laudos', count: reports.length },
           ].map(t => (
@@ -463,6 +467,81 @@ export default function CompanyDetail() {
                           fieldSheetId={s.id}
                           onDeleted={() => setFieldSheets(prev => prev.filter(f => f.id !== s.id))}
                         />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
+
+        {/* Fichas Químicas */}
+        {aba === 'quimico' && (
+          <>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
+              <button className="btn btn-primary btn-sm" onClick={() => navigate(`/chemical-field-sheet/new?company_id=${id}`)}>
+                + Nova Ficha Química
+              </button>
+            </div>
+            {chemSheets.length === 0 ? (
+              <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Nenhuma ficha química registrada.</div>
+            ) : (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Funcionário</th>
+                    <th>Data Coleta</th>
+                    <th>Amostrador</th>
+                    <th>Agentes</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {chemSheets.map(s => (
+                    <tr key={s.id}>
+                      <td>
+                        {s.laudo_number
+                          ? <span className="badge badge-blue">{s.laudo_number}</span>
+                          : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>
+                        }
+                      </td>
+                      <td style={{ fontWeight: 500 }}>{s.employee_nome || '—'}</td>
+                      <td style={{ color: '#64748b' }}>{new Date(s.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                      <td style={{ color: '#64748b' }}>{s.numero_amostrador}</td>
+                      <td>
+                        {(s.agents || []).length > 0 ? (
+                          <span style={{ fontSize: 11, background: '#f0fdf4', color: '#166534', borderRadius: 10, padding: '2px 8px', fontWeight: 600 }}>
+                            {s.agents.length} agente{s.agents.length !== 1 ? 's' : ''}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 11, color: '#94a3b8' }}>—</span>
+                        )}
+                      </td>
+                      <td>
+                        {s.status === 'aprovado'
+                          ? <span style={{ fontSize: 11, background: '#dcfce7', color: '#166534', borderRadius: 10, padding: '2px 8px', fontWeight: 700 }}>Aprovado</span>
+                          : <span style={{ fontSize: 11, background: '#fef9c3', color: '#854d0e', borderRadius: 10, padding: '2px 8px', fontWeight: 700 }}>Pendente</span>
+                        }
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-sm"
+                          style={{ background: '#FADADD', color: '#8B0000', border: '1px solid #f5a0a0', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}
+                          onClick={async () => {
+                            if (!window.confirm('Tem certeza que deseja excluir definitivamente esta ficha química?')) return;
+                            try {
+                              await api.delete(`/chemical-field-sheets/${s.id}`);
+                              setChemSheets(prev => prev.filter(x => x.id !== s.id));
+                            } catch {
+                              alert('Erro ao excluir ficha química.');
+                            }
+                          }}
+                        >
+                          Excluir
+                        </button>
                       </td>
                     </tr>
                   ))}
