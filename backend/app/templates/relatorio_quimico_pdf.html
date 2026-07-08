@@ -89,6 +89,88 @@
       color:#ffffff; font-weight:400;">{{ report_date }}</div>
 </div>
 
+<!-- ══════════════════ OBJETIVO ══════════════════ -->
+<div class="page-break">
+  <table style="border:none; border-bottom:1.5px solid #1f9c74; margin-bottom:8px; width:100%; padding-bottom:4px;">
+    <tr>
+      <td style="border:none; vertical-align:middle; width:38%;">
+        <img src="data:image/png;base64,{{ logo_b64 }}" style="height:38px;" alt="EcoSegme" />
+      </td>
+      <td style="border:none; vertical-align:middle; text-align:right; font-size:7pt; color:#333; line-height:1.55;">
+        <strong style="font-size:8pt;">Ecosegme Consultoria Ambiental Ltda</strong><br/>
+        Rua Professor Antônio Giulesse, 354 - Alvorada II<br/>
+        CNPJ: 08.584.308/0001-33 &nbsp;|&nbsp; Fone: (92) 3657-7043<br/>
+        CEP: 69042-060 - Manaus / AM<br/>
+        E-mail: ecosegme@ecosegme.com.br &nbsp;|&nbsp; Página: www.ecosegme.com.br
+      </td>
+    </tr>
+  </table>
+
+  <h1>Relatório de Monitoramento de Agentes Químicos</h1>
+
+  <table style="margin-bottom:6px;">
+    <tr>
+      <td class="label">Empresa:</td>
+      <td>{{ razao_social }}</td>
+    </tr>
+    {% if endereco %}
+    <tr>
+      <td class="label">Endereço:</td>
+      <td>{{ endereco }}</td>
+    </tr>
+    {% endif %}
+    {% if cnpj %}
+    <tr>
+      <td class="label">CNPJ:</td>
+      <td>{{ cnpj }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td class="label">Período de Amostragem:</td>
+      <td>{{ period }}</td>
+    </tr>
+    <tr>
+      <td class="label">Data de Emissão:</td>
+      <td>{{ report_date }}</td>
+    </tr>
+  </table>
+
+  <h2>1. Objetivo</h2>
+  <table><tr><td style="text-align:justify; line-height:1.55;">
+    Este relatório tem como objetivo apresentar os resultados do monitoramento de agentes químicos
+    ocupacionais realizado nas dependências da empresa <strong>{{ razao_social }}</strong>, avaliando
+    a exposição dos trabalhadores a substâncias químicas presentes no ambiente de trabalho, em
+    conformidade com as Normas Regulamentadoras vigentes do Ministério do Trabalho e Emprego (MTE).
+  </td></tr></table>
+
+  <h2>2. Metodologia e Normas de Referência</h2>
+  <table><tr><td style="text-align:justify; line-height:1.55;">
+    As coletas foram realizadas por técnico habilitado, utilizando amostradores de lapela passivos ou
+    ativos, conforme o agente químico avaliado. As amostras foram encaminhadas a laboratório acreditado
+    pelo INMETRO para análise química quantitativa. Os resultados foram comparados com os Limites de
+    Tolerância (LT) estabelecidos pelo Anexo 11 e Anexo 13 da NR-15, bem como com os Valores Limite de
+    Limiar (TLV-TWA) da ACGIH — American Conference of Governmental Industrial Hygienists.
+  </td></tr></table>
+
+  <h2>3. Normas e Referências Técnicas</h2>
+  <table><tr><td style="font-size:8pt; line-height:1.6;">
+    <strong>NR-15</strong> — Atividades e Operações Insalubres (Anexos 11 e 13) — Portaria MTb nº 3.214/1978 e atualizações.<br/>
+    <strong>NR-9</strong> — Avaliação e Controle das Exposições Ocupacionais a Agentes Físicos, Químicos e Biológicos.<br/>
+    <strong>ACGIH</strong> — Threshold Limit Values (TLV) and Biological Exposure Indices (BEI) — edição vigente.<br/>
+    <strong>ABHO / NHO-08</strong> — Coleta de Material Particulado Sólido Suspenso no Ar de Ambientes de Trabalho.<br/>
+    <strong>INMETRO</strong> — Normas de acreditação laboratorial para análises ambientais ocupacionais.
+  </td></tr></table>
+
+  <h2>4. Responsabilidade Técnica</h2>
+  <table><tr><td style="text-align:justify; line-height:1.55;">
+    Os serviços de monitoramento foram executados pela <strong>Ecosegme Consultoria Ambiental Ltda</strong>,
+    empresa especializada em Higiene Ocupacional e Meio Ambiente, com equipe técnica habilitada e
+    equipamentos calibrados conforme exigências normativas. Os laudos e relatórios emitidos são de
+    responsabilidade técnica exclusiva da Ecosegme, sendo vedada qualquer reprodução parcial ou total
+    sem autorização expressa.
+  </td></tr></table>
+</div>
+
 <!-- ══════════════════ RESUMO ══════════════════ -->
 <div class="page-break">
   <table style="border:none; border-bottom:1.5px solid #1f9c74; margin-bottom:6px; width:100%; padding-bottom:4px;">

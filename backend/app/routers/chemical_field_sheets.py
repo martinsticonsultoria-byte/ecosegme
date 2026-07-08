@@ -241,7 +241,7 @@ def generate_chemical_pdf_report(
     tmpl_dir   = os.path.join(os.path.dirname(__file__), "../templates")
     logo_path  = os.path.join(tmpl_dir, "logo.png")
     assin_path = os.path.join(tmpl_dir, "relatório_assinatura.png")
-    fundo_path = os.path.join(tmpl_dir, "images", "capa_fundo.png.png")
+    fundo_path = os.path.join(tmpl_dir, "images", "capa_fundo_químico.png")
     tmpl_path  = os.path.join(tmpl_dir, "relatorio_quimico_pdf.html")
 
     with open(logo_path,  "rb") as f: logo_b64       = base64.b64encode(f.read()).decode()

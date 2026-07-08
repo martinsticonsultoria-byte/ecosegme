@@ -96,6 +96,8 @@ export default function CompanyDetail() {
   const [chemSheets, setChemSheets] = useState([]);
   const [chemReportGenerating, setChemReportGenerating] = useState(false);
   const [chemPdfGenerating, setChemPdfGenerating] = useState(false);
+  const [chemPdfModoSelecao, setChemPdfModoSelecao] = useState(false);
+  const [chemFichasSelecionadas, setChemFichasSelecionadas] = useState([]);
   const [editChemModal, setEditChemModal] = useState(false);
   const [editChemTarget, setEditChemTarget] = useState(null);
   const [editChemForm, setEditChemForm] = useState({});
@@ -323,15 +325,25 @@ export default function CompanyDetail() {
   };
 
   const handleGerarPdfQuimico = async () => {
+    if (!chemPdfModoSelecao) {
+      setChemPdfModoSelecao(true);
+      setChemFichasSelecionadas([]);
+      return;
+    }
+    if (chemFichasSelecionadas.length === 0) return;
     setChemPdfGenerating(true);
     try {
-      const res = await api.get(`/chemical-field-sheets/report/pdf?company_id=${id}`, { responseType: 'blob' });
+      const params = new URLSearchParams({ company_id: id });
+      chemFichasSelecionadas.forEach(sid => params.append('field_sheet_ids', sid));
+      const res = await api.get(`/chemical-field-sheets/report/pdf?${params}`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(res.data);
       const a = document.createElement('a');
       a.href = url;
       a.download = `Relatório_Químico_${company?.razao_social?.slice(0, 20)}.pdf`;
       a.click();
       window.URL.revokeObjectURL(url);
+      setChemPdfModoSelecao(false);
+      setChemFichasSelecionadas([]);
       const updated = await api.get(`/reports/consolidated/${id}`);
       setConsolidated(updated.data);
     } catch (err) {
@@ -568,13 +580,31 @@ export default function CompanyDetail() {
         {/* Fichas Químicas */}
         {aba === 'quimico' && (
           <>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 8 }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 8, alignItems: 'center' }}>
               <button className="btn btn-primary btn-sm" onClick={() => navigate(`/chemical-field-sheet/new?company_id=${id}`)}>
                 + Nova Ficha Química
               </button>
-              <button className="btn btn-primary btn-sm" onClick={handleGerarPdfQuimico} disabled={chemPdfGenerating}>
-                {chemPdfGenerating ? 'Gerando...' : 'Gerar Relatório PDF'}
-              </button>
+              {!chemPdfModoSelecao ? (
+                <button className="btn btn-primary btn-sm" onClick={handleGerarPdfQuimico}>
+                  Gerar Relatório PDF
+                </button>
+              ) : (
+                <>
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={handleGerarPdfQuimico}
+                    disabled={chemFichasSelecionadas.length === 0 || chemPdfGenerating}
+                  >
+                    {chemPdfGenerating ? 'Gerando...' : `Confirmar e Gerar (${chemFichasSelecionadas.length})`}
+                  </button>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => { setChemPdfModoSelecao(false); setChemFichasSelecionadas([]); }}
+                  >
+                    Cancelar Seleção
+                  </button>
+                </>
+              )}
               <button className="btn btn-secondary btn-sm" onClick={handleGerarXlsxQuimico} disabled={chemReportGenerating}>
                 {chemReportGenerating ? 'Gerando...' : 'Gerar Relatório Excel'}
               </button>
@@ -585,6 +615,7 @@ export default function CompanyDetail() {
               <table className="table">
                 <thead>
                   <tr>
+                    {chemPdfModoSelecao && <th style={{ width: 36 }}></th>}
                     <th>#</th>
                     <th>Funcionário</th>
                     <th>Data Coleta</th>
@@ -596,7 +627,18 @@ export default function CompanyDetail() {
                 </thead>
                 <tbody>
                   {chemSheets.map(s => (
-                    <tr key={s.id}>
+                    <tr key={s.id} style={chemPdfModoSelecao && chemFichasSelecionadas.includes(s.id) ? { background: '#f0fdf4' } : {}}>
+                      {chemPdfModoSelecao && (
+                        <td style={{ textAlign: 'center' }}>
+                          <input
+                            type="checkbox"
+                            checked={chemFichasSelecionadas.includes(s.id)}
+                            onChange={e => setChemFichasSelecionadas(prev =>
+                              e.target.checked ? [...prev, s.id] : prev.filter(x => x !== s.id)
+                            )}
+                          />
+                        </td>
+                      )}
                       <td>
                         {s.laudo_number
                           ? <span className="badge badge-blue">{s.laudo_number}.{s.laudo_y || 1}/{new Date().getFullYear()}</span>
