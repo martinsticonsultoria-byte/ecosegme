@@ -1,25 +1,37 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [fichaDropdown, setFichaDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
+  // Fechar dropdown ao clicar fora
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setFichaDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
   if (!user) return null;
 
-  const links = [
-    ...(user?.role === 'admin_staff' ? [{ to: '/companies', label: 'Empresas' }] : []),
-    { to: '/field-sheet/new', label: 'Ficha de Campo' },
-    ...(user?.role === 'admin_staff' ? [
-      { to: '/conference', label: 'Conferência' },
-      { to: '/users', label: 'Usuários' },
-    ] : []),
-  ];
+  const adminLinks = user?.role === 'admin_staff' ? [
+    { to: '/companies', label: 'Empresas' },
+    { to: '/conference', label: 'Conferência' },
+    { to: '/users', label: 'Usuários' },
+  ] : [];
+
+  const isFichaActive = location.pathname.startsWith('/field-sheet') || location.pathname.startsWith('/chemical-field-sheet');
 
   return (
     <>
@@ -40,9 +52,76 @@ export default function Navbar() {
           <div style={{ paddingRight: 20, marginRight: 20, borderRight: '1px solid #e2e8f0' }}>
             <img src="/logo.png" alt="EcoSegme" style={{ height: 26, display: 'block' }} />
           </div>
+
           {/* Links desktop */}
           <div className="nav-links-desktop" style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {links.map(l => <NavItem key={l.to} to={l.to}>{l.label}</NavItem>)}
+            {user?.role === 'admin_staff' && <NavItem to="/companies">Empresas</NavItem>}
+
+            {/* Dropdown Ficha de Campo */}
+            <div ref={dropdownRef} style={{ position: 'relative' }}>
+              <button
+                onClick={() => setFichaDropdown(o => !o)}
+                style={{
+                  color: isFichaActive ? '#16a34a' : '#64748b',
+                  fontSize: 14,
+                  fontWeight: isFichaActive ? 600 : 500,
+                  padding: '5px 12px',
+                  borderRadius: 8,
+                  background: isFichaActive ? '#f0fdf4' : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  letterSpacing: '0.01em',
+                }}
+              >
+                Ficha de Campo
+                <span style={{ fontSize: 10, opacity: 0.7 }}>▾</span>
+              </button>
+
+              {fichaDropdown && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, marginTop: 4,
+                  background: 'white', border: '1px solid #e2e8f0', borderRadius: 10,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.10)', minWidth: 160, zIndex: 200, overflow: 'hidden',
+                }}>
+                  <button
+                    onClick={() => { setFichaDropdown(false); navigate('/field-sheet/new'); }}
+                    style={{
+                      width: '100%', textAlign: 'left', padding: '11px 16px',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontSize: 13, fontWeight: 500, color: '#0f172a',
+                      borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#f0fdf4'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                  >
+                    <span style={{ fontSize: 16 }}>🎧</span> Ruído
+                  </button>
+                  <button
+                    onClick={() => { setFichaDropdown(false); navigate('/chemical-field-sheet/new'); }}
+                    style={{
+                      width: '100%', textAlign: 'left', padding: '11px 16px',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontSize: 13, fontWeight: 500, color: '#0f172a',
+                      display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#f0fdf4'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                  >
+                    <span style={{ fontSize: 16 }}>🧪</span> Químico
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {user?.role === 'admin_staff' && (
+              <>
+                <NavItem to="/conference">Conferência</NavItem>
+                <NavItem to="/users">Usuários</NavItem>
+              </>
+            )}
           </div>
         </div>
 
@@ -73,15 +152,27 @@ export default function Navbar() {
       {/* Menu mobile dropdown */}
       {menuOpen && (
         <div style={{ background: 'white', borderBottom: '1px solid #e2e8f0', padding: '12px 24px 16px', position: 'sticky', top: 56, zIndex: 99 }}>
-          {links.map(l => (
-            <div key={l.to} onClick={() => { navigate(l.to); setMenuOpen(false); }} style={{
-              padding: '12px 0', fontSize: 15, fontWeight: location.pathname === l.to ? 600 : 500,
-              color: location.pathname === l.to ? '#16a34a' : '#0f172a',
-              borderBottom: '1px solid #f1f5f9', cursor: 'pointer',
-            }}>
-              {l.label}
+          {user?.role === 'admin_staff' && (
+            <div onClick={() => { navigate('/companies'); setMenuOpen(false); }} style={mobileItemStyle(location.pathname === '/companies')}>
+              Empresas
             </div>
-          ))}
+          )}
+          <div onClick={() => { navigate('/field-sheet/new'); setMenuOpen(false); }} style={mobileItemStyle(location.pathname === '/field-sheet/new')}>
+            Ficha de Campo — Ruído
+          </div>
+          <div onClick={() => { navigate('/chemical-field-sheet/new'); setMenuOpen(false); }} style={mobileItemStyle(location.pathname === '/chemical-field-sheet/new')}>
+            Ficha de Campo — Químico
+          </div>
+          {user?.role === 'admin_staff' && (
+            <>
+              <div onClick={() => { navigate('/conference'); setMenuOpen(false); }} style={mobileItemStyle(location.pathname === '/conference')}>
+                Conferência
+              </div>
+              <div onClick={() => { navigate('/users'); setMenuOpen(false); }} style={mobileItemStyle(location.pathname === '/users')}>
+                Usuários
+              </div>
+            </>
+          )}
           <div style={{ paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 13, color: '#64748b' }}>{user.name} · {user.role === 'admin_staff' ? 'Admin' : 'Técnico'}</span>
             <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Sair</button>
@@ -90,6 +181,14 @@ export default function Navbar() {
       )}
     </>
   );
+}
+
+function mobileItemStyle(active) {
+  return {
+    padding: '12px 0', fontSize: 15, fontWeight: active ? 600 : 500,
+    color: active ? '#16a34a' : '#0f172a',
+    borderBottom: '1px solid #f1f5f9', cursor: 'pointer',
+  };
 }
 
 function NavItem({ to, children }) {

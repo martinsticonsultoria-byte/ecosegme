@@ -16,7 +16,9 @@ export default function ChemicalFieldSheetForm() {
   const [searchParams] = useSearchParams();
   const prefilledCompanyId = searchParams.get('company_id');
 
+  const [companies, setCompanies] = useState([]);
   const [company, setCompany] = useState(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState(prefilledCompanyId || '');
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [employeeInput, setEmployeeInput] = useState('');
@@ -48,14 +50,30 @@ export default function ChemicalFieldSheetForm() {
 
   useEffect(() => {
     if (user?.name) setForm(f => ({ ...f, technician_name: user.name }));
-    if (prefilledCompanyId) {
-      api.get(`/companies`).then(res => {
+    api.get('/companies').then(res => {
+      setCompanies(res.data);
+      if (prefilledCompanyId) {
         const c = res.data.find(c => String(c.id) === String(prefilledCompanyId));
         setCompany(c || null);
-      });
+      }
+    });
+    if (prefilledCompanyId) {
       api.get(`/employees?company_id=${prefilledCompanyId}`).then(res => setEmployees(res.data));
     }
   }, [prefilledCompanyId, user]);
+
+  const handleCompanyChange = (e) => {
+    const cid = e.target.value;
+    setSelectedCompanyId(cid);
+    setSelectedEmployee(null);
+    setEmployeeInput('');
+    setEmployees([]);
+    if (cid) {
+      const c = companies.find(c => String(c.id) === cid);
+      setCompany(c || null);
+      api.get(`/employees?company_id=${cid}`).then(res => setEmployees(res.data));
+    } else { setCompany(null); }
+  };
 
   const filteredEmployees = employees.filter(e =>
     e.nome.toLowerCase().includes(employeeInput.toLowerCase())
@@ -85,7 +103,8 @@ export default function ChemicalFieldSheetForm() {
 
   const handleSubmit = async () => {
     // Validação dos campos obrigatórios
-    if (!prefilledCompanyId) { setError('Empresa não identificada. Volte e tente novamente.'); return; }
+    const companyId = prefilledCompanyId || selectedCompanyId;
+    if (!companyId) { setError('Selecione a empresa.'); return; }
     if (!employeeInput.trim()) { setError('Informe o nome do funcionário.'); return; }
     if (!form.funcao || !form.matricula || !form.setor || !form.local) {
       setError('Preencha os campos obrigatórios: Função, Matrícula, Setor e Local (*).');
@@ -95,14 +114,10 @@ export default function ChemicalFieldSheetForm() {
       setError('Preencha todos os campos de Identificação (*).');
       return;
     }
-    if (!form.situacao_ambiente.trim()) {
-      setError('Preencha a Situação do Ambiente (*).');
-      return;
-    }
     setError(''); setLoading(true);
     try {
       const payload = {
-        company_id:          parseInt(prefilledCompanyId),
+        company_id:          parseInt(companyId),
         employee_id:         selectedEmployee ? selectedEmployee.id : null,
         employee_name_text:  selectedEmployee ? null : employeeInput.trim(),
         funcao:              form.funcao,
@@ -211,6 +226,17 @@ export default function ChemicalFieldSheetForm() {
         <div className="section-title">Funcionário</div>
         <div className="grid-2">
 
+          {/* Seletor de empresa — só aparece quando não há company_id na URL */}
+          {!prefilledCompanyId && (
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label className="form-label">Empresa <span>*</span></label>
+              <select className="form-input" value={selectedCompanyId} onChange={handleCompanyChange}>
+                <option value="">Selecione a empresa...</option>
+                {companies.map(c => <option key={c.id} value={c.id}>{c.razao_social}</option>)}
+              </select>
+            </div>
+          )}
+
           {/* Campo de busca/nome do funcionário */}
           <div className="form-group" style={{ position: 'relative', gridColumn: '1 / -1' }}>
             <label className="form-label">Nome do Funcionário <span>*</span></label>
@@ -311,7 +337,7 @@ export default function ChemicalFieldSheetForm() {
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="section-title">Condições do Ambiente</div>
         <div className="form-group">
-          <label className="form-label">Situação do Ambiente <span>*</span></label>
+          <label className="form-label">Situação do Ambiente</label>
           <textarea name="situacao_ambiente" className="form-input" value={form.situacao_ambiente}
             onChange={handleChange} rows={3}
             placeholder="Descreva as condições do ambiente durante a coleta (temperatura, ventilação, atividade em andamento...)" />
