@@ -602,6 +602,9 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
     return vals;
   });
   const [modalSheet, setModalSheet] = useState(null);
+  const [chemRelModo, setChemRelModo] = useState(false);
+  const [chemRelSelecionadas, setChemRelSelecionadas] = useState([]);
+  const [gerandoRel, setGerandoRel] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -673,10 +676,17 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
       conclusao_texto: sheet.conclusao_texto || '',
       technician_name: sheet.technician_name || '',
       collection_date: sheet.collection_date || '',
+      employee_name_text: sheet.employee_nome || '',
       funcao: sheet.funcao || '',
       matricula: sheet.matricula || '',
       setor: sheet.setor || '',
       local: sheet.local || '',
+      numero_amostrador: sheet.numero_amostrador || '',
+      tipo_amostrador: sheet.tipo_amostrador || '',
+      situacao_ambiente: sheet.situacao_ambiente || '',
+      atividade: sheet.atividade || '',
+      epi: sheet.epi || '',
+      observacoes: sheet.observacoes || '',
     });
   };
 
@@ -752,6 +762,28 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
     return <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: s.bg, color: s.color }}>{s.label}</span>;
   };
 
+  const handleGerarRelatorio = async () => {
+    if (chemRelSelecionadas.length === 0) return;
+    setGerandoRel(true);
+    try {
+      const params = new URLSearchParams({ company_id: group.company_id });
+      chemRelSelecionadas.forEach(id => params.append('field_sheet_ids', id));
+      const res = await api.get(`/chemical-field-sheets/report/pdf?${params}`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `relatorio_quimico_${group.company_nome}_${new Date().toISOString().slice(0,10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setChemRelModo(false);
+      setChemRelSelecionadas([]);
+    } catch (err) {
+      alert('Erro ao gerar relatório. Verifique se as fichas selecionadas estão aprovadas.');
+    } finally {
+      setGerandoRel(false);
+    }
+  };
+
   const thStyle = { background: '#f8fafc', padding: '8px 10px', fontWeight: 600, fontSize: 11, color: '#475569', borderBottom: '2px solid #e2e8f0', whiteSpace: 'nowrap', textAlign: 'left' };
   const tdStyle = { padding: '8px 10px', fontSize: 12, borderBottom: '1px solid #f1f5f9', verticalAlign: 'middle' };
   const tdSmall = { ...tdStyle, color: '#64748b', fontSize: 11 };
@@ -810,6 +842,26 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
             <h1 className="page-title">{group.company_nome}</h1>
             <p className="page-subtitle">Químico · {sheets.length} ficha{sheets.length !== 1 ? 's' : ''}</p>
           </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {chemRelModo ? (
+              <>
+                <button className="btn btn-secondary btn-sm"
+                  onClick={() => { setChemRelModo(false); setChemRelSelecionadas([]); }}>
+                  Cancelar Seleção
+                </button>
+                <button className="btn btn-primary"
+                  onClick={handleGerarRelatorio}
+                  disabled={gerandoRel || chemRelSelecionadas.length === 0}>
+                  {gerandoRel ? 'Gerando...' : `Confirmar e Gerar (${chemRelSelecionadas.length})`}
+                </button>
+              </>
+            ) : (
+              <button className="btn btn-primary"
+                onClick={() => { setChemRelModo(true); setChemRelSelecionadas([]); }}>
+                📄 Gerar Relatório
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -841,7 +893,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                   <tr key={sheet.id} style={{ background: editingId === sheet.id ? '#f0faf6' : undefined }}>
                     <td style={tdStyle}>
                       {sheet.laudo_number
-                        ? <span className="badge badge-blue">{sheet.laudo_number}.1/{new Date().getFullYear()}</span>
+                        ? <span className="badge badge-blue">{sheet.laudo_number}.{sheet.laudo_y || '?'}/{new Date().getFullYear()}</span>
                         : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}
                     </td>
                     <td style={{ ...tdStyle, fontWeight: 500 }}>{sheet.employee_nome || '—'}</td>
@@ -854,20 +906,28 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                     </td>
                     <td style={tdStyle}><StatusBadge status={sheet.status} /></td>
                     <td style={{ ...tdStyle, textAlign: 'right' }}>
-                      {sheet.status !== 'aprovado' && (
-                        <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                          <button className="btn btn-secondary btn-sm"
-                            onClick={() => editingId === sheet.id ? setEditingId(null) : startEdit(sheet)}>
-                            {editingId === sheet.id ? 'Cancelar' : 'Editar'}
-                          </button>
+                      <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end', alignItems: 'center' }}>
+                        {chemRelModo && sheet.status === 'aprovado' && (
+                          <input type="checkbox"
+                            checked={chemRelSelecionadas.includes(sheet.id)}
+                            onChange={e => setChemRelSelecionadas(prev =>
+                              e.target.checked ? [...prev, sheet.id] : prev.filter(id => id !== sheet.id)
+                            )}
+                            style={{ width: 16, height: 16, cursor: 'pointer' }} />
+                        )}
+                        <button className="btn btn-secondary btn-sm"
+                          onClick={() => editingId === sheet.id ? setEditingId(null) : startEdit(sheet)}>
+                          {editingId === sheet.id ? 'Cancelar' : 'Editar'}
+                        </button>
+                        {sheet.status !== 'aprovado' && (
                           <button className="btn btn-primary btn-sm"
                             onClick={() => handleApprove(sheet)}
                             disabled={approving[sheet.id] || !canApprove(sheet)}
                             title={approveTitle(sheet)}>
                             {approving[sheet.id] ? '...' : 'Aprovar'}
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </td>
                   </tr>
 
@@ -899,7 +959,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                   {editingId === sheet.id && (
                     <tr key={`edit-${sheet.id}`}>
                       <td colSpan={7} style={{ padding: '14px 16px', background: '#f8fff8', borderBottom: '2px solid #bbf7d0' }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Identificação</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Identificação do Laudo</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 12 }}>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Nº do Laudo</label>
@@ -908,7 +968,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                                 value={editForm.laudo_number}
                                 onChange={e => setEditForm(f => ({ ...f, laudo_number: e.target.value.replace(/[^0-9]/g, '') }))}
                                 placeholder="Ex: 047" style={{ width: '100px' }} />
-                              <span style={{ color: '#666', fontWeight: 500, fontSize: 13 }}>.1/{new Date().getFullYear()}</span>
+                              <span style={{ color: '#666', fontWeight: 500, fontSize: 13 }}>.{sheet.laudo_y || '?'}/{new Date().getFullYear()}</span>
                             </div>
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
@@ -921,10 +981,14 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                             <input className="form-input" type="date" value={editForm.collection_date}
                               onChange={e => setEditForm(f => ({ ...f, collection_date: e.target.value }))} />
                           </div>
+                        </div>
+
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Dados do Funcionário</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 12 }}>
                           <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="form-label">Técnico</label>
-                            <input className="form-input" value={editForm.technician_name}
-                              onChange={e => setEditForm(f => ({ ...f, technician_name: e.target.value }))} />
+                            <label className="form-label">Nome do Funcionário</label>
+                            <input className="form-input" value={editForm.employee_name_text}
+                              onChange={e => setEditForm(f => ({ ...f, employee_name_text: e.target.value }))} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Cargo/Função</label>
@@ -932,10 +996,60 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                               onChange={e => setEditForm(f => ({ ...f, funcao: e.target.value }))} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Matrícula</label>
+                            <input className="form-input" value={editForm.matricula}
+                              onChange={e => setEditForm(f => ({ ...f, matricula: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Setor</label>
                             <input className="form-input" value={editForm.setor}
                               onChange={e => setEditForm(f => ({ ...f, setor: e.target.value }))} />
                           </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Local</label>
+                            <input className="form-input" value={editForm.local}
+                              onChange={e => setEditForm(f => ({ ...f, local: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Técnico Responsável</label>
+                            <input className="form-input" value={editForm.technician_name}
+                              onChange={e => setEditForm(f => ({ ...f, technician_name: e.target.value }))} />
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Dados da Coleta</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 12 }}>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Nº do Amostrador</label>
+                            <input className="form-input" value={editForm.numero_amostrador}
+                              onChange={e => setEditForm(f => ({ ...f, numero_amostrador: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Tipo de Amostrador</label>
+                            <input className="form-input" value={editForm.tipo_amostrador}
+                              onChange={e => setEditForm(f => ({ ...f, tipo_amostrador: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Situação do Ambiente</label>
+                            <input className="form-input" value={editForm.situacao_ambiente}
+                              onChange={e => setEditForm(f => ({ ...f, situacao_ambiente: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0, gridColumn: 'span 2' }}>
+                            <label className="form-label">Atividade Desenvolvida</label>
+                            <input className="form-input" value={editForm.atividade}
+                              onChange={e => setEditForm(f => ({ ...f, atividade: e.target.value }))} />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">EPI Utilizado</label>
+                            <input className="form-input" value={editForm.epi}
+                              onChange={e => setEditForm(f => ({ ...f, epi: e.target.value }))} />
+                          </div>
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                          <label className="form-label">Observações</label>
+                          <textarea className="form-input" rows={2} value={editForm.observacoes}
+                            onChange={e => setEditForm(f => ({ ...f, observacoes: e.target.value }))} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 12 }}>
                           <label className="form-label">Conclusão <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional — substitui o texto automático no PDF)</span></label>
@@ -951,8 +1065,8 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                     </tr>
                   )}
 
-                  {/* Seção de agentes (sempre visível para fichas não aprovadas) */}
-                  {sheet.status !== 'aprovado' && (
+                  {/* Seção de agentes (visível para fichas não aprovadas OU em edição) */}
+                  {(sheet.status !== 'aprovado' || editingId === sheet.id) && (
                     <tr key={`agents-${sheet.id}`}>
                       <td colSpan={7} style={{ padding: '12px 16px', background: '#f0f9ff', borderBottom: '2px solid #bae6fd' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>

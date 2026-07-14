@@ -27,7 +27,9 @@ router = APIRouter(prefix="/chemical-field-sheets", tags=["chemical-field-sheets
 # ──────────────────────────────────────────────────────
 
 def _calcular_resultado(valor: str, agent: ChemicalAgent) -> str:
-    """Determina resultado_status a partir do valor medido e limites do agente."""
+    """Determina resultado_status a partir do valor medido e limites do agente.
+    Prioridade: NR-15 → ACGIH TWA. Ignora valores não-numéricos como '-' e '—'.
+    """
     if not valor or not valor.strip():
         return "pendente"
     v = valor.strip()
@@ -35,8 +37,21 @@ def _calcular_resultado(valor: str, agent: ChemicalAgent) -> str:
         return "nao_detectado"
     try:
         num = float(v.replace(",", "."))
-        limite_str = agent.nr15_valor or agent.acgih_twa  # NR-15 tem prioridade; fallback ACGIH
-        if not limite_str or limite_str.strip() in ("-", ""):
+        # Tenta NR-15 primeiro; se inválido/traço, tenta ACGIH TWA
+        limite_str = None
+        for candidate in [agent.nr15_valor, agent.acgih_twa]:
+            if not candidate:
+                continue
+            c = candidate.strip()
+            if c in ("-", "—", ""):
+                continue
+            try:
+                float(c.replace(",", "."))
+                limite_str = c
+                break
+            except (ValueError, TypeError):
+                continue
+        if not limite_str:
             return "pendente"
         limite = float(limite_str.replace(",", "."))
         return "dentro_limite" if num <= limite else "acima_limite"
