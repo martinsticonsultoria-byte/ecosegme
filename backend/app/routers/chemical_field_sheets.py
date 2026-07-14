@@ -524,8 +524,28 @@ def update_chemical_field_sheet(
     _: User = Depends(get_current_user),
 ):
     sheet = _get_sheet_or_404(sheet_id, db)
-    for field, value in data.dict(exclude_unset=True).items():
-        setattr(sheet, field, value)
+    update_data = data.dict(exclude_unset=True)
+
+    # employee_name_text não é coluna do modelo — tratar separadamente
+    if "employee_name_text" in update_data:
+        name = update_data.pop("employee_name_text")
+        if name and name.strip():
+            existing = db.query(Employee).filter(
+                Employee.company_id == sheet.company_id,
+                Employee.nome == name.strip(),
+            ).first()
+            if existing:
+                sheet.employee_id = existing.id
+            else:
+                new_emp = Employee(company_id=sheet.company_id, nome=name.strip())
+                db.add(new_emp)
+                db.flush()
+                sheet.employee_id = new_emp.id
+
+    for field, value in update_data.items():
+        if hasattr(sheet.__class__, field):   # só colunas mapeadas
+            setattr(sheet, field, value)
+
     db.commit()
     db.refresh(sheet)
     return sheet
