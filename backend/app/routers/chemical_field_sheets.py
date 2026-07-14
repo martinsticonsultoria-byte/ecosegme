@@ -543,7 +543,9 @@ def update_chemical_field_sheet(
                 sheet.employee_id = new_emp.id
 
     for field, value in update_data.items():
-        if hasattr(sheet.__class__, field):   # só colunas mapeadas
+        # Só colunas mapeadas e com valor não-nulo
+        # (null viria de campo vazio no frontend — não sobrescrever coluna NOT NULL com null)
+        if hasattr(sheet.__class__, field) and value is not None:
             setattr(sheet, field, value)
 
     db.commit()

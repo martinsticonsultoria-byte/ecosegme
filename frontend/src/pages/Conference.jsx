@@ -693,9 +693,14 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
   const handleSaveEdit = async (sheetId) => {
     setSaving(true);
     try {
-      // Converte strings vazias em null (campos de data e opcionais)
+      // Converte para null APENAS campos de data (string vazia não é date válida)
+      // Campos de texto ficam como string vazia — evita violação de NOT NULL no banco
+      const DATE_FIELDS = ['data_relatorio', 'collection_date', 'signature_date'];
       const payload = Object.fromEntries(
-        Object.entries(editForm).map(([k, v]) => [k, v === '' ? null : v])
+        Object.entries(editForm).map(([k, v]) => [
+          k,
+          (DATE_FIELDS.includes(k) && v === '') ? null : v,
+        ])
       );
       const res = await api.patch(`/chemical-field-sheets/${sheetId}`, payload);
       setSheets(s => s.map(x => x.id === sheetId ? { ...x, ...res.data } : x));
