@@ -713,12 +713,23 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
   const handleApprove = async (sheet) => {
     setApproving(a => ({ ...a, [sheet.id]: true }));
     try {
-      await api.patch(`/chemical-field-sheets/${sheet.id}/status?laudo_number=${encodeURIComponent(sheet.laudo_number)}`);
-      setSheets(s => s.map(x => x.id === sheet.id ? { ...x, status: 'aprovado' } : x));
+      const res = await api.patch(`/chemical-field-sheets/${sheet.id}/status?laudo_number=${encodeURIComponent(sheet.laudo_number)}`);
+      // Usa a resposta do backend (inclui laudo_y calculado)
+      setSheets(s => s.map(x => x.id === sheet.id ? { ...x, ...res.data } : x));
       onReload();
     } catch (err) {
       setErrors(e => ({ ...e, [sheet.id]: err.response?.data?.detail || 'Erro ao aprovar' }));
     } finally { setApproving(a => ({ ...a, [sheet.id]: false })); }
+  };
+
+  const handleDeleteChemSheet = async (sheetId) => {
+    if (!window.confirm('Tem certeza que deseja excluir definitivamente esta ficha química? Esta ação não pode ser desfeita.')) return;
+    try {
+      await api.delete(`/chemical-field-sheets/${sheetId}`);
+      setSheets(s => s.filter(x => x.id !== sheetId));
+    } catch (err) {
+      setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao excluir ficha' }));
+    }
   };
 
   const canApprove = (sheet) => {
@@ -932,6 +943,12 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                             {approving[sheet.id] ? '...' : 'Aprovar'}
                           </button>
                         )}
+                        <button
+                          onClick={() => handleDeleteChemSheet(sheet.id)}
+                          style={{ background: '#FADADD', color: '#8B0000', border: 'none', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          title="Excluir ficha definitivamente">
+                          Excluir
+                        </button>
                       </div>
                     </td>
                   </tr>

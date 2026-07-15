@@ -336,10 +336,12 @@
     </tr>
   </table>
 
-  <div style="text-align:center; margin-top:20pt;">
-    <p style="font-size:11pt; color:#1a1a1a; margin:0 0 24pt 0; font-family:Arial, sans-serif;">
+  <div style="margin-top:20pt; text-align:center;">
+    <p style="font-size:11pt; color:#1a1a1a; margin:0; font-family:Arial, sans-serif; text-align:center;">
       Manaus, {{ f.signature_date_ext }}
     </p>
+    <!-- 3 espaçamentos de linha entre data/local e assinatura -->
+    <div style="height:52pt;"></div>
     <img src="data:image/png;base64,{{ assinatura_b64 }}"
          style="width:220pt; height:auto; display:block; margin:0 auto;"/>
   </div>
