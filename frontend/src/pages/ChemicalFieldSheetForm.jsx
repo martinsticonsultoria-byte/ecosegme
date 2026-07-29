@@ -5,9 +5,8 @@ import api from '../api/axios';
 
 const TIPO_AMOSTRADOR_OPTIONS = [
   'Tubo de Carvão Ativado',
-  'Filtro de PVC',
-  'Filtro de MCE',
-  'Outro',
+  'K7',
+  'Tubo de Sílica Gel',
 ];
 
 export default function ChemicalFieldSheetForm() {
@@ -47,6 +46,7 @@ export default function ChemicalFieldSheetForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [savedSheet, setSavedSheet] = useState(null);
+  const [matriculaMode, setMatriculaMode] = useState('matricula');
 
   useEffect(() => {
     if (user?.name) setForm(f => ({ ...f, technician_name: user.name }));
@@ -283,9 +283,33 @@ export default function ChemicalFieldSheetForm() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Matrícula <span>*</span></label>
+            <label className="form-label">
+              {matriculaMode === 'cpf' ? 'CPF' : 'Matrícula'} <span>*</span>
+            </label>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+              {[['matricula', 'Matrícula'], ['cpf', 'CPF']].map(([mode, text]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setMatriculaMode(mode)}
+                  style={{
+                    padding: '3px 12px',
+                    borderRadius: 'var(--radius-full)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    background: matriculaMode === mode ? 'var(--green)' : 'white',
+                    color: matriculaMode === mode ? 'white' : 'var(--text-2)',
+                  }}
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
             <input name="matricula" className="form-input" value={form.matricula}
-              onChange={handleChange} placeholder="Ex: 12345" />
+              onChange={handleChange}
+              placeholder={matriculaMode === 'cpf' ? 'Ex: 123.456.789-00' : 'Ex: 12345'} />
           </div>
 
           <div className="form-group">
