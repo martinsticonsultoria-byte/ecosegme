@@ -16,18 +16,10 @@
   h2 { text-align: center; font-size: 8.5pt; background: #1f9c74; color: white; padding: 2px; border: 1px solid #167a5a; margin: 6px 0 0 0; }
   p { font-size: 8pt; margin: 4px 0; text-align: justify; }
 
-  /* Resumo */
-  .resumo th { background: #c6efce; text-align: center; font-weight: bold; font-size: 8pt; }
-  .resumo td { text-align: center; }
-
   /* Abreviações */
   .abrev { table-layout: fixed; }
   .abrev td { font-size: 7.3pt; line-height: 1.45; padding: 5px 7px; vertical-align: top; background: #f5fdf9; }
   .abrev td strong { color: #167a5a; }
-  .status-ok   { font-weight: bold; color: #166534; }
-  .status-nc   { font-weight: bold; color: #991b1b; }
-  .status-nd   { font-weight: bold; color: #1e40af; }
-  .status-pend { font-weight: bold; color: #854d0e; }
 
   /* Capa */
   .cover {
@@ -163,74 +155,6 @@
   </table>
 </div>
 
-<!-- ══════════════════ RESUMO ══════════════════ -->
-<div class="page-break">
-  <table style="border:none; border-bottom:1.5px solid #1f9c74; margin-bottom:6px; width:100%; padding-bottom:4px;">
-    <tr>
-      <td style="border:none; vertical-align:middle;">
-        <img src="data:image/png;base64,{{ logo_b64 }}" style="height:38px;" alt="EcoSegme" />
-      </td>
-    </tr>
-  </table>
-  <table style="border:none; margin-bottom:6px;">
-    <tr>
-      <td style="border:none;"><strong>Empresa:</strong> {{ razao_social }}</td>
-      <td style="border:none; text-align:right;"><strong>Período de Amostragem:</strong> {{ period }}</td>
-    </tr>
-    {% if endereco %}<tr><td colspan="2" style="border:none;"><strong>Endereço:</strong> {{ endereco }}</td></tr>{% endif %}
-  </table>
-
-  <table class="resumo" style="table-layout:fixed; width:100%;">
-    <thead>
-      <tr>
-        <th colspan="6" style="background:#1f9c74; color:white; text-align:center; font-size:10pt; padding:3px; border:1px solid #167a5a; font-weight:bold;">
-          Resumo do Monitoramento de Agentes Químicos
-        </th>
-      </tr>
-      <tr>
-        <th style="width:14%;">Nº de Laudo</th>
-        <th style="width:22%;">Funcionário</th>
-        <th style="width:18%;">Cargo/Função</th>
-        <th style="width:20%;">Amostrador</th>
-        <th style="width:8%;">Agentes</th>
-        <th style="width:18%;">Resultado Geral</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for f in fichas %}
-      <tr>
-        <td>{{ f.laudo_number }}.{{ f.laudo_y }}/{{ year }}</td>
-        <td>{{ f.employee_nome or '—' }}</td>
-        <td>{{ f.funcao or '—' }}</td>
-        <td>{{ f.numero_amostrador or '—' }}</td>
-        <td style="text-align:center;">{{ f.agents|length }}</td>
-        <td>
-          {% if f.resultado_geral == 'acima_limite' %}<span class="status-nc">Acima do Limite</span>
-          {% elif f.resultado_geral == 'dentro_limite' %}<span class="status-ok">Dentro do Limite</span>
-          {% elif f.resultado_geral == 'nao_detectado' %}<span class="status-nd">Não Detectado</span>
-          {% else %}<span class="status-pend">Pendente</span>{% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-
-  <h2>Normas e Referências Técnicas</h2>
-  <table><tr><td style="font-size:8pt; line-height:1.7; padding:4px 8px;">
-    <strong>NR-15</strong> — Atividades e Operações Insalubres (Anexos 11 e 13) — Portaria MTb nº 3.214/1978 e atualizações.<br/>
-    <strong>NR-9</strong> — Avaliação e Controle das Exposições Ocupacionais a Agentes Físicos, Químicos e Biológicos.<br/>
-    <strong>ACGIH</strong> — Threshold Limit Values (TLV) and Biological Exposure Indices (BEI) — edição vigente.<br/>
-    <strong>ABHO / NHO-08</strong> — Coleta de Material Particulado Sólido Suspenso no Ar de Ambientes de Trabalho.<br/>
-    <strong>INMETRO</strong> — Normas de acreditação laboratorial para análises ambientais ocupacionais.
-  </td></tr></table>
-
-  <h2>Notas</h2>
-  <table><tr><td style="font-size:8pt; line-height:1.7; padding:4px 8px;">
-    Foram utilizados os dados fornecidos pelo interessado. O resultado de cada parâmetro está em função do volume de ar amostrado.<br/>
-    Equipamento Utilizado na Coleta: Bomba Gravimétrica. Os resultados são válidos exclusivamente para a amostra analisada.<br/>
-    Códigos retirados da "Tabela 24: Agentes Nocivos e Atividades - Aposentadoria Especial" do eSocial Versão S-1.0 de 2021.
-  </td></tr></table>
-</div>
 
 <!-- ══════════════════ FICHAS INDIVIDUAIS ══════════════════ -->
 {% for f in fichas %}
@@ -275,30 +199,18 @@
     </tr>
   </table>
 
-  <h2>Dados de Campo</h2>
+  <h2>Informações Técnicas de Amostragem</h2>
   <table>
     <tr>
-      <td class="label">Data da Coleta:</td><td>{{ f.collection_date }}</td>
-      <td class="label">Técnico Responsável:</td><td>{{ f.technician_name or '—' }}</td>
+      <td class="label">Data de Avaliação:</td><td>{{ f.collection_date }}</td>
+      <td class="label">Volume de Ar Amostrado (L):</td><td>{{ f.volume_calculado }}</td>
     </tr>
     <tr>
-      <td class="label">Nº do Amostrador:</td><td>{{ f.numero_amostrador or '—' }}</td>
+      <td class="label">Jornada de Trabalho:</td><td>{{ f.jornada_trabalho }}</td>
       <td class="label">Tipo de Amostrador:</td><td>{{ f.tipo_amostrador or '—' }}</td>
     </tr>
-    {% if f.jornada_trabalho or f.volume_ar_amostrado %}
-    <tr>
-      <td class="label">Jornada de Trabalho:</td><td>{{ f.jornada_trabalho or '—' }}</td>
-      <td class="label">Volume de Ar Amostrado:</td><td>{{ f.volume_ar_amostrado or '—' }}</td>
-    </tr>
-    {% endif %}
     {% if f.situacao_ambiente %}
     <tr><td class="label">Situação do Ambiente:</td><td colspan="3">{{ f.situacao_ambiente }}</td></tr>
-    {% endif %}
-    {% if f.atividade %}
-    <tr><td class="label">Atividade Desenvolvida:</td><td colspan="3">{{ f.atividade }}</td></tr>
-    {% endif %}
-    {% if f.epi %}
-    <tr><td class="label">EPI Utilizado:</td><td colspan="3">{{ f.epi }}</td></tr>
     {% endif %}
   </table>
 
@@ -357,14 +269,12 @@
   <h2>Referências Normativas</h2>
   <table>
     <tr>
-      <td style="font-size:7.5pt; text-align:justify;">
-        NR-15 (Anexo 11 e 13) — Limites de Tolerância para Substâncias Químicas.
-        &nbsp;|&nbsp;
-        ACGIH — Threshold Limit Values (TLV) and Biological Exposure Indices (BEI).
-        &nbsp;|&nbsp;
-        ABHO — Normas de Higiene Ocupacional (NHO).
-        &nbsp;|&nbsp;
-        NR-9 — Programa de Prevenção de Riscos Ambientais.
+      <td style="font-size:7.5pt; text-align:justify; line-height:1.5;">
+        Valores Limites de Exposição TLV-TWA da American Conference of Governmental Industrial Hygienists - ACGIH.<br/>
+        Norma Regulamentadora - NR 15.<br/>
+        Ministério do Trabalho e Emprego - MTE.<br/>
+        Nacional Institute for Occupational Safety and Health - NIOSH (Instituto Nacional de Segurança e Saúde Ocupacional).<br/>
+        OSHA - Occupational Safety and Health Administration.
       </td>
     </tr>
   </table>
@@ -372,7 +282,7 @@
   <h2>Conclusão</h2>
   <table>
     <tr>
-      <td style="text-align:justify;">
+      <td style="text-align:justify; line-height:1.5;">
         {% if f.conclusao_texto %}
           {{ f.conclusao_texto }}
         {% else %}
