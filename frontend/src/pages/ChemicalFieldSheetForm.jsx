@@ -35,7 +35,7 @@ export default function ChemicalFieldSheetForm() {
     technician_name: '',
     situacao_ambiente: '',
     atividade: '',
-    jornada_trabalho: '',
+    jornada_trabalho: '44 horas/ Semanais',
     volume_ar_amostrado: '',
     frequencia: '',
     tempo_exposicao_h: '',
@@ -188,7 +188,7 @@ export default function ChemicalFieldSheetForm() {
                 ...f,
                 funcao: '', matricula: '', setor: '', local: '',
                 numero_amostrador: '', situacao_ambiente: '',
-                atividade: '', jornada_trabalho: '', volume_ar_amostrado: '',
+                atividade: '', jornada_trabalho: '44 horas/ Semanais', volume_ar_amostrado: '',
                 frequencia: '', tempo_exposicao_h: '', epi: '', observacoes: '',
               }));
             }}
