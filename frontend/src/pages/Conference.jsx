@@ -717,7 +717,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
     });
   };
 
-  const handleSaveEdit = async (sheetId) => {
+  const handleSaveEdit = async (sheetId, confirmGroup = false) => {
     setSaving(true);
     try {
       // Converte para null APENAS campos de data (string vazia não é date válida)
@@ -729,11 +729,21 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
           (DATE_FIELDS.includes(k) && v === '') ? null : v,
         ])
       );
-      const res = await api.patch(`/chemical-field-sheets/${sheetId}`, payload);
+      const qs = confirmGroup ? '?confirm_group=true' : '';
+      const res = await api.patch(`/chemical-field-sheets/${sheetId}${qs}`, payload);
       setSheets(s => s.map(x => x.id === sheetId ? { ...x, ...res.data } : x));
       setEditingId(null);
     } catch (err) {
-      setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao salvar' }));
+      const detail = err.response?.data?.detail;
+      if (!confirmGroup && err.response?.status === 409 && detail?.needs_confirmation) {
+        if (window.confirm(detail.message)) {
+          await handleSaveEdit(sheetId, true);
+          return;
+        }
+        setErrors(e => ({ ...e, [sheetId]: 'Escolha outro nº de laudo ou confirme para juntar ao grupo existente.' }));
+        return;
+      }
+      setErrors(e => ({ ...e, [sheetId]: (typeof detail === 'string' ? detail : detail?.message) || 'Erro ao salvar' }));
     } finally { setSaving(false); }
   };
 

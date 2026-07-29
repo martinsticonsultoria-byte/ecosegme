@@ -15,6 +15,7 @@ from app.schemas.chemical import (
     ChemicalSheetAgentCreate,
     ChemicalSheetAgentUpdate,
     ChemicalSheetAgentOut,
+    clean_esocial,
 )
 from app.core.deps import get_current_user, require_admin
 from app.models.user import User
@@ -185,7 +186,7 @@ def generate_chemical_pdf_report(
             rs = sa.resultado_status or "pendente"
             agents_data.append({
                 "agent_nome":              ag.nome if ag else "—",
-                "agent_esocial":           ag.esocial if ag else "—",
+                "agent_esocial":           clean_esocial(ag.esocial) if ag else "—",
                 "agent_metodo":            ag.metodo if ag else "—",
                 "agent_unidade":           ag.unidade if ag else "—",
                 "agent_nr15":              sa.nr15_valor or (ag.nr15_valor if ag else "") or "—",
@@ -520,11 +521,77 @@ def get_chemical_field_sheet(
 def update_chemical_field_sheet(
     sheet_id: int,
     data: ChemicalFieldSheetUpdate,
+    confirm_group: bool = Query(False, description="Confirma inclusão no grupo de laudo existente"),
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
     sheet = _get_sheet_or_404(sheet_id, db)
     update_data = data.dict(exclude_unset=True)
+
+    novo_xxx = update_data.get("laudo_number")
+    if novo_xxx and str(novo_xxx).strip() and novo_xxx != sheet.laudo_number:
+        from sqlalchemy import extract
+        from app.models.consolidated_report import ConsolidatedReport as CR
+        ano_atual = date.today().year
+
+        # BLOQUEIA: xxx já usado por outra empresa (ficha aprovada, qualquer ano)
+        ficha_outra_empresa = db.query(ChemicalFieldSheet).filter(
+            ChemicalFieldSheet.laudo_number == novo_xxx,
+            ChemicalFieldSheet.id != sheet_id,
+            ChemicalFieldSheet.company_id != sheet.company_id,
+            ChemicalFieldSheet.laudo_y.isnot(None),
+        ).first()
+        if ficha_outra_empresa:
+            raise HTTPException(
+                status_code=400,
+                detail=f"O código {novo_xxx} já foi utilizado em outra "
+                       f"empresa em {ano_atual}. Escolha um código diferente."
+            )
+
+        # BLOQUEIA: xxx já aparece em relatório consolidado químico gerado no ano atual
+        relatorio_existente = db.query(CR).filter(
+            CR.company_id == sheet.company_id,
+            CR.tipo_analise == "Químico",
+            extract('year', CR.generated_at) == ano_atual,
+            CR.filename.contains(novo_xxx),
+        ).first()
+        if relatorio_existente:
+            raise HTTPException(
+                status_code=400,
+                detail=f"O código {novo_xxx} já foi utilizado em um "
+                       f"relatório consolidado químico gerado em {ano_atual}. "
+                       f"Escolha um código diferente."
+            )
+
+        # AVISA: xxx já pertence a um grupo de fichas aprovadas desta mesma empresa —
+        # exige confirmação explícita antes de juntar a ficha a esse grupo
+        if not confirm_group:
+            grupo_existente = (
+                db.query(ChemicalFieldSheet)
+                .filter(
+                    ChemicalFieldSheet.laudo_number == novo_xxx,
+                    ChemicalFieldSheet.company_id == sheet.company_id,
+                    ChemicalFieldSheet.laudo_y.isnot(None),
+                    ChemicalFieldSheet.id != sheet_id,
+                )
+                .order_by(ChemicalFieldSheet.collection_date.desc())
+                .all()
+            )
+            if grupo_existente:
+                mais_recente = grupo_existente[0].collection_date.strftime("%d/%m/%Y")
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "needs_confirmation": True,
+                        "existing_count": len(grupo_existente),
+                        "most_recent_date": mais_recente,
+                        "message": (
+                            f"O número {novo_xxx} já está sendo usado por um grupo de "
+                            f"{len(grupo_existente)} ficha(s) desta empresa (mais recente: "
+                            f"{mais_recente}). Deseja incluir esta ficha no mesmo grupo?"
+                        ),
+                    },
+                )
 
     # employee_name_text não é coluna do modelo — tratar separadamente
     if "employee_name_text" in update_data:

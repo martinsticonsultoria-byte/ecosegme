@@ -1,6 +1,18 @@
-from pydantic import BaseModel
+import re
+from pydantic import BaseModel, field_validator
 from datetime import date, datetime
 from typing import Optional, List
+
+# A planilha TLV de origem já traz o rótulo embutido no dado
+# (ex: "Cód. e-Social: N. C."), então a exibição faz o rótulo duplicar
+# ("e-Social: Cód. e-Social: N. C."). Remove esse prefixo, mantendo só o valor.
+_ESOCIAL_PREFIX_RE = re.compile(r'^\s*c[oó]d\.?\s*e-?social\s*:?\s*', re.IGNORECASE)
+
+
+def clean_esocial(value: Optional[str]) -> Optional[str]:
+    if not value:
+        return value
+    return _ESOCIAL_PREFIX_RE.sub('', value).strip()
 
 
 # ──────────────────────────────────────────
@@ -23,6 +35,11 @@ class ChemicalAgentOut(BaseModel):
     volume:         Optional[str] = None
     lq:             Optional[str] = None
     numero_cas:     Optional[str] = None
+
+    @field_validator('esocial')
+    @classmethod
+    def _strip_esocial_prefix(cls, v):
+        return clean_esocial(v)
 
     class Config:
         from_attributes = True
