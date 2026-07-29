@@ -382,7 +382,8 @@
     </tr>
   </table>
 
-  <table style="border:none; width:100%; margin-top:20pt;">
+  <table style="border:none; width:100%; table-layout:fixed; margin-top:20pt;">
+    <colgroup><col style="width:100%"></colgroup>
     <tr>
       <td style="border:none; text-align:center; padding:0;">
         <p style="font-size:11pt; color:#1a1a1a; margin:0; font-family:Arial, sans-serif;">
@@ -391,7 +392,7 @@
         <!-- 3 espaçamentos de linha entre data/local e assinatura -->
         <div style="height:52pt;"></div>
         <img src="data:image/png;base64,{{ assinatura_b64 }}"
-             style="width:220pt; height:auto; display:block; margin:0 auto;"/>
+             style="width:220pt; height:auto; display:inline-block;"/>
       </td>
     </tr>
   </table>
