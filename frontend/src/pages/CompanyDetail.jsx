@@ -297,10 +297,7 @@ export default function CompanyDetail() {
       numero_amostrador:   sheet.numero_amostrador || '',
       tipo_amostrador:     sheet.tipo_amostrador || '',
       situacao_ambiente:   sheet.situacao_ambiente || '',
-      atividade:           sheet.atividade || '',
       jornada_trabalho:    sheet.jornada_trabalho || '',
-      volume_ar_amostrado: sheet.volume_ar_amostrado || '',
-      epi:                 sheet.epi || '',
       observacoes:         sheet.observacoes || '',
       conclusao_texto:     sheet.conclusao_texto || '',
       data_relatorio:      sheet.data_relatorio || '',
@@ -880,21 +877,9 @@ export default function CompanyDetail() {
                 <label className="form-label">Jornada de Trabalho</label>
                 <input className="form-input" value={editChemForm.jornada_trabalho} onChange={e => setEditChemForm(f => ({ ...f, jornada_trabalho: e.target.value }))} placeholder="Ex: 44 Horas/Semanais" />
               </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Volume de Ar Amostrado</label>
-                <input className="form-input" value={editChemForm.volume_ar_amostrado} onChange={e => setEditChemForm(f => ({ ...f, volume_ar_amostrado: e.target.value }))} placeholder="Ex: 12,5 L" />
-              </div>
               <div className="form-group" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
                 <label className="form-label">Situação do Ambiente</label>
                 <textarea className="form-input" rows={2} value={editChemForm.situacao_ambiente} onChange={e => setEditChemForm(f => ({ ...f, situacao_ambiente: e.target.value }))} />
-              </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Atividade Desenvolvida</label>
-                <textarea className="form-input" rows={2} value={editChemForm.atividade} onChange={e => setEditChemForm(f => ({ ...f, atividade: e.target.value }))} />
-              </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">EPI Utilizado</label>
-                <textarea className="form-input" rows={2} value={editChemForm.epi} onChange={e => setEditChemForm(f => ({ ...f, epi: e.target.value }))} />
               </div>
               <div className="form-group" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
                 <label className="form-label">Observações</label>

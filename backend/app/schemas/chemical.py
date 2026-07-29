@@ -1,6 +1,6 @@
 import re
 from pydantic import BaseModel, field_validator
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Optional, List
 
 # A planilha TLV de origem já traz o rótulo embutido no dado
@@ -99,12 +99,7 @@ class ChemicalFieldSheetCreate(BaseModel):
     numero_amostrador:   str
     tipo_amostrador:     str
     situacao_ambiente:   str
-    atividade:           Optional[str]   = None
-    frequencia:          Optional[str]   = None
-    tempo_exposicao_h:   Optional[float] = None
     jornada_trabalho:    Optional[str]   = None
-    volume_ar_amostrado: Optional[str]   = None
-    epi:                 Optional[str]   = None
     observacoes:         Optional[str]   = None
 
 
@@ -120,13 +115,11 @@ class ChemicalFieldSheetUpdate(BaseModel):
     numero_amostrador:   Optional[str]   = None
     tipo_amostrador:     Optional[str]   = None
     situacao_ambiente:   Optional[str]   = None
-    atividade:           Optional[str]   = None
-    frequencia:          Optional[str]   = None
-    tempo_exposicao_h:   Optional[float] = None
     jornada_trabalho:    Optional[str]   = None
-    volume_ar_amostrado: Optional[str]   = None
-    epi:                 Optional[str]   = None
     observacoes:         Optional[str]   = None
+    hora_inicial:        Optional[time]  = None
+    hora_final:          Optional[time]  = None
+    vazao:               Optional[float] = None
     laudo_number:        Optional[str]   = None
     laudo_y:             Optional[int]   = None
     conclusao_texto:     Optional[str]   = None
@@ -149,13 +142,12 @@ class ChemicalFieldSheetOut(BaseModel):
     numero_amostrador:   str
     tipo_amostrador:     str
     situacao_ambiente:   str
-    atividade:           Optional[str]   = None
-    frequencia:          Optional[str]   = None
-    tempo_exposicao_h:   Optional[float] = None
     jornada_trabalho:    Optional[str]   = None
-    volume_ar_amostrado: Optional[str]   = None
-    epi:                 Optional[str]   = None
     observacoes:         Optional[str]   = None
+    hora_inicial:        Optional[time]  = None
+    hora_final:          Optional[time]  = None
+    vazao:               Optional[float] = None
+    volume_calculado:    Optional[float] = None
     laudo_number:        Optional[str]   = None
     laudo_y:             Optional[int]   = None
     tipo_analise:        str

@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Numeric, ForeignKey
+from datetime import datetime as _datetime
+from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Time, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -35,13 +36,13 @@ class ChemicalFieldSheet(Base):
     situacao_ambiente   = Column(Text, nullable=False)
 
     # Campos opcionais
-    atividade           = Column(Text)
-    frequencia          = Column(String(150))
-    tempo_exposicao_h   = Column(Numeric(5, 2))
     jornada_trabalho    = Column(String(50))        # ex: "44 Horas/Semanais"
-    volume_ar_amostrado = Column(String(50))        # ex: "12,5 L"
-    epi                 = Column(Text)
     observacoes         = Column(Text)
+
+    # Cálculo de volume de amostragem (L) — vazão (L/min) x tempo (min)
+    hora_inicial        = Column(Time)
+    hora_final          = Column(Time)
+    vazao               = Column(Numeric(10, 3))    # L/min
 
     # Laudo e status
     laudo_number        = Column(String(50))
@@ -76,3 +77,16 @@ class ChemicalFieldSheet(Base):
     @property
     def company_nome(self):
         return self.company.razao_social if self.company else None
+
+    @property
+    def volume_calculado(self):
+        """Volume de ar amostrado (L) = vazão (L/min) x intervalo (min).
+        Assume horário final no mesmo dia; se cruzar a meia-noite, soma 24h."""
+        if not (self.hora_inicial and self.hora_final and self.vazao is not None):
+            return None
+        inicio = _datetime.combine(_datetime.today(), self.hora_inicial)
+        fim = _datetime.combine(_datetime.today(), self.hora_final)
+        minutos = (fim - inicio).total_seconds() / 60
+        if minutos < 0:
+            minutos += 24 * 60
+        return round(float(self.vazao) * minutos, 2)

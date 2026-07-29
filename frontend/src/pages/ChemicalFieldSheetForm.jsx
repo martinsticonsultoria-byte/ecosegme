@@ -34,12 +34,7 @@ export default function ChemicalFieldSheetForm() {
     tipo_amostrador: 'Tubo de Carvão Ativado',
     technician_name: '',
     situacao_ambiente: '',
-    atividade: '',
     jornada_trabalho: '44 horas/ Semanais',
-    volume_ar_amostrado: '',
-    frequencia: '',
-    tempo_exposicao_h: '',
-    epi: '',
     observacoes: '',
   });
 
@@ -129,12 +124,7 @@ export default function ChemicalFieldSheetForm() {
         tipo_amostrador:     form.tipo_amostrador,
         technician_name:     form.technician_name,
         situacao_ambiente:   form.situacao_ambiente,
-        atividade:           form.atividade   || null,
         jornada_trabalho:    form.jornada_trabalho || null,
-        volume_ar_amostrado: form.volume_ar_amostrado || null,
-        frequencia:          form.frequencia  || null,
-        tempo_exposicao_h:   form.tempo_exposicao_h ? parseFloat(form.tempo_exposicao_h) : null,
-        epi:                 form.epi         || null,
         observacoes:         form.observacoes || null,
         tipo_analise:        'Químico',
       };
@@ -188,8 +178,7 @@ export default function ChemicalFieldSheetForm() {
                 ...f,
                 funcao: '', matricula: '', setor: '', local: '',
                 numero_amostrador: '', situacao_ambiente: '',
-                atividade: '', jornada_trabalho: '44 horas/ Semanais', volume_ar_amostrado: '',
-                frequencia: '', tempo_exposicao_h: '', epi: '', observacoes: '',
+                jornada_trabalho: '44 horas/ Semanais', observacoes: '',
               }));
             }}
             style={{ padding: '12px 28px' }}
@@ -376,38 +365,6 @@ export default function ChemicalFieldSheetForm() {
             <label className="form-label">Jornada de Trabalho</label>
             <input name="jornada_trabalho" className="form-input" value={form.jornada_trabalho}
               onChange={handleChange} placeholder="Ex: 44 Horas/Semanais" />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Volume de Ar Amostrado</label>
-            <input name="volume_ar_amostrado" className="form-input" value={form.volume_ar_amostrado}
-              onChange={handleChange} placeholder="Ex: 12,5 L" />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Frequência de Exposição</label>
-            <input name="frequencia" className="form-input" value={form.frequencia}
-              onChange={handleChange} placeholder="Ex: Diária" />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Tempo de Exposição (horas)</label>
-            <input type="number" step="0.1" name="tempo_exposicao_h" className="form-input"
-              value={form.tempo_exposicao_h} onChange={handleChange} placeholder="Ex: 8.5" />
-          </div>
-
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label className="form-label">Atividade Desenvolvida</label>
-            <textarea name="atividade" className="form-input" value={form.atividade}
-              onChange={handleChange} rows={2}
-              placeholder="Descreva a atividade realizada durante a amostragem" />
-          </div>
-
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label className="form-label">EPI Utilizado</label>
-            <textarea name="epi" className="form-input" value={form.epi}
-              onChange={handleChange} rows={2}
-              placeholder="Liste os EPIs utilizados durante a coleta" />
           </div>
 
           <div className="form-group" style={{ gridColumn: '1 / -1' }}>

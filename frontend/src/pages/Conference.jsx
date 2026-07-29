@@ -581,6 +581,19 @@ function ConferenceDetail({ group, onBack, onReload }) {
   );
 }
 
+// Volume de ar amostrado (L) = vazão (L/min) x intervalo (min) entre hora inicial e final.
+function calcVolume(horaInicial, horaFinal, vazao) {
+  if (!horaInicial || !horaFinal || vazao === '' || vazao === undefined || vazao === null) return null;
+  const [h1, m1] = horaInicial.split(':').map(Number);
+  const [h2, m2] = horaFinal.split(':').map(Number);
+  if ([h1, m1, h2, m2].some(Number.isNaN)) return null;
+  let minutos = (h2 * 60 + m2) - (h1 * 60 + m1);
+  if (minutos < 0) minutos += 24 * 60;
+  const v = parseFloat(vazao);
+  if (Number.isNaN(v)) return null;
+  return Math.round(v * minutos * 100) / 100;
+}
+
 // ─── Conferência de Fichas Químicas (detalhe de uma empresa) ─────────────────
 function ChemicalConferenceDetail({ group, onBack, onReload }) {
   const [sheets, setSheets] = useState(group.sheets);
@@ -610,6 +623,13 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
     });
     return vals;
   });
+  const [volumeValues, setVolumeValues] = useState(() =>
+    Object.fromEntries(group.sheets.map(s => [s.id, {
+      hora_inicial: (s.hora_inicial || '').slice(0, 5),
+      hora_final: (s.hora_final || '').slice(0, 5),
+      vazao: s.vazao ?? '',
+    }]))
+  );
   const [modalSheet, setModalSheet] = useState(null);
   const [chemRelModo, setChemRelModo] = useState(false);
   const [chemRelSelecionadas, setChemRelSelecionadas] = useState([]);
@@ -674,6 +694,24 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
     }, 500);
   };
 
+  const handleVolumeChange = (sheetId, field, value) => {
+    setVolumeValues(v => ({ ...v, [sheetId]: { ...v[sheetId], [field]: value } }));
+    const debounceKey = `volume:${sheetId}`;
+    if (saveDebounceRefs.current[debounceKey]) clearTimeout(saveDebounceRefs.current[debounceKey]);
+    saveDebounceRefs.current[debounceKey] = setTimeout(async () => {
+      try {
+        const current = { ...volumeValues[sheetId], [field]: value };
+        await api.patch(`/chemical-field-sheets/${sheetId}`, {
+          hora_inicial: current.hora_inicial || null,
+          hora_final: current.hora_final || null,
+          vazao: current.vazao === '' ? null : parseFloat(current.vazao),
+        });
+      } catch {
+        setErrors(e => ({ ...e, [sheetId]: 'Erro ao salvar cálculo de volume' }));
+      }
+    }, 500);
+  };
+
   const handleAddAgent = async (agent) => {
     if (!modalSheet) return;
     setAddingAgent(true);
@@ -711,8 +749,6 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
       numero_amostrador: sheet.numero_amostrador || '',
       tipo_amostrador: sheet.tipo_amostrador || '',
       situacao_ambiente: sheet.situacao_ambiente || '',
-      atividade: sheet.atividade || '',
-      epi: sheet.epi || '',
       observacoes: sheet.observacoes || '',
     });
   };
@@ -1088,20 +1124,10 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                             <input className="form-input" value={editForm.tipo_amostrador}
                               onChange={e => setEditForm(f => ({ ...f, tipo_amostrador: e.target.value }))} />
                           </div>
-                          <div className="form-group" style={{ marginBottom: 0 }}>
+                          <div className="form-group" style={{ marginBottom: 0, gridColumn: 'span 2' }}>
                             <label className="form-label">Situação do Ambiente</label>
                             <input className="form-input" value={editForm.situacao_ambiente}
                               onChange={e => setEditForm(f => ({ ...f, situacao_ambiente: e.target.value }))} />
-                          </div>
-                          <div className="form-group" style={{ marginBottom: 0, gridColumn: 'span 2' }}>
-                            <label className="form-label">Atividade Desenvolvida</label>
-                            <input className="form-input" value={editForm.atividade}
-                              onChange={e => setEditForm(f => ({ ...f, atividade: e.target.value }))} />
-                          </div>
-                          <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="form-label">EPI Utilizado</label>
-                            <input className="form-input" value={editForm.epi}
-                              onChange={e => setEditForm(f => ({ ...f, epi: e.target.value }))} />
                           </div>
                         </div>
 
@@ -1187,6 +1213,41 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                             </tbody>
                           </table>
                         )}
+
+                        {agents.length > 0 && (() => {
+                          const vol = volumeValues[sheet.id] || { hora_inicial: '', hora_final: '', vazao: '' };
+                          const volumeCalculado = calcVolume(vol.hora_inicial, vol.hora_final, vol.vazao);
+                          return (
+                            <div style={{ marginTop: 12, padding: '10px 12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8 }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>
+                                Cálculo de Volume de Amostragem
+                              </div>
+                              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                  <label className="form-label">Hora Inicial</label>
+                                  <input type="time" className="form-input" value={vol.hora_inicial}
+                                    onChange={e => handleVolumeChange(sheet.id, 'hora_inicial', e.target.value)}
+                                    style={{ width: 110 }} />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                  <label className="form-label">Hora Final</label>
+                                  <input type="time" className="form-input" value={vol.hora_final}
+                                    onChange={e => handleVolumeChange(sheet.id, 'hora_final', e.target.value)}
+                                    style={{ width: 110 }} />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                  <label className="form-label">Vazão (L/min)</label>
+                                  <input type="number" step="0.001" className="form-input" value={vol.vazao}
+                                    onChange={e => handleVolumeChange(sheet.id, 'vazao', e.target.value)}
+                                    placeholder="Ex: 1,5" style={{ width: 100 }} />
+                                </div>
+                                <div style={{ fontSize: 13, color: '#166534', fontWeight: 600, paddingBottom: 8 }}>
+                                  Volume: {volumeCalculado !== null ? `${volumeCalculado} L` : '—'}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </td>
                     </tr>
                   )}

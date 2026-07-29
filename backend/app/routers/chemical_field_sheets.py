@@ -163,11 +163,6 @@ def generate_chemical_pdf_report(
         )
 
     year = datetime.now().year
-    dates = [s.collection_date for s in sheets]
-    period = f"{min(dates).strftime('%d/%m/%Y')} à {max(dates).strftime('%d/%m/%Y')}"
-
-    # ── Prioridade de resultado: acima_limite > pendente > dentro_limite > nao_detectado ──
-    _PRIO = {"acima_limite": 3, "pendente": 2, "dentro_limite": 1, "nao_detectado": 0}
 
     fichas = []
     for sheet in sheets:
@@ -179,8 +174,6 @@ def generate_chemical_pdf_report(
             sig_date_ext = f"{_now.day:02d} de {_MESES_PT[_now.month-1]} de {_now.year}"
 
         agents_data = []
-        pior_prio = -1
-        resultado_geral = "pendente"
         for sa in (sheet.agents or []):
             ag = sa.agent
             rs = sa.resultado_status or "pendente"
@@ -196,12 +189,6 @@ def generate_chemical_pdf_report(
                 "valor_encontrado":        sa.valor_encontrado or "—",
                 "resultado_status":        rs,
             })
-            p = _PRIO.get(rs, 0)
-            if p > pior_prio:
-                pior_prio = p
-                resultado_geral = rs
-        if not agents_data:
-            resultado_geral = "pendente"
 
         fichas.append({
             "laudo_number":       sheet.laudo_number,
@@ -216,15 +203,12 @@ def generate_chemical_pdf_report(
             "numero_amostrador":  sheet.numero_amostrador or "—",
             "tipo_amostrador":    sheet.tipo_amostrador or "—",
             "situacao_ambiente":  sheet.situacao_ambiente or "",
-            "atividade":          sheet.atividade or "",
-            "jornada_trabalho":   sheet.jornada_trabalho or "",
-            "volume_ar_amostrado": sheet.volume_ar_amostrado or "",
-            "epi":                sheet.epi or "",
+            "jornada_trabalho":   sheet.jornada_trabalho or "—",
+            "volume_calculado":   sheet.volume_calculado if sheet.volume_calculado is not None else "—",
             "observacoes":        sheet.observacoes or "",
             "conclusao_texto":    sheet.conclusao_texto or "",
             "signature_date_ext": sig_date_ext,
             "agents":             agents_data,
-            "resultado_geral":    resultado_geral,
         })
 
     # ── Calcula fontes e range de laudos (mesma lógica do relatório de ruído) ──
@@ -271,7 +255,6 @@ def generate_chemical_pdf_report(
         razao_social=company.razao_social,
         cnpj=company.cnpj or "",
         endereco=company.endereco or "",
-        period=period,
         report_date=datetime.now().strftime("%m.%Y"),
         year=year,
         laudo_min=laudo_min,
