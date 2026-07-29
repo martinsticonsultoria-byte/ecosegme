@@ -188,7 +188,7 @@ def generate_chemical_pdf_report(
                 "agent_esocial":           ag.esocial if ag else "—",
                 "agent_metodo":            ag.metodo if ag else "—",
                 "agent_unidade":           ag.unidade if ag else "—",
-                "agent_nr15":              ag.nr15_valor if ag else "—",
+                "agent_nr15":              sa.nr15_valor or (ag.nr15_valor if ag else "") or "—",
                 "agent_acgih_twa":         ag.acgih_twa if ag else "—",
                 "agent_acgih_stel":        ag.acgih_stel if ag else "—",
                 "bases_efeitos_criticos":  sa.bases_efeitos_criticos or (ag.efeito_critico if ag else "") or "—",
@@ -455,7 +455,7 @@ def generate_chemical_xlsx_report(
                     ag.numero_cas if ag else "—",
                     ag.unidade if ag else "—",
                     sa.valor_encontrado or "—",
-                    ag.nr15_valor if ag else "—",
+                    sa.nr15_valor or (ag.nr15_valor if ag else "") or "—",
                     ag.acgih_twa if ag else "—",
                     STATUS_LABEL.get(result_key, result_key),
                 ])

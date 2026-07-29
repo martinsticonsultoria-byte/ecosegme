@@ -22,6 +22,7 @@ class ChemicalSheetAgent(Base):
     # Valores possíveis: pendente | dentro_limite | acima_limite | nao_detectado
 
     bases_efeitos_criticos = Column(Text)    # editável por ficha; fallback em ChemicalAgent.efeito_critico
+    nr15_valor             = Column(String(20))  # editável por ficha; fallback em ChemicalAgent.nr15_valor
     observacao             = Column(Text)
     created_at        = Column(TIMESTAMP(timezone=True), server_default=func.now())
 

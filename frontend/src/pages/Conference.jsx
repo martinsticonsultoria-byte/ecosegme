@@ -601,6 +601,15 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
     });
     return vals;
   });
+  const [nr15Values, setNr15Values] = useState(() => {
+    const vals = {};
+    group.sheets.forEach(s => {
+      (s.agents || []).forEach(a => {
+        vals[`${s.id}-${a.agent_id}`] = a.nr15_valor ?? a.agent?.nr15_valor ?? '';
+      });
+    });
+    return vals;
+  });
   const [modalSheet, setModalSheet] = useState(null);
   const [chemRelModo, setChemRelModo] = useState(false);
   const [chemRelSelecionadas, setChemRelSelecionadas] = useState([]);
@@ -643,6 +652,24 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
         }));
       } catch {
         setErrors(e => ({ ...e, [sheetId]: 'Erro ao salvar valor do agente' }));
+      }
+    }, 500);
+  };
+
+  const handleNr15Change = (sheetId, agentId, valor) => {
+    const key = `${sheetId}-${agentId}`;
+    setNr15Values(v => ({ ...v, [key]: valor }));
+    const debounceKey = `nr15:${key}`;
+    if (saveDebounceRefs.current[debounceKey]) clearTimeout(saveDebounceRefs.current[debounceKey]);
+    saveDebounceRefs.current[debounceKey] = setTimeout(async () => {
+      try {
+        await api.patch(`/chemical-field-sheets/${sheetId}/agents/${agentId}`, { nr15_valor: valor });
+        setAgentsMap(m => ({
+          ...m,
+          [sheetId]: m[sheetId].map(a => a.agent_id === agentId ? { ...a, nr15_valor: valor } : a),
+        }));
+      } catch {
+        setErrors(e => ({ ...e, [sheetId]: 'Erro ao salvar NR-15 do agente' }));
       }
     }, 500);
   };
@@ -1115,6 +1142,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                               {agents.map(sa => {
                                 const key = `${sheet.id}-${sa.agent_id}`;
                                 const val = agentValues[key] !== undefined ? agentValues[key] : (sa.valor_encontrado || '');
+                                const nr15Val = nr15Values[key] !== undefined ? nr15Values[key] : (sa.nr15_valor ?? sa.agent?.nr15_valor ?? '');
                                 return (
                                   <tr key={sa.id}>
                                     <td style={{ padding: '6px 8px', color: '#0f172a', fontWeight: 500 }}>
@@ -1130,7 +1158,12 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                                     <td style={{ padding: '6px 8px', color: '#64748b' }}>{sa.agent?.unidade || '—'}</td>
                                     <td style={{ padding: '6px 8px', color: '#64748b' }}>{sa.agent?.acgih_twa || '—'}</td>
                                     <td style={{ padding: '6px 8px', color: '#64748b' }}>{sa.agent?.acgih_stel || '—'}</td>
-                                    <td style={{ padding: '6px 8px', color: '#64748b' }}>{sa.agent?.nr15_valor || '—'}</td>
+                                    <td style={{ padding: '6px 8px' }}>
+                                      <input className="form-input" value={nr15Val}
+                                        onChange={e => handleNr15Change(sheet.id, sa.agent_id, e.target.value)}
+                                        placeholder={sa.agent?.nr15_valor || '—'}
+                                        style={{ width: 70, padding: '4px 8px', fontSize: 12 }} />
+                                    </td>
                                     <td style={{ padding: '6px 8px', color: '#374151', fontSize: 11, maxWidth: 200 }}>{sa.agent?.efeito_critico || '—'}</td>
                                     <td style={{ padding: '6px 8px' }}><ResultBadge status={sa.resultado_status} /></td>
                                     <td style={{ padding: '6px 8px' }}>

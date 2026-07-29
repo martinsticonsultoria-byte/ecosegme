@@ -37,6 +37,7 @@ class ChemicalSheetAgentCreate(BaseModel):
     valor_encontrado:        Optional[str] = None
     resultado_status:        Optional[str] = None
     bases_efeitos_criticos:  Optional[str] = None
+    nr15_valor:              Optional[str] = None
     observacao:              Optional[str] = None
 
 
@@ -44,6 +45,7 @@ class ChemicalSheetAgentUpdate(BaseModel):
     valor_encontrado:        Optional[str] = None
     resultado_status:        Optional[str] = None
     bases_efeitos_criticos:  Optional[str] = None
+    nr15_valor:              Optional[str] = None
     observacao:              Optional[str] = None
 
 
@@ -54,6 +56,7 @@ class ChemicalSheetAgentOut(BaseModel):
     valor_encontrado:        Optional[str] = None
     resultado_status:        Optional[str] = None
     bases_efeitos_criticos:  Optional[str] = None
+    nr15_valor:              Optional[str] = None
     observacao:              Optional[str] = None
     agent:                   Optional[ChemicalAgentOut] = None
     created_at:              datetime
