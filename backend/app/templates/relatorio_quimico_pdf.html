@@ -340,7 +340,7 @@
         <td style="text-align:center;">{{ a.agent_acgih_twa or '—' }}</td>
         <td style="text-align:center;">{{ a.agent_acgih_stel or '—' }}</td>
         <td style="text-align:center;">{{ a.agent_nr15 or '—' }}</td>
-        <td style="font-size:7.5pt; text-align:justify; line-height:1.4;">{{ a.bases_efeitos_criticos or '—' }}</td>
+        <td style="font-size:7.5pt; text-align:center; line-height:1.4;">{{ a.bases_efeitos_criticos or '—' }}</td>
       </tr>
       {% endfor %}
       {% if not f.agents %}
@@ -382,15 +382,19 @@
     </tr>
   </table>
 
-  <div style="margin-top:20pt; text-align:center;">
-    <p style="font-size:11pt; color:#1a1a1a; margin:0; font-family:Arial, sans-serif; text-align:center;">
-      Manaus, {{ f.signature_date_ext }}
-    </p>
-    <!-- 3 espaçamentos de linha entre data/local e assinatura -->
-    <div style="height:52pt;"></div>
-    <img src="data:image/png;base64,{{ assinatura_b64 }}"
-         style="width:220pt; height:auto; display:block; margin:0 auto;"/>
-  </div>
+  <table style="border:none; width:100%; margin-top:20pt;">
+    <tr>
+      <td style="border:none; text-align:center; padding:0;">
+        <p style="font-size:11pt; color:#1a1a1a; margin:0; font-family:Arial, sans-serif;">
+          Manaus, {{ f.signature_date_ext }}
+        </p>
+        <!-- 3 espaçamentos de linha entre data/local e assinatura -->
+        <div style="height:52pt;"></div>
+        <img src="data:image/png;base64,{{ assinatura_b64 }}"
+             style="width:220pt; height:auto; display:block; margin:0 auto;"/>
+      </td>
+    </tr>
+  </table>
 
 </div>
 {% endfor %}
