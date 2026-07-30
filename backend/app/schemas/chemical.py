@@ -35,6 +35,7 @@ class ChemicalAgentOut(BaseModel):
     volume:         Optional[str] = None
     lq:             Optional[str] = None
     numero_cas:     Optional[str] = None
+    grupo:          Optional[str] = None
 
     @field_validator('esocial')
     @classmethod

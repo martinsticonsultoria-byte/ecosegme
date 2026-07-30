@@ -21,5 +21,7 @@ class ChemicalAgent(Base):
     volume         = Column(String(50))         # Volume de coleta
     lq             = Column(String(50))         # Limite de Quantificação
     numero_cas     = Column(String(50), index=True)
+    grupo          = Column(String(100), index=True)  # ex: "VOC" — agrupa agentes na busca da Conferência;
+                                                        # não aparece no laudo nem em nenhum registro salvo na ficha
     updated_at     = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
     created_at     = Column(TIMESTAMP(timezone=True), server_default=func.now())

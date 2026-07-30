@@ -732,6 +732,25 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
     } finally { setAddingAgent(false); }
   };
 
+  const handleAddGroup = async (groupAgents) => {
+    if (!modalSheet) return;
+    const linked = new Set((agentsMap[modalSheet.id] || []).map(a => a.agent_id));
+    const faltando = groupAgents.filter(a => !linked.has(a.id));
+    if (faltando.length === 0) return;
+    setAddingAgent(true);
+    try {
+      for (const agent of faltando) {
+        try {
+          const res = await api.post(`/chemical-field-sheets/${modalSheet.id}/agents`, { agent_id: agent.id });
+          setAgentsMap(m => ({ ...m, [modalSheet.id]: [...(m[modalSheet.id] || []), res.data] }));
+          setAgentValues(v => ({ ...v, [`${modalSheet.id}-${agent.id}`]: '' }));
+        } catch (err) {
+          showError(modalSheet.id, err.response?.data?.detail || `Erro ao vincular ${agent.nome}`);
+        }
+      }
+    } finally { setAddingAgent(false); }
+  };
+
   const handleRemoveAgent = async (sheetId, agentId) => {
     try {
       await api.delete(`/chemical-field-sheets/${sheetId}/agents/${agentId}`);
@@ -905,25 +924,59 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
               {searchLoading && <div style={{ color: '#94a3b8', fontSize: 13, padding: 8 }}>Buscando...</div>}
               {!searchLoading && !searchText && <div style={{ color: '#94a3b8', fontSize: 13, padding: 8 }}>Digite para buscar no catálogo de agentes.</div>}
               {!searchLoading && searchText && searchResults.length === 0 && <div style={{ color: '#94a3b8', fontSize: 13, padding: 8 }}>Nenhum agente encontrado.</div>}
-              {searchResults.map(agent => {
-                const alreadyLinked = (agentsMap[modalSheet.id] || []).some(a => a.agent_id === agent.id);
+              {(() => {
+                const porGrupo = {};
+                const individuais = [];
+                searchResults.forEach(agent => {
+                  if (agent.grupo) (porGrupo[agent.grupo] = porGrupo[agent.grupo] || []).push(agent);
+                  else individuais.push(agent);
+                });
+                const grupos = Object.entries(porGrupo).filter(([, membros]) => membros.length > 1);
+                const soltosDeGrupo = Object.values(porGrupo).filter(membros => membros.length === 1).flat();
+                const todosIndividuais = [...individuais, ...soltosDeGrupo];
+
                 return (
-                  <div key={agent.id} style={{ padding: '10px 12px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: alreadyLinked ? 0.5 : 1 }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{agent.nome}</div>
-                      <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                        {agent.unidade || '—'} · CAS: {agent.numero_cas || '—'}
-                        {agent.nr15_valor ? ` · NR-15: ${agent.nr15_valor}` : ''}
-                        {agent.acgih_twa ? ` · TLV: ${agent.acgih_twa}` : ''}
-                      </div>
-                    </div>
-                    <button className="btn btn-primary btn-sm" onClick={() => !alreadyLinked && handleAddAgent(agent)}
-                      disabled={alreadyLinked || addingAgent} style={{ marginLeft: 12, flexShrink: 0 }}>
-                      {alreadyLinked ? 'Vinculado' : '+'}
-                    </button>
-                  </div>
+                  <>
+                    {grupos.map(([nomeGrupo, membros]) => {
+                      const jaVinculados = membros.filter(a => (agentsMap[modalSheet.id] || []).some(la => la.agent_id === a.id));
+                      const todosVinculados = jaVinculados.length === membros.length;
+                      return (
+                        <div key={`grupo-${nomeGrupo}`} style={{ padding: '10px 12px', borderBottom: '1px solid #f1f5f9', background: '#f0fdf4', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: '#166534' }}>
+                              {nomeGrupo} <span style={{ fontWeight: 400, color: '#64748b' }}>({membros.length} agentes)</span>
+                            </div>
+                            <div style={{ fontSize: 11, color: '#94a3b8' }}>{membros.map(m => m.nome).join(', ')}</div>
+                          </div>
+                          <button className="btn btn-primary btn-sm" onClick={() => handleAddGroup(membros)}
+                            disabled={todosVinculados || addingAgent} style={{ marginLeft: 12, flexShrink: 0 }}>
+                            {todosVinculados ? 'Vinculado' : jaVinculados.length > 0 ? `+ (${membros.length - jaVinculados.length})` : '+ Todos'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {todosIndividuais.map(agent => {
+                      const alreadyLinked = (agentsMap[modalSheet.id] || []).some(a => a.agent_id === agent.id);
+                      return (
+                        <div key={agent.id} style={{ padding: '10px 12px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: alreadyLinked ? 0.5 : 1 }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{agent.nome}</div>
+                            <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                              {agent.unidade || '—'} · CAS: {agent.numero_cas || '—'}
+                              {agent.nr15_valor ? ` · NR-15: ${agent.nr15_valor}` : ''}
+                              {agent.acgih_twa ? ` · TLV: ${agent.acgih_twa}` : ''}
+                            </div>
+                          </div>
+                          <button className="btn btn-primary btn-sm" onClick={() => !alreadyLinked && handleAddAgent(agent)}
+                            disabled={alreadyLinked || addingAgent} style={{ marginLeft: 12, flexShrink: 0 }}>
+                            {alreadyLinked ? 'Vinculado' : '+'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </>
                 );
-              })}
+              })()}
             </div>
           </div>
         </div>
