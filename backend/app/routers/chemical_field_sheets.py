@@ -196,6 +196,7 @@ def generate_chemical_pdf_report(
             "employee_nome":      (sheet.employee.nome if sheet.employee else sheet.employee_name_text) or "—",
             "funcao":             sheet.funcao or "—",
             "matricula":          sheet.matricula or "—",
+            "matricula_label":    "CPF" if sheet.matricula_tipo == "cpf" else "Matrícula",
             "setor":              sheet.setor or "—",
             "local":              sheet.local or "—",
             "collection_date":    sheet.collection_date.strftime("%d/%m/%Y"),

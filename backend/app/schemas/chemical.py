@@ -95,6 +95,7 @@ class ChemicalFieldSheetCreate(BaseModel):
     employee_name_text:  Optional[str]   = None
     funcao:              str
     matricula:           str
+    matricula_tipo:      Optional[str]   = 'matricula'
     setor:               str
     local:               str
     numero_amostrador:   str
@@ -111,6 +112,7 @@ class ChemicalFieldSheetUpdate(BaseModel):
     employee_name_text:  Optional[str]   = None
     funcao:              Optional[str]   = None
     matricula:           Optional[str]   = None
+    matricula_tipo:      Optional[str]   = None
     setor:               Optional[str]   = None
     local:               Optional[str]   = None
     numero_amostrador:   Optional[str]   = None
@@ -138,6 +140,7 @@ class ChemicalFieldSheetOut(BaseModel):
     employee_nome:       Optional[str]   = None
     funcao:              str
     matricula:           str
+    matricula_tipo:      str = 'matricula'
     setor:               str
     local:               str
     numero_amostrador:   str

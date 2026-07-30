@@ -27,6 +27,7 @@ class ChemicalFieldSheet(Base):
     employee_name_text  = Column(String(150))
     funcao              = Column(String(100), nullable=False)
     matricula           = Column(String(50), nullable=False)
+    matricula_tipo      = Column(String(20), nullable=False, default='matricula')  # 'matricula' ou 'cpf'
     setor               = Column(String(150), nullable=False)
     local               = Column(String(100), nullable=False)
 

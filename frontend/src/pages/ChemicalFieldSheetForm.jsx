@@ -181,6 +181,7 @@ export default function ChemicalFieldSheetForm() {
       employee_name_text:  selectedEmployee ? null : employeeInput.trim(),
       funcao:              form.funcao,
       matricula:           form.matricula,
+      matricula_tipo:      matriculaMode,
       setor:               form.setor,
       local:               form.local,
       collection_date:     form.collection_date,
@@ -256,6 +257,7 @@ export default function ChemicalFieldSheetForm() {
               setSavedSheet(null);
               setEmployeeInput('');
               setSelectedEmployee(null);
+              setMatriculaMode('matricula');
               setForm(f => ({
                 ...f,
                 funcao: '', matricula: '', setor: '', local: '',

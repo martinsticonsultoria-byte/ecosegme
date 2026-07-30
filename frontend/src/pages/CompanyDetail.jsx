@@ -886,7 +886,7 @@ export default function CompanyDetail() {
                 <input className="form-input" value={editChemForm.funcao} onChange={e => setEditChemForm(f => ({ ...f, funcao: e.target.value }))} />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Matrícula</label>
+                <label className="form-label">{editChemTarget?.matricula_tipo === 'cpf' ? 'CPF' : 'Matrícula'}</label>
                 <input className="form-input" value={editChemForm.matricula} onChange={e => setEditChemForm(f => ({ ...f, matricula: e.target.value }))} />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>

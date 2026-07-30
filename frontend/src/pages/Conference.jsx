@@ -1152,7 +1152,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                               onChange={e => setEditForm(f => ({ ...f, funcao: e.target.value }))} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="form-label">Matrícula</label>
+                            <label className="form-label">{sheet.matricula_tipo === 'cpf' ? 'CPF' : 'Matrícula'}</label>
                             <input className="form-input" value={editForm.matricula}
                               onChange={e => setEditForm(f => ({ ...f, matricula: e.target.value }))} />
                           </div>
