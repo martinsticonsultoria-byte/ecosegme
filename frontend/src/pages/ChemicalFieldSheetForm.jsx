@@ -2,6 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import {
+  saveOfflineSheet, getPendingSheets, markSynced,
+  saveOfflineCache, getOfflineCache
+} from '../offlineStorage';
+
+const OFFLINE_TIPO = 'quimico';
 
 const TIPO_AMOSTRADOR_OPTIONS = [
   'Tubo de Carvão Ativado',
@@ -42,18 +48,72 @@ export default function ChemicalFieldSheetForm() {
   const [loading, setLoading] = useState(false);
   const [savedSheet, setSavedSheet] = useState(null);
   const [matriculaMode, setMatriculaMode] = useState('matricula');
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
+
+  useEffect(() => {
+    getPendingSheets().then(p => setPendingCount(p.filter(s => s._tipo === OFFLINE_TIPO).length));
+  }, []);
+
+  // Sincroniza fichas químicas salvas offline assim que a conexão voltar
+  useEffect(() => {
+    const sync = async () => {
+      if (!navigator.onLine) return;
+      const pending = await getPendingSheets();
+      for (const sheet of pending.filter(s => s._tipo === OFFLINE_TIPO)) {
+        try {
+          const { localId, savedAt, synced, _tipo, ...payload } = sheet;
+          await api.post('/chemical-field-sheets', payload);
+          await markSynced(localId);
+        } catch (err) {
+          console.error('Sync error (ficha química):', localId, err);
+        }
+      }
+      getPendingSheets().then(p => setPendingCount(p.filter(s => s._tipo === OFFLINE_TIPO).length));
+    };
+    window.addEventListener('online', sync);
+    sync();
+    return () => window.removeEventListener('online', sync);
+  }, []);
 
   useEffect(() => {
     if (user?.name) setForm(f => ({ ...f, technician_name: user.name }));
     api.get('/companies').then(res => {
       setCompanies(res.data);
+      saveOfflineCache('companies', res.data);
       if (prefilledCompanyId) {
         const c = res.data.find(c => String(c.id) === String(prefilledCompanyId));
         setCompany(c || null);
       }
+    }).catch(async () => {
+      const cached = await getOfflineCache('companies');
+      if (cached) {
+        setCompanies(cached);
+        if (prefilledCompanyId) {
+          const c = cached.find(c => String(c.id) === String(prefilledCompanyId));
+          setCompany(c || null);
+        }
+      }
     });
     if (prefilledCompanyId) {
-      api.get(`/employees?company_id=${prefilledCompanyId}`).then(res => setEmployees(res.data));
+      api.get(`/employees?company_id=${prefilledCompanyId}`).then(res => {
+        setEmployees(res.data);
+        saveOfflineCache(`employees_${prefilledCompanyId}`, res.data);
+      }).catch(async () => {
+        const cached = await getOfflineCache(`employees_${prefilledCompanyId}`);
+        if (cached) setEmployees(cached);
+      });
     }
   }, [prefilledCompanyId, user]);
 
@@ -66,7 +126,13 @@ export default function ChemicalFieldSheetForm() {
     if (cid) {
       const c = companies.find(c => String(c.id) === cid);
       setCompany(c || null);
-      api.get(`/employees?company_id=${cid}`).then(res => setEmployees(res.data));
+      api.get(`/employees?company_id=${cid}`).then(res => {
+        setEmployees(res.data);
+        saveOfflineCache(`employees_${cid}`, res.data);
+      }).catch(async () => {
+        const cached = await getOfflineCache(`employees_${cid}`);
+        if (cached) setEmployees(cached);
+      });
     } else { setCompany(null); }
   };
 
@@ -109,27 +175,35 @@ export default function ChemicalFieldSheetForm() {
       setError('Preencha todos os campos de Identificação (*).');
       return;
     }
+    const payload = {
+      company_id:          parseInt(companyId),
+      employee_id:         selectedEmployee ? selectedEmployee.id : null,
+      employee_name_text:  selectedEmployee ? null : employeeInput.trim(),
+      funcao:              form.funcao,
+      matricula:           form.matricula,
+      setor:               form.setor,
+      local:               form.local,
+      collection_date:     form.collection_date,
+      numero_amostrador:   form.numero_amostrador,
+      tipo_amostrador:     form.tipo_amostrador,
+      technician_name:     form.technician_name,
+      situacao_ambiente:   form.situacao_ambiente,
+      jornada_trabalho:    form.jornada_trabalho || null,
+      observacoes:         form.observacoes || null,
+      tipo_analise:        'Químico',
+    };
+
+    if (!navigator.onLine) {
+      await saveOfflineSheet({ ...payload, _tipo: OFFLINE_TIPO });
+      setSavedSheet({ offline: true, employee_nome: selectedEmployee?.nome || employeeInput.trim() });
+      setPendingCount(p => p + 1);
+      return;
+    }
+
     setError(''); setLoading(true);
     try {
-      const payload = {
-        company_id:          parseInt(companyId),
-        employee_id:         selectedEmployee ? selectedEmployee.id : null,
-        employee_name_text:  selectedEmployee ? null : employeeInput.trim(),
-        funcao:              form.funcao,
-        matricula:           form.matricula,
-        setor:               form.setor,
-        local:               form.local,
-        collection_date:     form.collection_date,
-        numero_amostrador:   form.numero_amostrador,
-        tipo_amostrador:     form.tipo_amostrador,
-        technician_name:     form.technician_name,
-        situacao_ambiente:   form.situacao_ambiente,
-        jornada_trabalho:    form.jornada_trabalho || null,
-        observacoes:         form.observacoes || null,
-        tipo_analise:        'Químico',
-      };
       const res = await api.post('/chemical-field-sheets', payload);
-      setSavedSheet(res.data);
+      setSavedSheet({ ...res.data, offline: false });
     } catch (err) {
       const detail = err.response?.data?.detail;
       if (Array.isArray(detail)) setError(detail.map(e => e.msg).join(', '));
@@ -160,12 +234,20 @@ export default function ChemicalFieldSheetForm() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           margin: '0 auto 16px', fontSize: 24, color: '#16a34a'
         }}>✓</div>
-        <h2 style={{ color: '#16a34a', marginBottom: 8 }}>Ficha Química salva com sucesso!</h2>
+        <h2 style={{ color: '#16a34a', marginBottom: 8 }}>
+          {savedSheet.offline ? 'Ficha Química salva localmente!' : 'Ficha Química salva com sucesso!'}
+        </h2>
         <p style={{ color: '#64748b', marginBottom: 32 }}>
           Funcionário: {savedSheet.employee_nome || employeeInput}<br />
-          <span style={{ fontSize: 12, color: '#94a3b8' }}>
-            O Nº do Laudo e os agentes serão vinculados pelo admin na Conferência.
-          </span>
+          {savedSheet.offline ? (
+            <span style={{ fontSize: 12, color: '#d97706' }}>
+              Será sincronizada automaticamente quando houver conexão.
+            </span>
+          ) : (
+            <span style={{ fontSize: 12, color: '#94a3b8' }}>
+              O Nº do Laudo e os agentes serão vinculados pelo admin na Conferência.
+            </span>
+          )}
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexDirection: 'column' }}>
           <button
@@ -207,7 +289,15 @@ export default function ChemicalFieldSheetForm() {
             {company ? `Empresa: ${company.razao_social}` : 'Preencha os dados da coleta de agentes químicos'}
           </p>
         </div>
-        <button className="btn btn-secondary" onClick={() => navigate(-1)}>Cancelar</button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span className={`badge ${isOnline ? 'badge-green' : 'badge-blue'}`}>
+            {isOnline ? 'Online' : 'Offline'}
+          </span>
+          {pendingCount > 0 && (
+            <span className="badge badge-blue">{pendingCount} pendente{pendingCount > 1 ? 's' : ''}</span>
+          )}
+          <button className="btn btn-secondary" onClick={() => navigate(-1)}>Cancelar</button>
+        </div>
       </div>
 
       {/* ── SEÇÃO 1: Funcionário ──────────────────────────────────────────── */}
@@ -272,29 +362,31 @@ export default function ChemicalFieldSheetForm() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">
-              {matriculaMode === 'cpf' ? 'CPF' : 'Matrícula'} <span>*</span>
-            </label>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-              {[['matricula', 'Matrícula'], ['cpf', 'CPF']].map(([mode, text]) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setMatriculaMode(mode)}
-                  style={{
-                    padding: '3px 12px',
-                    borderRadius: 'var(--radius-full)',
-                    fontSize: 11,
-                    fontWeight: 600,
-                    border: '1px solid var(--border)',
-                    cursor: 'pointer',
-                    background: matriculaMode === mode ? 'var(--green)' : 'white',
-                    color: matriculaMode === mode ? 'white' : 'var(--text-2)',
-                  }}
-                >
-                  {text}
-                </button>
-              ))}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <label className="form-label" style={{ marginBottom: 0 }}>
+                {matriculaMode === 'cpf' ? 'CPF' : 'Matrícula'} <span>*</span>
+              </label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {[['matricula', 'Matrícula'], ['cpf', 'CPF']].map(([mode, text]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setMatriculaMode(mode)}
+                    style={{
+                      padding: '3px 12px',
+                      borderRadius: 'var(--radius-full)',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      border: '1px solid var(--border)',
+                      cursor: 'pointer',
+                      background: matriculaMode === mode ? 'var(--green)' : 'white',
+                      color: matriculaMode === mode ? 'white' : 'var(--text-2)',
+                    }}
+                  >
+                    {text}
+                  </button>
+                ))}
+              </div>
             </div>
             <input name="matricula" className="form-input" value={form.matricula}
               onChange={handleChange}
