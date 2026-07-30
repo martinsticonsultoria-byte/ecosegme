@@ -44,6 +44,7 @@ def delete_employee(employee_id: int, db: Session = Depends(get_db), _=Depends(r
     from app.models.generated_report import GeneratedReport
     from app.models.sonus_upload import SonusUpload
     from app.models.audit_log import AuditLog
+    from app.models.chemical_field_sheet import ChemicalFieldSheet
     from app import supabase_storage
 
     employee = db.query(Employee).filter(Employee.id == employee_id).first()
@@ -83,6 +84,11 @@ def delete_employee(employee_id: int, db: Session = Depends(get_db), _=Depends(r
         db.query(FieldSheet).filter(
             FieldSheet.employee_id == employee_id
         ).delete(synchronize_session=False)
+
+    # Delete ChemicalFieldSheets (chemical_sheet_agents cai em cascata via ondelete="CASCADE")
+    db.query(ChemicalFieldSheet).filter(
+        ChemicalFieldSheet.employee_id == employee_id
+    ).delete(synchronize_session=False)
 
     db.delete(employee)
     db.commit()
