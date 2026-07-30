@@ -602,6 +602,14 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
   const [saving, setSaving] = useState(false);
   const [approving, setApproving] = useState({});
   const [errors, setErrors] = useState({});
+  const errorTimeoutRefs = useRef({});
+  const showError = (sheetId, message) => {
+    setErrors(e => ({ ...e, [sheetId]: message }));
+    if (errorTimeoutRefs.current[sheetId]) clearTimeout(errorTimeoutRefs.current[sheetId]);
+    errorTimeoutRefs.current[sheetId] = setTimeout(() => {
+      setErrors(e => ({ ...e, [sheetId]: '' }));
+    }, 4000);
+  };
   const [agentsMap, setAgentsMap] = useState(() =>
     Object.fromEntries(group.sheets.map(s => [s.id, s.agents || []]))
   );
@@ -671,7 +679,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
             : a),
         }));
       } catch {
-        setErrors(e => ({ ...e, [sheetId]: 'Erro ao salvar valor do agente' }));
+        showError(sheetId, 'Erro ao salvar valor do agente');
       }
     }, 500);
   };
@@ -689,7 +697,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
           [sheetId]: m[sheetId].map(a => a.agent_id === agentId ? { ...a, nr15_valor: valor } : a),
         }));
       } catch {
-        setErrors(e => ({ ...e, [sheetId]: 'Erro ao salvar NR-15 do agente' }));
+        showError(sheetId, 'Erro ao salvar NR-15 do agente');
       }
     }, 500);
   };
@@ -707,7 +715,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
           vazao: current.vazao === '' ? null : parseFloat(current.vazao),
         });
       } catch {
-        setErrors(e => ({ ...e, [sheetId]: 'Erro ao salvar cálculo de volume' }));
+        showError(sheetId, 'Erro ao salvar cálculo de volume');
       }
     }, 500);
   };
@@ -720,7 +728,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
       setAgentsMap(m => ({ ...m, [modalSheet.id]: [...(m[modalSheet.id] || []), res.data] }));
       setAgentValues(v => ({ ...v, [`${modalSheet.id}-${agent.id}`]: '' }));
     } catch (err) {
-      setErrors(e => ({ ...e, [modalSheet.id]: err.response?.data?.detail || 'Erro ao vincular agente' }));
+      showError(modalSheet.id, err.response?.data?.detail || 'Erro ao vincular agente');
     } finally { setAddingAgent(false); }
   };
 
@@ -729,7 +737,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
       await api.delete(`/chemical-field-sheets/${sheetId}/agents/${agentId}`);
       setAgentsMap(m => ({ ...m, [sheetId]: m[sheetId].filter(a => a.agent_id !== agentId) }));
     } catch {
-      setErrors(e => ({ ...e, [sheetId]: 'Erro ao remover agente' }));
+      showError(sheetId, 'Erro ao remover agente');
     }
   };
 
@@ -776,10 +784,10 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
           await handleSaveEdit(sheetId, true);
           return;
         }
-        setErrors(e => ({ ...e, [sheetId]: 'Escolha outro nº de laudo ou confirme para juntar ao grupo existente.' }));
+        showError(sheetId, 'Escolha outro nº de laudo ou confirme para juntar ao grupo existente.');
         return;
       }
-      setErrors(e => ({ ...e, [sheetId]: (typeof detail === 'string' ? detail : detail?.message) || 'Erro ao salvar' }));
+      showError(sheetId, (typeof detail === 'string' ? detail : detail?.message) || 'Erro ao salvar');
     } finally { setSaving(false); }
   };
 
@@ -791,7 +799,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
       setSheets(s => s.map(x => x.id === sheet.id ? { ...x, ...res.data } : x));
       onReload();
     } catch (err) {
-      setErrors(e => ({ ...e, [sheet.id]: err.response?.data?.detail || 'Erro ao aprovar' }));
+      showError(sheet.id, err.response?.data?.detail || 'Erro ao aprovar');
     } finally { setApproving(a => ({ ...a, [sheet.id]: false })); }
   };
 
@@ -801,7 +809,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
       await api.delete(`/chemical-field-sheets/${sheetId}`);
       setSheets(s => s.filter(x => x.id !== sheetId));
     } catch (err) {
-      setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao excluir ficha' }));
+      showError(sheetId, err.response?.data?.detail || 'Erro ao excluir ficha');
     }
   };
 
