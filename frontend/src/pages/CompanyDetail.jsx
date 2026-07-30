@@ -1,6 +1,46 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+
+function NovaFichaDropdown({ companyId }) {
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const onClickOutside = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+      <button className="btn btn-primary btn-sm" onClick={() => setOpen(o => !o)}>
+        + Nova Ficha de Campo <span style={{ fontSize: 10, opacity: 0.7 }}>▾</span>
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, marginTop: 4,
+          background: 'white', border: '1px solid #e2e8f0', borderRadius: 8,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.10)', minWidth: 160, zIndex: 50, overflow: 'hidden',
+        }}>
+          <button
+            onClick={() => { setOpen(false); navigate(`/field-sheet/new?company_id=${companyId}`); }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#0f172a' }}
+          >
+            Ruído
+          </button>
+          <button
+            onClick={() => { setOpen(false); navigate(`/chemical-field-sheet/new?company_id=${companyId}`); }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#0f172a' }}
+          >
+            Químico
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function DeleteFieldSheetButton({ fieldSheetId, onDeleted }) {
   const [showModal, setShowModal] = useState(false);
@@ -537,9 +577,7 @@ export default function CompanyDetail() {
         {aba === 'fichas' && (
           <>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
-              <button className="btn btn-primary btn-sm" onClick={() => navigate(`/field-sheet/new?company_id=${id}`)}>
-                + Nova Ficha de Ruído
-              </button>
+              <NovaFichaDropdown companyId={id} />
             </div>
             {fieldSheets.length === 0 ? (
               <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Nenhuma ficha de campo registrada.</div>
@@ -578,9 +616,7 @@ export default function CompanyDetail() {
         {aba === 'quimico' && (
           <>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button className="btn btn-primary btn-sm" onClick={() => navigate(`/chemical-field-sheet/new?company_id=${id}`)}>
-                + Nova Ficha Química
-              </button>
+              <NovaFichaDropdown companyId={id} />
               {!chemPdfModoSelecao ? (
                 <button className="btn btn-primary btn-sm" onClick={handleGerarPdfQuimico}>
                   Gerar Relatório PDF

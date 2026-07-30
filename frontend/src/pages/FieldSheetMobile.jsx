@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import {
@@ -8,6 +9,7 @@ import {
 
 export default function FieldSheetMobile() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [companies, setCompanies] = useState([])
   const [employees, setEmployees] = useState([])
   const [selectedEmployee, setSelectedEmployee] = useState(null)
@@ -315,7 +317,13 @@ export default function FieldSheetMobile() {
 
           <div style={fieldStyle}>
             <label style={labelStyle}>Tipo de Análise</label>
-            <select name="tipo_analise" style={inputStyle} value={form.tipo_analise} onChange={handleChange}>
+            <select name="tipo_analise" style={inputStyle} value={form.tipo_analise} onChange={e => {
+              if (e.target.value === 'Químico') {
+                navigate(form.company_id ? `/chemical-field-sheet/new?company_id=${form.company_id}` : '/chemical-field-sheet/new')
+                return
+              }
+              handleChange(e)
+            }}>
               <option value="Ruído">Ruído</option>
               <option value="Temperatura">Temperatura</option>
               <option value="Iluminância">Iluminância</option>
