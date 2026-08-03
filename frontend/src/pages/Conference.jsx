@@ -589,7 +589,7 @@ function calcVolume(horaInicial, horaFinal, vazao) {
   if ([h1, m1, h2, m2].some(Number.isNaN)) return null;
   let minutos = (h2 * 60 + m2) - (h1 * 60 + m1);
   if (minutos < 0) minutos += 24 * 60;
-  const v = parseFloat(vazao);
+  const v = parseFloat(String(vazao).replace(',', '.'));
   if (Number.isNaN(v)) return null;
   return Math.round(v * minutos * 100) / 100;
 }
@@ -1278,6 +1278,10 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                         {agents.length > 0 && (() => {
                           const vol = volumeValues[sheet.id] || { hora_inicial: '', hora_final: '', vazao: '' };
                           const volumeCalculado = calcVolume(vol.hora_inicial, vol.hora_final, vol.vazao);
+                          const vazaoOptions = [...new Set(
+                            agents.map(sa => (sa.agent?.vazao || '').trim()).filter(Boolean)
+                          )];
+                          const vazaoDatalistId = `vazao-opts-${sheet.id}`;
                           return (
                             <div style={{ marginTop: 12, padding: '10px 12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8 }}>
                               <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>
@@ -1298,9 +1302,14 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
                                   <label className="form-label">Vazão (L/min)</label>
-                                  <input type="number" step="0.001" className="form-input" value={vol.vazao}
+                                  <input type="text" inputMode="decimal" list={vazaoDatalistId} className="form-input" value={vol.vazao}
                                     onChange={e => handleVolumeChange(sheet.id, 'vazao', e.target.value)}
                                     placeholder="Ex: 1,5" style={{ width: 100 }} />
+                                  <datalist id={vazaoDatalistId}>
+                                    {vazaoOptions.length > 0
+                                      ? vazaoOptions.map(v => <option key={v} value={v} />)
+                                      : <option value="Vazio" />}
+                                  </datalist>
                                 </div>
                                 <div style={{ fontSize: 13, color: '#166534', fontWeight: 600, paddingBottom: 8 }}>
                                   Volume: {volumeCalculado !== null ? `${volumeCalculado} L` : '—'}
