@@ -39,11 +39,19 @@ def run_seed(db: Session = Depends(get_db), _: User = Depends(require_admin)):
     return {"created": created, "message": "Seed executado com sucesso"}
 
 
-# Cabeçalho da planilha (linha 2) -> nome do campo em ChemicalAgent.
+# Planilha TLV (Google Sheets) — fonte viva do catálogo de agentes químicos.
+# O sistema lê direto deste link a cada importação, então edições feitas na
+# planilha (novos agentes, novos grupos, valores atualizados) são refletidas
+# automaticamente na próxima vez que /setup/import-chemical-agents rodar.
+TLV_SHEET_ID = "1KNKUBeDkb3VupB3FvUVsRn6HjXdPNM4J0kHwmw54qAI"
+TLV_SHEET_EXPORT_URL = f"https://docs.google.com/spreadsheets/d/{TLV_SHEET_ID}/export?format=xlsx"
+
+# Cabeçalho da planilha (linha 1, aba "TLV") -> nome do campo em ChemicalAgent.
 # Lido por NOME, não por posição — inserir/mover colunas na planilha não quebra
 # a importação, só o texto do cabeçalho precisa continuar batendo.
 _TLV_HEADER_MAP = {
     "Agente": "nome",
+    "Substância / Agente": "_nome_fallback",  # usado só quando "Agente" vier vazio (maioria das linhas)
     "e-Social": "esocial",
     "Unidade": "unidade",
     "TWA": "acgih_twa",
@@ -57,21 +65,23 @@ _TLV_HEADER_MAP = {
     "Volume": "volume",
     "L.Q": "lq",
     "CAS": "numero_cas",
+    "Código CAS": "numero_cas",
     "Grupos": "grupo",
 }
 
 
-def _parse_tlv_xlsx(xlsx_path, sheet_name="TLV", header_row=2, data_start_row=3):
+def _parse_tlv_xlsx(xlsx_file, sheet_name="TLV", header_row=1, data_start_row=2):
     """Lê a planilha TLV e devolve uma lista de dicts (um por agente), mapeando
     colunas pelo texto do cabeçalho (linha `header_row`). Não toca no banco —
-    função pura, fácil de testar isoladamente contra o arquivo real.
+    função pura, fácil de testar isoladamente. `xlsx_file` aceita tanto um
+    caminho de arquivo quanto um objeto file-like (ex: BytesIO do download).
     """
     import openpyxl
 
     def _str(val):
         return str(val).strip() if val is not None else ""
 
-    wb = openpyxl.load_workbook(xlsx_path, data_only=True)
+    wb = openpyxl.load_workbook(xlsx_file, data_only=True)
     ws = wb[sheet_name]
 
     col_by_field = {}
@@ -80,19 +90,26 @@ def _parse_tlv_xlsx(xlsx_path, sheet_name="TLV", header_row=2, data_start_row=3)
         if campo and campo not in col_by_field:  # mantém a 1ª ocorrência (há "Agente" duplicado)
             col_by_field[campo] = cell.column
 
-    faltando = [h for h, campo in _TLV_HEADER_MAP.items() if campo not in col_by_field.values() and campo != "grupo"]
-    if "nome" not in col_by_field:
-        raise ValueError(f'Coluna "Agente" não encontrada no cabeçalho (linha {header_row}) de "{sheet_name}".')
+    if "nome" not in col_by_field and "_nome_fallback" not in col_by_field:
+        raise ValueError(
+            f'Nenhuma coluna de nome do agente ("Agente" ou "Substância / Agente") '
+            f'encontrada no cabeçalho (linha {header_row}) de "{sheet_name}".'
+        )
 
     agentes = []
     for row in range(data_start_row, ws.max_row + 1):
-        nome = _str(ws.cell(row, col_by_field["nome"]).value)
+        # "Agente" só vem preenchido numa fração das linhas (as com dados
+        # completos de TLV); a maioria só tem "Substância / Agente" — por
+        # isso o nome cai pro fallback quando "Agente" está vazio.
+        nome_principal = _str(ws.cell(row, col_by_field["nome"]).value) if "nome" in col_by_field else ""
+        nome_fallback  = _str(ws.cell(row, col_by_field["_nome_fallback"]).value) if "_nome_fallback" in col_by_field else ""
+        nome = nome_principal or nome_fallback
         if not nome:
             continue  # linha em branco
 
         dado = {"nome": nome}
         for campo, col in col_by_field.items():
-            if campo == "nome":
+            if campo in ("nome", "_nome_fallback"):
                 continue
             valor = _str(ws.cell(row, col).value)
             dado[campo] = valor if (campo != "grupo" or valor) else None
@@ -107,31 +124,27 @@ def import_chemical_agents(
     _: User = Depends(require_admin),
 ):
     """
-    Importa/atualiza o catálogo de agentes químicos a partir da planilha TLV.
-    Faz upsert por nome: agente novo é inserido, agente já existente tem seus
-    dados (incluindo `grupo`) atualizados a partir da planilha mais recente.
-    Requer: openpyxl instalado + arquivo no path abaixo.
+    Importa/atualiza o catálogo de agentes químicos a partir da planilha TLV
+    (Google Sheets, TLV_SHEET_EXPORT_URL). Faz upsert por nome: agente novo é
+    inserido, agente já existente tem seus dados (incluindo `grupo`)
+    atualizados a partir da versão mais recente da planilha.
     """
-    import os
-
-    XLSX_PATH = os.path.join(
-        os.path.dirname(__file__),          # .../backend/app/routers/
-        "..", "..", "data",                 # .../backend/data/
-        "Eduardo - quimico.xlsx",
-    )
-    XLSX_PATH = os.path.abspath(XLSX_PATH)
-
-    if not os.path.exists(XLSX_PATH):
-        raise HTTPException(
-            status_code=404,
-            detail=f"Planilha não encontrada em: {XLSX_PATH}. "
-                   "Copie 'Eduardo - quimico.xlsx' para backend/data/ e tente novamente.",
-        )
+    import io
+    import httpx
 
     from app.models.chemical_agent import ChemicalAgent
 
     try:
-        agentes = _parse_tlv_xlsx(XLSX_PATH)
+        resp = httpx.get(TLV_SHEET_EXPORT_URL, follow_redirects=True, timeout=30.0)
+        resp.raise_for_status()
+    except httpx.HTTPError as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Erro ao baixar a planilha do Google Sheets: {e}",
+        )
+
+    try:
+        agentes = _parse_tlv_xlsx(io.BytesIO(resp.content))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao ler planilha: {e}")
 
