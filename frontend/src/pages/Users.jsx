@@ -21,8 +21,22 @@ export default function Users() {
   const [resetTarget, setResetTarget] = useState(null);
   const [newPassword, setNewPassword] = useState('');
 
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const [importError, setImportError] = useState('');
+
   const load = () => api.get('/users').then(res => setUsers(res.data));
   useEffect(() => { load(); }, []);
+
+  const handleImportAgents = async () => {
+    setImportLoading(true); setImportError(''); setImportResult(null);
+    try {
+      const res = await api.post('/setup/import-chemical-agents');
+      setImportResult(res.data);
+    } catch (err) {
+      setImportError(err.response?.data?.detail || 'Erro ao importar planilha');
+    } finally { setImportLoading(false); }
+  };
 
   const handleCreate = async () => {
     if (!form.name || !form.email || !form.password) { setError('Preencha todos os campos'); return; }
@@ -65,6 +79,23 @@ export default function Users() {
         <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setError(''); }}>
           {showForm ? 'Cancelar' : '+ Novo Usuário'}
         </button>
+      </div>
+
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div className="section-title">Catálogo de Agentes Químicos</div>
+        <p style={{ color: '#64748b', fontSize: 13, marginTop: -4, marginBottom: 12 }}>
+          Atualiza o catálogo de agentes químicos com os dados mais recentes da planilha (Google Sheets).
+          Use sempre que a planilha for editada — a atualização não acontece sozinha.
+        </p>
+        <button className="btn btn-primary" onClick={handleImportAgents} disabled={importLoading}>
+          {importLoading ? 'Importando...' : 'Importar / Atualizar Agora'}
+        </button>
+        {importResult && (
+          <div className="alert alert-success" style={{ marginTop: 12 }}>
+            Importação concluída: {importResult.inserted} agente(s) novo(s), {importResult.updated} atualizado(s) — total de {importResult.total}.
+          </div>
+        )}
+        {importError && <div className="alert alert-error" style={{ marginTop: 12 }}>{importError}</div>}
       </div>
 
       {showForm && (
