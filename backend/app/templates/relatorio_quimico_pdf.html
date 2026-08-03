@@ -6,6 +6,20 @@
   @page { size: A4; margin: 10mm 12mm; }
   @page :first { margin: 0; }
 
+  /* Página das fichas: rodapé fixo reservado para assinatura + data,
+     preenchido via elemento "running" — garante que a assinatura sempre
+     fique colada no rodapé da página onde a ficha termina, sem depender
+     de sobrar espaço no fluxo normal do conteúdo. */
+  @page ficha {
+    size: A4;
+    margin: 10mm 12mm 155pt 12mm;
+    @bottom-center {
+      content: element(assinatura_rodape);
+      vertical-align: bottom;
+      padding-bottom: 6pt;
+    }
+  }
+
   body { font-family: Arial, sans-serif; font-size: 8.5pt; margin: 0; color: #000; }
   .page-break { page-break-before: always; }
 
@@ -158,7 +172,10 @@
 
 <!-- ══════════════════ FICHAS INDIVIDUAIS ══════════════════ -->
 {% for f in fichas %}
-<div class="page-break">
+<div class="page-break" style="page: ficha;">
+  <!-- limpa o rodapé (assinatura) deixado pela ficha anterior, antes de
+       qualquer conteúdo desta ficha entrar no fluxo -->
+  <div style="position: running(assinatura_rodape);"></div>
 
   <!-- Cabeçalho -->
   <table style="border:none; border-bottom:1.5px solid #1f9c74; margin-bottom:6px; width:100%; padding-bottom:4px;">
@@ -301,19 +318,16 @@
     </tr>
   </table>
 
-  <table style="border:none; width:100%; table-layout:fixed; margin-top:20pt; page-break-inside:avoid; break-inside:avoid;">
-    <colgroup><col style="width:100%"></colgroup>
-    <tr style="page-break-inside:avoid; break-inside:avoid;">
-      <td style="border:none; text-align:center; padding:0;">
-        <p style="font-size:11pt; color:#1a1a1a; margin:0; font-family:Arial, sans-serif; text-align:center;">
-          Manaus, {{ f.signature_date_ext }}
-        </p>
-        <div style="height:10pt;"></div>
-        <img src="data:image/png;base64,{{ assinatura_b64 }}"
-             style="width:220pt; height:auto; display:inline-block;"/>
-      </td>
-    </tr>
-  </table>
+  <!-- assinatura + data: não fica no fluxo normal, é "capturada" e
+       renderizada no rodapé fixo (@page ficha / @bottom-center) da página
+       onde esta ficha termina -->
+  <div style="position: running(assinatura_rodape); text-align:center;">
+    <p style="font-size:11pt; color:#1a1a1a; margin:0 0 8pt 0; font-family:Arial, sans-serif; text-align:center;">
+      Manaus, {{ f.signature_date_ext }}
+    </p>
+    <img src="data:image/png;base64,{{ assinatura_b64 }}"
+         style="width:220pt; height:auto; display:inline-block;"/>
+  </div>
 
 </div>
 {% endfor %}
