@@ -205,6 +205,7 @@ def generate_chemical_pdf_report(
             "tipo_amostrador":    sheet.tipo_amostrador or "—",
             "situacao_ambiente":  sheet.situacao_ambiente or "",
             "jornada_trabalho":   sheet.jornada_trabalho or "—",
+            "responsavel_coleta": sheet.creator.name if sheet.creator else "—",
             "volume_calculado":   sheet.volume_calculado if sheet.volume_calculado is not None else "—",
             "observacoes":        sheet.observacoes or "",
             "conclusao_texto":    sheet.conclusao_texto or "",
