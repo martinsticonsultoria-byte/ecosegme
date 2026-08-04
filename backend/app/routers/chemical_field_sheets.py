@@ -533,47 +533,44 @@ def update_chemical_field_sheet(
                        f"empresa em {ano_atual}. Escolha um código diferente."
             )
 
-        # BLOQUEIA: xxx já aparece em relatório consolidado químico gerado no ano atual
-        relatorio_existente = db.query(CR).filter(
-            CR.company_id == sheet.company_id,
-            CR.tipo_analise == "Químico",
-            extract('year', CR.generated_at) == ano_atual,
-            CR.filename.contains(novo_xxx),
-        ).first()
-        if relatorio_existente:
-            raise HTTPException(
-                status_code=400,
-                detail=f"O código {novo_xxx} já foi utilizado em um "
-                       f"relatório consolidado químico gerado em {ano_atual}. "
-                       f"Escolha um código diferente."
-            )
-
-        # AVISA: xxx já pertence a um grupo de fichas aprovadas desta mesma empresa —
-        # exige confirmação explícita antes de juntar a ficha a esse grupo
+        # AVISA: xxx já foi usado em um relatório químico JÁ EMITIDO (gerado) desta
+        # empresa no ano atual — só nesse caso vale confirmar, já que juntar fichas
+        # a um grupo ainda não relatado é normal e não precisa de aviso nenhum.
         if not confirm_group:
-            grupo_existente = (
-                db.query(ChemicalFieldSheet)
+            relatorio_ja_emitido = (
+                db.query(CR)
                 .filter(
-                    ChemicalFieldSheet.laudo_number == novo_xxx,
-                    ChemicalFieldSheet.company_id == sheet.company_id,
-                    ChemicalFieldSheet.laudo_y.isnot(None),
-                    ChemicalFieldSheet.id != sheet_id,
+                    CR.company_id == sheet.company_id,
+                    CR.tipo_analise == "Químico",
+                    extract('year', CR.generated_at) == ano_atual,
+                    CR.filename.contains(novo_xxx),
                 )
-                .order_by(ChemicalFieldSheet.collection_date.desc())
-                .all()
+                .order_by(CR.generated_at.desc())
+                .first()
             )
-            if grupo_existente:
-                mais_recente = grupo_existente[0].collection_date.strftime("%d/%m/%Y")
+            if relatorio_ja_emitido:
+                grupo_existente = (
+                    db.query(ChemicalFieldSheet)
+                    .filter(
+                        ChemicalFieldSheet.laudo_number == novo_xxx,
+                        ChemicalFieldSheet.company_id == sheet.company_id,
+                        ChemicalFieldSheet.laudo_y.isnot(None),
+                        ChemicalFieldSheet.id != sheet_id,
+                    )
+                    .order_by(ChemicalFieldSheet.collection_date.desc())
+                    .all()
+                )
+                data_emissao = relatorio_ja_emitido.generated_at.strftime("%d/%m/%Y")
                 raise HTTPException(
                     status_code=409,
                     detail={
                         "needs_confirmation": True,
                         "existing_count": len(grupo_existente),
-                        "most_recent_date": mais_recente,
+                        "most_recent_date": data_emissao,
                         "message": (
-                            f"O número {novo_xxx} já está sendo usado por um grupo de "
-                            f"{len(grupo_existente)} ficha(s) desta empresa (mais recente: "
-                            f"{mais_recente}). Deseja incluir esta ficha no mesmo grupo?"
+                            f"O número {novo_xxx} já foi usado em um relatório "
+                            f"emitido para esta empresa em {data_emissao}. Deseja "
+                            f"incluir esta ficha no mesmo grupo?"
                         ),
                     },
                 )
