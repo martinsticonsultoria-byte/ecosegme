@@ -191,21 +191,43 @@ def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=De
                         detail=f"Nome no SONUS '{sonus.parsed_employee_name}' diverge do cadastro '{emp_nome}'. Corrija antes de aprovar."
                     )
     if new_status == "aprovada":
-        xxx = sheet.laudo_number
-        count = db.query(FieldSheet).filter(
-            FieldSheet.company_id == sheet.company_id,
-            FieldSheet.laudo_number == xxx,
-            FieldSheet.laudo_y.isnot(None),
-            FieldSheet.id != sheet.id,
-        ).count()
-        sheet.laudo_y = count + 1
-
-    sheet.status = new_status
-    if new_status == "aprovada":
         from datetime import date
+        from sqlalchemy import func
+        from sqlalchemy.exc import IntegrityError
+
+        sheet.status = new_status
         if not sheet.signature_date:
             sheet.signature_date = date.today()
-    db.commit()
+
+        xxx = sheet.laudo_number
+        # MAX+1 (não COUNT+1): COUNT quebra sempre que uma ficha aprovada do
+        # mesmo grupo é excluída depois (deixa "buraco" na sequência e o
+        # próximo COUNT reaproveita um número já usado). Tenta de novo em
+        # caso de conflito (ex: duas aprovações do mesmo grupo em paralelo).
+        for _tentativa in range(5):
+            max_y = db.query(func.max(FieldSheet.laudo_y)).filter(
+                FieldSheet.company_id == sheet.company_id,
+                FieldSheet.laudo_number == xxx,
+                FieldSheet.id != sheet.id,
+            ).scalar()
+            sheet.laudo_y = (max_y or 0) + 1
+            try:
+                db.commit()
+                break
+            except IntegrityError:
+                db.rollback()
+                sheet = db.query(FieldSheet).filter(FieldSheet.id == sheet_id).first()
+                sheet.status = new_status
+                if not sheet.signature_date:
+                    sheet.signature_date = date.today()
+        else:
+            raise HTTPException(
+                status_code=409,
+                detail="Não foi possível atribuir o número do laudo (conflito com outra aprovação simultânea). Tente novamente."
+            )
+    else:
+        sheet.status = new_status
+        db.commit()
     db.refresh(sheet)
     return {"id": sheet.id, "status": sheet.status, "laudo_y": sheet.laudo_y}
 

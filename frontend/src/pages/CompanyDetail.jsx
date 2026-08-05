@@ -259,16 +259,20 @@ export default function CompanyDetail() {
     } finally { setSavingSheet(false); }
   };
 
-  const handleGenerateConsolidated = async () => {
+  const handleGenerateConsolidated = async (tipoOverride, formatOverride) => {
+    const tipo = tipoOverride ?? genTipo;
+    const format = formatOverride ?? genFormat;
+    if (tipoOverride) setGenTipo(tipoOverride);
+    if (formatOverride) setGenFormat(formatOverride);
     setGenerating(true);
     try {
-      const url = `/reports/generate-bulk${genFormat === 'pdf' ? '-pdf' : ''}?company_id=${id}&tipo_analise=${encodeURIComponent(genTipo)}`;
-      const ext = genFormat === 'pdf' ? 'pdf' : 'xlsx';
+      const url = `/reports/generate-bulk${format === 'pdf' ? '-pdf' : ''}?company_id=${id}&tipo_analise=${encodeURIComponent(tipo)}`;
+      const ext = format === 'pdf' ? 'pdf' : 'xlsx';
       const res = await api.get(url, { responseType: 'blob' });
       const blobUrl = window.URL.createObjectURL(res.data);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = `relatorio_${genTipo}_${company?.razao_social?.slice(0,20)}.${ext}`;
+      a.download = `relatorio_${tipo}_${company?.razao_social?.slice(0,20)}.${ext}`;
       a.click();
       window.URL.revokeObjectURL(blobUrl);
       const updated = await api.get(`/reports/consolidated/${id}`);
@@ -282,12 +286,14 @@ export default function CompanyDetail() {
     } finally { setGenerating(false); }
   };
 
-  const handleOpenRelModal = async () => {
+  const handleOpenRelModal = async (tipoOverride) => {
+    const tipo = tipoOverride ?? genTipo;
+    if (tipoOverride) setGenTipo(tipoOverride);
     setShowRelModal(true);
     setRelFichasSel([]);
     setRelCarregando(true);
     try {
-      const res = await api.get(`/field-sheets?company_id=${id}&tipo_analise=${encodeURIComponent(genTipo)}`);
+      const res = await api.get(`/field-sheets?company_id=${id}&tipo_analise=${encodeURIComponent(tipo)}`);
       setRelFichas(res.data);
     } catch {
       alert('Erro ao carregar fichas.');
@@ -576,8 +582,14 @@ export default function CompanyDetail() {
         {/* Fichas de Campo */}
         {aba === 'fichas' && (
           <>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 8, alignItems: 'center' }}>
               <NovaFichaDropdown companyId={id} />
+              <button className="btn btn-primary btn-sm" onClick={() => handleOpenRelModal('Ruído')} disabled={relCarregando}>
+                Gerar Relatório PDF
+              </button>
+              <button className="btn btn-secondary btn-sm" onClick={() => handleGenerateConsolidated('Ruído', 'xlsx')} disabled={generating}>
+                {generating ? 'Gerando...' : 'Gerar Relatório Excel'}
+              </button>
             </div>
             {fieldSheets.length === 0 ? (
               <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Nenhuma ficha de campo registrada.</div>

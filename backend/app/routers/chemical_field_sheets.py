@@ -610,22 +610,43 @@ def approve_chemical_field_sheet(
     current_user: User = Depends(require_admin),
 ):
     """Aprova a ficha: define laudo_number, laudo_y, status e signature_date.
-    laudo_y é calculado como count+1 de fichas já aprovadas com o mesmo laudo_number
-    na mesma empresa — idêntico à regra das fichas de ruído."""
+    laudo_y é calculado como MAX+1 das fichas já aprovadas com o mesmo
+    laudo_number na mesma empresa — idêntico à regra das fichas de ruído."""
+    from sqlalchemy import func
+    from sqlalchemy.exc import IntegrityError
+
     sheet = _get_sheet_or_404(sheet_id, db)
-    # Conta fichas já aprovadas com mesmo laudo_number na mesma empresa (exceto a atual)
-    count = db.query(ChemicalFieldSheet).filter(
-        ChemicalFieldSheet.company_id == sheet.company_id,
-        ChemicalFieldSheet.laudo_number == laudo_number,
-        ChemicalFieldSheet.laudo_y.isnot(None),
-        ChemicalFieldSheet.id != sheet_id,
-    ).count()
     sheet.laudo_number   = laudo_number
-    sheet.laudo_y        = count + 1
     sheet.status         = "aprovado"
     sheet.signature_date = date.today()
     sheet.data_relatorio = date.today()
-    db.commit()
+
+    # MAX+1 (não COUNT+1): COUNT quebra sempre que uma ficha aprovada do
+    # mesmo grupo é excluída depois (deixa "buraco" na sequência e o
+    # próximo COUNT reaproveita um número já usado). Tenta de novo em
+    # caso de conflito (ex: duas aprovações do mesmo grupo em paralelo).
+    for _tentativa in range(5):
+        max_y = db.query(func.max(ChemicalFieldSheet.laudo_y)).filter(
+            ChemicalFieldSheet.company_id == sheet.company_id,
+            ChemicalFieldSheet.laudo_number == laudo_number,
+            ChemicalFieldSheet.id != sheet_id,
+        ).scalar()
+        sheet.laudo_y = (max_y or 0) + 1
+        try:
+            db.commit()
+            break
+        except IntegrityError:
+            db.rollback()
+            sheet = _get_sheet_or_404(sheet_id, db)
+            sheet.laudo_number   = laudo_number
+            sheet.status         = "aprovado"
+            sheet.signature_date = date.today()
+            sheet.data_relatorio = date.today()
+    else:
+        raise HTTPException(
+            status_code=409,
+            detail="Não foi possível atribuir o número do laudo (conflito com outra aprovação simultânea). Tente novamente."
+        )
     db.refresh(sheet)
     return sheet
 
