@@ -20,6 +20,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
   const [genBulkPdf, setGenBulkPdf] = useState(false);
   const [genBulkXls, setGenBulkXls] = useState(false);
   const [errors, setErrors] = useState({});
+  const [uploadConflict, setUploadConflict] = useState({});
   const [epiOptions, setEpiOptions] = useState([]);
   const [deletingSonus, setDeletingSonus] = useState({});
   const [modoSelecao, setModoSelecao] = useState(false);
@@ -75,6 +76,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
     if (!file) return;
     setUploading(u => ({ ...u, [sheetId]: true }));
     setErrors(e => ({ ...e, [sheetId]: '' }));
+    setUploadConflict(c => ({ ...c, [sheetId]: false }));
     setUploadResult(r => ({ ...r, [sheetId]: null }));
     try {
       const fd = new FormData();
@@ -90,7 +92,13 @@ function ConferenceDetail({ group, onBack, onReload }) {
       } : x));
       onReload();
     } catch (err) {
-      setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao enviar PDF' }));
+      const detail = err.response?.data?.detail || 'Erro ao enviar PDF';
+      setErrors(e => ({ ...e, [sheetId]: detail }));
+      // O backend recusa reenvio se já existe um SonusUpload pra essa ficha —
+      // isso pode acontecer mesmo quando a tela ainda mostra "não enviado"
+      // (ex: a resposta do envio anterior se perdeu antes de atualizar a
+      // tela). Sem um jeito de excluir aqui, o usuário fica travado.
+      setUploadConflict(c => ({ ...c, [sheetId]: err.response?.status === 400 && detail.includes('Já existe um PDF') }));
     } finally { setUploading(u => ({ ...u, [sheetId]: false })); }
   };
 
@@ -102,6 +110,8 @@ function ConferenceDetail({ group, onBack, onReload }) {
       setUploadResult(r => ({ ...r, [sheetId]: null }));
       setUploadFile(f => ({ ...f, [sheetId]: null }));
       setSheets(s => s.map(x => x.id === sheetId ? { ...x, has_sonus: false, sonus_name_mismatch: false, sonus_parsed_name: null } : x));
+      setErrors(e => ({ ...e, [sheetId]: '' }));
+      setUploadConflict(c => ({ ...c, [sheetId]: false }));
       onReload();
     } catch (err) {
       setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao excluir SONUS' }));
@@ -409,6 +419,12 @@ function ConferenceDetail({ group, onBack, onReload }) {
                     <tr key={`err-${sheet.id}`}>
                       <td colSpan={modoSelecao ? 15 : 14} style={{ padding: '4px 12px', background: '#fff5f5' }}>
                         <span style={{ color: '#dc2626', fontSize: 12 }}>{errors[sheet.id]}</span>
+                        {uploadConflict[sheet.id] && (
+                          <button className="btn btn-secondary btn-sm" style={{ marginLeft: 10, padding: '2px 10px', fontSize: 11 }}
+                            onClick={() => handleDeleteSonus(sheet.id)} disabled={deletingSonus[sheet.id]}>
+                            {deletingSonus[sheet.id] ? 'Excluindo...' : 'Excluir PDF anterior e tentar novamente'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   )}
@@ -528,6 +544,12 @@ function ConferenceDetail({ group, onBack, onReload }) {
                           <div style={{ marginBottom: 8 }}>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
                               <span style={{ fontSize: 13, color: '#0369a1' }}>PDF do SONUS já enviado.</span>
+                              {sheet.status !== 'aprovada' && (
+                                <button className="btn btn-secondary btn-sm" style={{ padding: '2px 10px', fontSize: 11 }}
+                                  onClick={() => handleDeleteSonus(sheet.id)} disabled={deletingSonus[sheet.id]}>
+                                  {deletingSonus[sheet.id] ? 'Excluindo...' : 'Excluir'}
+                                </button>
+                              )}
                             </div>
                             {!reports[sheet.id]
                               ? <button className="btn btn-primary btn-sm" onClick={() => handleGenerate(sheet.id)} disabled={generating[sheet.id]}>
