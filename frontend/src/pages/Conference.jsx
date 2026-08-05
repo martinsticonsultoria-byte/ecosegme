@@ -88,6 +88,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
         sonus_name_mismatch: nameMatch === false,
         sonus_parsed_name: res.data.parsed_data?.funcionario,
       } : x));
+      onReload();
     } catch (err) {
       setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao enviar PDF' }));
     } finally { setUploading(u => ({ ...u, [sheetId]: false })); }
@@ -101,6 +102,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
       setUploadResult(r => ({ ...r, [sheetId]: null }));
       setUploadFile(f => ({ ...f, [sheetId]: null }));
       setSheets(s => s.map(x => x.id === sheetId ? { ...x, has_sonus: false, sonus_name_mismatch: false, sonus_parsed_name: null } : x));
+      onReload();
     } catch (err) {
       setErrors(e => ({ ...e, [sheetId]: err.response?.data?.detail || 'Erro ao excluir SONUS' }));
     } finally { setDeletingSonus(d => ({ ...d, [sheetId]: false })); }

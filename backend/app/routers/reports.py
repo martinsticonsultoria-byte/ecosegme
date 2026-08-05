@@ -196,7 +196,7 @@ def generate_bulk_report(
     sheets = db.query(FieldSheet).filter(
         FieldSheet.company_id == company_id,
         tipo_filter
-    ).order_by(FieldSheet.laudo_number).all()
+    ).order_by(FieldSheet.laudo_number, FieldSheet.laudo_y).all()
 
     if not sheets:
         raise HTTPException(status_code=404, detail="Nenhuma ficha encontrada para esse grupo")
@@ -404,12 +404,12 @@ def generate_bulk_pdf(
         sheets = db.query(FieldSheet).filter(
             FieldSheet.id.in_(field_sheet_ids),
             FieldSheet.company_id == company_id
-        ).order_by(FieldSheet.laudo_number).all()
+        ).order_by(FieldSheet.laudo_number, FieldSheet.laudo_y).all()
     else:
         sheets = db.query(FieldSheet).filter(
             FieldSheet.company_id == company_id,
             tipo_filter
-        ).order_by(FieldSheet.laudo_number).all()
+        ).order_by(FieldSheet.laudo_number, FieldSheet.laudo_y).all()
 
     if not sheets:
         raise HTTPException(status_code=404, detail="Nenhuma ficha encontrada para esse grupo")
