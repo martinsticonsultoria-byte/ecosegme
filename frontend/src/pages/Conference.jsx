@@ -103,7 +103,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
   };
 
   const handleDeleteSonus = async (sheetId) => {
-    if (!window.confirm('Excluir o PDF do SONUS desta ficha? Você poderá enviar outro depois.')) return;
+    if (!window.confirm('Excluir o PDF do SONUS desta ficha? Se já existir um laudo gerado a partir dele, ele também será excluído. Você poderá enviar outro SONUS depois.')) return;
     setDeletingSonus(d => ({ ...d, [sheetId]: true }));
     try {
       await api.delete(`/uploads/sonus/${sheetId}`);

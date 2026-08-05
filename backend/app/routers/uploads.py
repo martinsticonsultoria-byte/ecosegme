@@ -133,6 +133,9 @@ def delete_sonus_upload(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user)
 ):
+    from app.models.generated_report import GeneratedReport
+    from app import supabase_storage
+
     sheet = db.query(FieldSheet).filter(FieldSheet.id == field_sheet_id).first()
     if not sheet:
         raise HTTPException(status_code=404, detail="Ficha não encontrada")
@@ -141,6 +144,21 @@ def delete_sonus_upload(
     upload = db.query(SonusUpload).filter(SonusUpload.field_sheet_id == field_sheet_id).first()
     if not upload:
         raise HTTPException(status_code=404, detail="Nenhum upload encontrado para esta ficha")
+
+    # Um laudo PDF gerado a partir deste SONUS referencia o upload por FK
+    # (generated_reports.sonus_upload_id) — sem apagar isso primeiro, o
+    # DELETE do SonusUpload quebra com violação de integridade. Como o
+    # laudo gerado fica órfão/desatualizado sem o SONUS de origem, apaga
+    # junto (mesmo comportamento de excluir a ficha inteira).
+    reports = db.query(GeneratedReport).filter(GeneratedReport.sonus_upload_id == upload.id).all()
+    for report in reports:
+        if report.output_path:
+            try:
+                supabase_storage.delete_file(report.output_path)
+            except Exception:
+                pass
+        db.delete(report)
+
     if upload.storage_path and os.path.exists(upload.storage_path):
         try:
             os.unlink(upload.storage_path)

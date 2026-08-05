@@ -599,7 +599,7 @@ export default function CompanyDetail() {
                 <tbody>
                   {fieldSheets.map(s => (
                     <tr key={s.id}>
-                      <td>{s.laudo_number ? <span className="badge badge-blue">{s.laudo_number}.{s.laudo_y || 1}/{new Date().getFullYear()}</span> : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}</td>
+                      <td>{s.laudo_number ? <span className="badge badge-blue">{s.laudo_y ? `${s.laudo_number}.${s.laudo_y}/${new Date().getFullYear()}` : `${s.laudo_number} (pendente)`}</span> : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>}</td>
                       <td style={{ fontWeight: 500 }}>{s.employee_nome || '—'}</td>
                       <td style={{ color: '#64748b' }}>{new Date(s.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                       <td style={{ color: '#64748b' }}>{s.technician_name}</td>
@@ -686,7 +686,7 @@ export default function CompanyDetail() {
                       )}
                       <td>
                         {s.laudo_number
-                          ? <span className="badge badge-blue">{s.laudo_number}.{s.laudo_y || 1}/{new Date().getFullYear()}</span>
+                          ? <span className="badge badge-blue">{s.laudo_y ? `${s.laudo_number}.${s.laudo_y}/${new Date().getFullYear()}` : `${s.laudo_number} (pendente)`}</span>
                           : <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>S/ Nº</span>
                         }
                       </td>
@@ -1130,7 +1130,7 @@ export default function CompanyDetail() {
                           />
                         </td>
                         <td style={{ padding: '8px 10px' }}>
-                          {s.laudo_number ? `${s.laudo_number}.${s.laudo_y || 1}/${new Date().getFullYear()}` : <span style={{ color: '#f59e0b' }}>S/Nº</span>}
+                          {s.laudo_number ? (s.laudo_y ? `${s.laudo_number}.${s.laudo_y}/${new Date().getFullYear()}` : `${s.laudo_number} (pendente)`) : <span style={{ color: '#f59e0b' }}>S/Nº</span>}
                         </td>
                         <td style={{ padding: '8px 10px', fontWeight: 500 }}>{s.employee_nome || '—'}</td>
                         <td style={{ padding: '8px 10px', color: '#64748b' }}>{new Date(s.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
