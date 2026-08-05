@@ -93,6 +93,9 @@ export default function Users() {
         {importResult && (
           <div className="alert alert-success" style={{ marginTop: 12 }}>
             Importação concluída: {importResult.inserted} agente(s) novo(s), {importResult.updated} atualizado(s) — total de {importResult.total}.
+            {(importResult.merged > 0 || importResult.cleaned > 0) && (
+              <> {importResult.merged > 0 && `${importResult.merged} duplicata(s) consolidada(s).`} {importResult.cleaned > 0 && `${importResult.cleaned} vínculo(s) de grupo desatualizado(s) removido(s).`}</>
+            )}
           </div>
         )}
         {importError && <div className="alert alert-error" style={{ marginTop: 12 }}>{importError}</div>}

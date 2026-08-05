@@ -138,12 +138,23 @@ def import_chemical_agents(
 ):
     """
     Importa/atualiza o catálogo de agentes químicos a partir da planilha TLV
-    (Google Sheets, TLV_SHEET_EXPORT_URL). Faz upsert por CAS (prioridade,
-    identificador estável) ou nome normalizado. Se encontrar mais de um
-    agente já cadastrado pro mesmo CAS/nome — duplicatas deixadas por
-    importações antigas, antes da normalização — consolida tudo num único
-    registro, removendo os extras (a menos que algum já esteja vinculado a
-    uma ficha real, caso em que é mantido intacto e apenas ignorado).
+    (Google Sheets, TLV_SHEET_EXPORT_URL).
+
+    IMPORTANTE: o mesmo agente (mesmo CAS/nome) pode legitimamente pertencer
+    a mais de um grupo — ex.: Benzeno aparece em linhas separadas sem grupo,
+    em "VOC", em "BETX (4)" e em "BETX (5)". Por isso a identidade de cada
+    linha pro upsert é o par (CAS-ou-nome, grupo), nunca só o CAS/nome
+    sozinho — do contrário, linhas do mesmo agente em grupos diferentes se
+    confundiriam como duplicatas umas das outras.
+
+    Passo 1: qualquer combinação (agente, grupo) que exista no banco mas não
+    exista mais na planilha atual tem o grupo limpo (a planilha manda: se
+    ela não lista mais aquele agente naquele grupo, o cadastro não deveria
+    dizer que ele pertence lá).
+    Passo 2: upsert normal de cada combinação (agente, grupo) que a planilha
+    define — se houver mais de uma linha do banco pra mesma combinação
+    (duplicata real), consolida numa só, exceto se alguma já estiver
+    vinculada a uma ficha real (mantida intacta e apenas ignorada).
     """
     import io
     import httpx
@@ -165,25 +176,47 @@ def import_chemical_agents(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao ler planilha: {e}")
 
-    # Indexa o catálogo atual por CAS e por nome normalizado, pra reconhecer
-    # o mesmo agente mesmo com pequenas diferenças de texto e pra localizar
-    # duplicatas já existentes no banco.
-    por_cas = {}
-    por_nome_norm = {}
-    for ag in db.query(ChemicalAgent).all():
-        if ag.numero_cas and ag.numero_cas.strip():
-            por_cas.setdefault(ag.numero_cas.strip(), []).append(ag)
-        por_nome_norm.setdefault(_normalize_nome(ag.nome), []).append(ag)
+    def _identidade(cas, nome):
+        cas = (cas or "").strip()
+        return cas if cas else _normalize_nome(nome)
 
+    def _grupo_key(grupo):
+        grupo = (grupo or "").strip()
+        return grupo or None
+
+    # Uma linha por combinação (identidade, grupo) — se a planilha repetir a
+    # mesma combinação em mais de uma linha, a última processada prevalece.
+    sheet_por_chave = {}
+    for dado in agentes:
+        chave = (_identidade(dado.get("numero_cas"), dado["nome"]), _grupo_key(dado.get("grupo")))
+        sheet_por_chave[chave] = dado
+
+    def _indexar_banco():
+        idx = {}
+        for ag in db.query(ChemicalAgent).all():
+            chave = (_identidade(ag.numero_cas, ag.nome), _grupo_key(ag.grupo))
+            idx.setdefault(chave, []).append(ag)
+        return idx
+
+    cleaned = 0
+    merged = 0
     inserted = 0
     updated = 0
-    merged = 0
 
-    for dado in agentes:
-        cas = (dado.get("numero_cas") or "").strip()
-        nome_norm = _normalize_nome(dado["nome"])
-        candidatos = (por_cas.get(cas) if cas else None) or por_nome_norm.get(nome_norm) or []
+    # Passo 1: limpa combinações (agente, grupo) que não existem mais na planilha
+    for (identidade, grupo_key), linhas in _indexar_banco().items():
+        if grupo_key is None or (identidade, grupo_key) in sheet_por_chave:
+            continue
+        for ag in linhas:
+            ag.grupo = None
+            cleaned += 1
+    db.flush()
 
+    # Passo 2: upsert de cada combinação (agente, grupo) que a planilha define,
+    # reindexando o banco já sem as combinações obsoletas do passo 1
+    db_por_chave = _indexar_banco()
+    for chave, dado in sheet_por_chave.items():
+        candidatos = db_por_chave.get(chave, [])
         if candidatos:
             principal, *duplicatas = candidatos
             for dup in duplicatas:
@@ -198,18 +231,10 @@ def import_chemical_agents(
                 setattr(principal, campo, valor)
             db.flush()
             updated += 1
-            agente_atual = principal
         else:
-            agente_atual = ChemicalAgent(**dado)
-            db.add(agente_atual)
+            db.add(ChemicalAgent(**dado))
             db.flush()
             inserted += 1
-
-        # mantém os índices atualizados pro resto do lote (evita duplicar
-        # dentro da própria planilha se duas linhas caírem no mesmo agente)
-        if cas:
-            por_cas[cas] = [agente_atual]
-        por_nome_norm[nome_norm] = [agente_atual]
 
     db.commit()
     return {
@@ -217,5 +242,6 @@ def import_chemical_agents(
         "inserted": inserted,
         "updated": updated,
         "merged": merged,
+        "cleaned": cleaned,
         "total": inserted + updated,
     }
