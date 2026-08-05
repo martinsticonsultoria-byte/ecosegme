@@ -70,6 +70,19 @@ _TLV_HEADER_MAP = {
 }
 
 
+def _normalize_nome(nome):
+    """Normaliza um nome de agente pra fins de comparação: unifica acentuação
+    (NFC), colapsa espaços múltiplos e ignora maiúsculas/minúsculas. Evita que
+    uma diferença mínima de texto entre edições da planilha (espaço extra,
+    unicode diferente pro mesmo acento) crie um agente duplicado no catálogo
+    em vez de atualizar o já existente."""
+    import unicodedata
+    if not nome:
+        return ""
+    nome = unicodedata.normalize("NFC", nome)
+    return " ".join(nome.split()).casefold()
+
+
 def _parse_tlv_xlsx(xlsx_file, sheet_name="TLV", header_row=1, data_start_row=2):
     """Lê a planilha TLV e devolve uma lista de dicts (um por agente), mapeando
     colunas pelo texto do cabeçalho (linha `header_row`). Não toca no banco —
@@ -125,12 +138,16 @@ def import_chemical_agents(
 ):
     """
     Importa/atualiza o catálogo de agentes químicos a partir da planilha TLV
-    (Google Sheets, TLV_SHEET_EXPORT_URL). Faz upsert por nome: agente novo é
-    inserido, agente já existente tem seus dados (incluindo `grupo`)
-    atualizados a partir da versão mais recente da planilha.
+    (Google Sheets, TLV_SHEET_EXPORT_URL). Faz upsert por CAS (prioridade,
+    identificador estável) ou nome normalizado. Se encontrar mais de um
+    agente já cadastrado pro mesmo CAS/nome — duplicatas deixadas por
+    importações antigas, antes da normalização — consolida tudo num único
+    registro, removendo os extras (a menos que algum já esteja vinculado a
+    uma ficha real, caso em que é mantido intacto e apenas ignorado).
     """
     import io
     import httpx
+    from sqlalchemy.exc import IntegrityError
 
     from app.models.chemical_agent import ChemicalAgent
 
@@ -148,23 +165,57 @@ def import_chemical_agents(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao ler planilha: {e}")
 
+    # Indexa o catálogo atual por CAS e por nome normalizado, pra reconhecer
+    # o mesmo agente mesmo com pequenas diferenças de texto e pra localizar
+    # duplicatas já existentes no banco.
+    por_cas = {}
+    por_nome_norm = {}
+    for ag in db.query(ChemicalAgent).all():
+        if ag.numero_cas and ag.numero_cas.strip():
+            por_cas.setdefault(ag.numero_cas.strip(), []).append(ag)
+        por_nome_norm.setdefault(_normalize_nome(ag.nome), []).append(ag)
+
     inserted = 0
     updated = 0
+    merged = 0
 
     for dado in agentes:
-        existente = db.query(ChemicalAgent).filter(ChemicalAgent.nome == dado["nome"]).first()
-        if existente:
+        cas = (dado.get("numero_cas") or "").strip()
+        nome_norm = _normalize_nome(dado["nome"])
+        candidatos = (por_cas.get(cas) if cas else None) or por_nome_norm.get(nome_norm) or []
+
+        if candidatos:
+            principal, *duplicatas = candidatos
+            for dup in duplicatas:
+                try:
+                    with db.begin_nested():
+                        db.delete(dup)
+                        db.flush()
+                    merged += 1
+                except IntegrityError:
+                    pass  # ainda referenciado por alguma ficha — mantém como está
             for campo, valor in dado.items():
-                setattr(existente, campo, valor)
+                setattr(principal, campo, valor)
+            db.flush()
             updated += 1
+            agente_atual = principal
         else:
-            db.add(ChemicalAgent(**dado))
+            agente_atual = ChemicalAgent(**dado)
+            db.add(agente_atual)
+            db.flush()
             inserted += 1
+
+        # mantém os índices atualizados pro resto do lote (evita duplicar
+        # dentro da própria planilha se duas linhas caírem no mesmo agente)
+        if cas:
+            por_cas[cas] = [agente_atual]
+        por_nome_norm[nome_norm] = [agente_atual]
 
     db.commit()
     return {
         "message": "Importação concluída",
         "inserted": inserted,
         "updated": updated,
+        "merged": merged,
         "total": inserted + updated,
     }
