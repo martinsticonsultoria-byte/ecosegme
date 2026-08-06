@@ -266,7 +266,7 @@
     </thead>
     <tbody>
       {% for a in f.agents %}
-      <tr>
+      <tr style="page-break-inside:avoid; break-inside:avoid;">
         <td style="font-size:7.5pt; line-height:1.4;">
           <strong>{{ a.agent_nome or '—' }}</strong>
           {% if a.agent_metodo %}<br/><span style="color:#555; font-size:7pt;">{{ a.agent_metodo }}</span>{% endif %}
