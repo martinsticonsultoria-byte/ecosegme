@@ -1254,8 +1254,8 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                             <thead>
                               <tr>
-                                {['Nome', 'Valor Encontrado', 'Unidade', 'ACGIH TWA', 'ACGIH STEL', 'NR-15', 'Bases de Efeitos Críticos', 'Resultado', ''].map((h, i) => (
-                                  <th key={i} style={{ padding: '6px 8px', textAlign: 'left', fontWeight: 600, fontSize: 11, color: '#0369a1', borderBottom: '1px solid #bae6fd', background: '#e0f2fe', maxWidth: h === 'Bases de Efeitos Críticos' ? 200 : undefined }}>{h}</th>
+                                {['Nome', 'Valor Encontrado', 'Unidade', 'ACGIH TWA', 'ACGIH STEL', 'NR-15', 'Bases de Efeitos Críticos', 'Volume', 'Resultado', ''].map((h, i) => (
+                                  <th key={i} style={{ padding: '6px 8px', textAlign: 'center', fontWeight: 600, fontSize: 11, color: '#0369a1', borderBottom: '1px solid #bae6fd', background: '#e0f2fe', maxWidth: h === 'Bases de Efeitos Críticos' ? 200 : undefined }}>{h}</th>
                                 ))}
                               </tr>
                             </thead>
@@ -1266,28 +1266,29 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                                 const nr15Val = nr15Values[key] !== undefined ? nr15Values[key] : (sa.nr15_valor ?? sa.agent?.nr15_valor ?? '');
                                 return (
                                   <tr key={sa.id}>
-                                    <td style={{ padding: '6px 8px', color: '#0f172a', fontWeight: 500 }}>
+                                    <td style={{ padding: '6px 8px', color: '#0f172a', fontWeight: 500, textAlign: 'center' }}>
                                       {sa.agent?.nome || '—'}
                                       {sa.agent?.esocial && <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>e-Social: {sa.agent.esocial}</div>}
                                     </td>
-                                    <td style={{ padding: '6px 8px' }}>
+                                    <td style={{ padding: '6px 8px', textAlign: 'center' }}>
                                       <input className="form-input" value={val}
                                         onChange={e => handleValorChange(sheet.id, sa.agent_id, e.target.value)}
                                         placeholder="Ex: 12,5 ou <LD"
-                                        style={{ width: 90, padding: '4px 8px', fontSize: 12 }} />
+                                        style={{ width: 90, padding: '4px 8px', fontSize: 12, textAlign: 'center' }} />
                                     </td>
-                                    <td style={{ padding: '6px 8px', color: '#64748b' }}>{sa.agent?.unidade || '—'}</td>
-                                    <td style={{ padding: '6px 8px', color: '#64748b' }}>{sa.agent?.acgih_twa || '—'}</td>
-                                    <td style={{ padding: '6px 8px', color: '#64748b' }}>{sa.agent?.acgih_stel || '—'}</td>
-                                    <td style={{ padding: '6px 8px' }}>
+                                    <td style={{ padding: '6px 8px', color: '#64748b', textAlign: 'center' }}>{sa.agent?.unidade || '—'}</td>
+                                    <td style={{ padding: '6px 8px', color: '#64748b', textAlign: 'center' }}>{sa.agent?.acgih_twa || '—'}</td>
+                                    <td style={{ padding: '6px 8px', color: '#64748b', textAlign: 'center' }}>{sa.agent?.acgih_stel || '—'}</td>
+                                    <td style={{ padding: '6px 8px', textAlign: 'center' }}>
                                       <input className="form-input" value={nr15Val}
                                         onChange={e => handleNr15Change(sheet.id, sa.agent_id, e.target.value)}
                                         placeholder={sa.agent?.nr15_valor || '—'}
-                                        style={{ width: 70, padding: '4px 8px', fontSize: 12 }} />
+                                        style={{ width: 70, padding: '4px 8px', fontSize: 12, textAlign: 'center' }} />
                                     </td>
-                                    <td style={{ padding: '6px 8px', color: '#374151', fontSize: 11, maxWidth: 200 }}>{sa.agent?.efeito_critico || '—'}</td>
-                                    <td style={{ padding: '6px 8px' }}><ResultBadge status={sa.resultado_status} /></td>
-                                    <td style={{ padding: '6px 8px' }}>
+                                    <td style={{ padding: '6px 8px', color: '#374151', fontSize: 11, maxWidth: 200, textAlign: 'center' }}>{sa.agent?.efeito_critico || '—'}</td>
+                                    <td style={{ padding: '6px 8px', color: '#64748b', textAlign: 'center' }} title="Apenas informativo — não aparece no relatório final">{sa.agent?.volume || ''}</td>
+                                    <td style={{ padding: '6px 8px', textAlign: 'center' }}><ResultBadge status={sa.resultado_status} /></td>
+                                    <td style={{ padding: '6px 8px', textAlign: 'center' }}>
                                       <button onClick={() => handleRemoveAgent(sheet.id, sa.agent_id)}
                                         style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}
                                         title="Remover agente">✕</button>
