@@ -31,6 +31,9 @@ class ChemicalFieldSheet(Base):
     setor               = Column(String(150), nullable=False)
     local               = Column(String(100), nullable=False)
 
+    # Controle interno — não aparece no relatório final, só na base de registro
+    numero_ficha_campo  = Column(String(50))
+
     # Amostragem obrigatória
     numero_amostrador   = Column(String(100), nullable=False)
     tipo_amostrador     = Column(String(100), nullable=False)

@@ -340,6 +340,7 @@ export default function CompanyDetail() {
       matricula:           sheet.matricula || '',
       setor:               sheet.setor || '',
       local:               sheet.local || '',
+      numero_ficha_campo:  sheet.numero_ficha_campo || '',
       numero_amostrador:   sheet.numero_amostrador || '',
       tipo_amostrador:     sheet.tipo_amostrador || '',
       situacao_ambiente:   sheet.situacao_ambiente || '',
@@ -664,6 +665,7 @@ export default function CompanyDetail() {
                     <th>#</th>
                     <th>Funcionário</th>
                     <th>Data Coleta</th>
+                    <th>Nº Ficha</th>
                     <th>Amostrador</th>
                     <th>Agentes</th>
                     <th style={{ textAlign: 'center' }}>Status</th>
@@ -692,6 +694,7 @@ export default function CompanyDetail() {
                       </td>
                       <td style={{ fontWeight: 500 }}>{s.employee_nome || '—'}</td>
                       <td style={{ color: '#64748b' }}>{new Date(s.collection_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                      <td style={{ color: '#64748b' }}>{s.numero_ficha_campo || '—'}</td>
                       <td style={{ color: '#64748b' }}>{s.numero_amostrador}</td>
                       <td>
                         {(s.agents || []).length > 0 ? (
@@ -908,6 +911,11 @@ export default function CompanyDetail() {
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Local</label>
                 <input className="form-input" value={editChemForm.local} onChange={e => setEditChemForm(f => ({ ...f, local: e.target.value }))} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nº Ficha de Campo</label>
+                <input className="form-input" value={editChemForm.numero_ficha_campo} onChange={e => setEditChemForm(f => ({ ...f, numero_ficha_campo: e.target.value }))}
+                  title="Apenas para controle interno — não aparece no relatório final" />
               </div>
             </div>
 

@@ -35,6 +35,7 @@ export default function ChemicalFieldSheetForm() {
     matricula: '',
     setor: '',
     local: '',
+    numero_ficha_campo: '',
     collection_date: new Date().toISOString().split('T')[0],
     numero_amostrador: '',
     tipo_amostrador: 'Tubo de Carvão Ativado',
@@ -184,6 +185,7 @@ export default function ChemicalFieldSheetForm() {
       matricula_tipo:      matriculaMode,
       setor:               form.setor,
       local:               form.local,
+      numero_ficha_campo:  form.numero_ficha_campo || null,
       collection_date:     form.collection_date,
       numero_amostrador:   form.numero_amostrador,
       tipo_amostrador:     form.tipo_amostrador,
@@ -319,7 +321,7 @@ export default function ChemicalFieldSheetForm() {
           )}
 
           {/* Campo de busca/nome do funcionário */}
-          <div className="form-group" style={{ position: 'relative', gridColumn: '1 / -1' }}>
+          <div className="form-group" style={{ position: 'relative' }}>
             <label className="form-label">Nome do Funcionário <span>*</span></label>
             <input
               ref={empInputRef}
@@ -355,6 +357,13 @@ export default function ChemicalFieldSheetForm() {
                 ✓ Funcionário do cadastro selecionado
               </span>
             )}
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Nº Ficha de Campo</label>
+            <input name="numero_ficha_campo" className="form-input" value={form.numero_ficha_campo}
+              onChange={handleChange} placeholder="Ex: 047-A / 2026.1"
+              title="Apenas para controle interno — não aparece no relatório final" />
           </div>
 
           <div className="form-group">
