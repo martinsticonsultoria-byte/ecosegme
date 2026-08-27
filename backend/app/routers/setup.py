@@ -64,6 +64,7 @@ _TLV_HEADER_MAP = {
     "Vazão": "vazao",
     "Volume": "volume",
     "L.Q": "lq",
+    "Resultados": "resultado_planilha",
     "CAS": "numero_cas",
     "Código CAS": "numero_cas",
     "Grupos": "grupo",

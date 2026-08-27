@@ -34,6 +34,7 @@ class ChemicalAgentOut(BaseModel):
     vazao:          Optional[str] = None
     volume:         Optional[str] = None
     lq:             Optional[str] = None
+    resultado_planilha: Optional[str] = None
     numero_cas:     Optional[str] = None
     grupo:          Optional[str] = None
 

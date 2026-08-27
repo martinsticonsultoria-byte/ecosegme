@@ -641,7 +641,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
     const vals = {};
     group.sheets.forEach(s => {
       (s.agents || []).forEach(a => {
-        vals[`${s.id}-${a.agent_id}`] = a.valor_encontrado || '';
+        vals[`${s.id}-${a.agent_id}`] = a.valor_encontrado || a.agent?.resultado_planilha || '';
       });
     });
     return vals;
@@ -864,7 +864,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
     return agents.every(a => {
       const v = agentValues[`${sheet.id}-${a.agent_id}`] !== undefined
         ? agentValues[`${sheet.id}-${a.agent_id}`]
-        : (a.valor_encontrado || '');
+        : (a.valor_encontrado || a.agent?.resultado_planilha || '');
       return v.trim() !== '';
     });
   };
@@ -877,7 +877,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
     const allFilled = agents.every(a => {
       const v = agentValues[`${sheet.id}-${a.agent_id}`] !== undefined
         ? agentValues[`${sheet.id}-${a.agent_id}`]
-        : (a.valor_encontrado || '');
+        : (a.valor_encontrado || a.agent?.resultado_planilha || '');
       return v.trim() !== '';
     });
     if (!allFilled) return 'Preencha o Valor Encontrado de todos os agentes';
@@ -1059,7 +1059,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
               const missingValor = agents.some(a => {
                 const v = agentValues[`${sheet.id}-${a.agent_id}`] !== undefined
                   ? agentValues[`${sheet.id}-${a.agent_id}`]
-                  : (a.valor_encontrado || '');
+                  : (a.valor_encontrado || a.agent?.resultado_planilha || '');
                 return !v.trim();
               });
               return (
@@ -1262,7 +1262,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                             <tbody>
                               {agents.map(sa => {
                                 const key = `${sheet.id}-${sa.agent_id}`;
-                                const val = agentValues[key] !== undefined ? agentValues[key] : (sa.valor_encontrado || '');
+                                const val = agentValues[key] !== undefined ? agentValues[key] : (sa.valor_encontrado ?? sa.agent?.resultado_planilha ?? '');
                                 const nr15Val = nr15Values[key] !== undefined ? nr15Values[key] : (sa.nr15_valor ?? sa.agent?.nr15_valor ?? '');
                                 return (
                                   <tr key={sa.id}>

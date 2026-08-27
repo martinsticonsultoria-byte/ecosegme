@@ -20,6 +20,8 @@ class ChemicalAgent(Base):
     vazao          = Column(String(50))         # Vazão da bomba
     volume         = Column(String(50))         # Volume de coleta
     lq             = Column(String(50))         # Limite de Quantificação
+    resultado_planilha = Column(String(50))     # Coluna "Resultados" (P) da planilha TLV — pré-preenche
+                                                  # "Valor Encontrado" na Conferência, mas continua editável
     numero_cas     = Column(String(50), index=True)
     grupo          = Column(String(100), index=True)  # ex: "VOC" — agrupa agentes na busca da Conferência;
                                                         # não aparece no laudo nem em nenhum registro salvo na ficha
