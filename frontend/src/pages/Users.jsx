@@ -194,7 +194,7 @@ export default function Users() {
                   {u.id !== me?.id && (
                     <>
                       <button className="btn btn-sm" onClick={() => handleToggle(u.id)}
-                        style={{ background: u.active ? '#f1f5f9' : '#f0fdf4', color: u.active ? '#475569' : '#16a34a', border: `1px solid ${u.active ? '#cbd5e1' : '#bbf7d0'}`, borderRadius: 999, padding: '4px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600, width: 96, textAlign: 'center' }}>
+                        style={{ background: u.active ? '#f1f5f9' : '#f0fdf4', color: u.active ? '#475569' : '#16a34a', border: `1px solid ${u.active ? '#cbd5e1' : '#bbf7d0'}`, borderRadius: 999, padding: '4px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600, width: 96, justifyContent: 'center' }}>
                         {u.active ? 'Desativar' : 'Ativar'}
                       </button>
                       <button className="btn btn-sm" onClick={() => handleDelete(u)}
