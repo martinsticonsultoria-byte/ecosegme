@@ -284,8 +284,8 @@ def generate_chemical_pdf_report(
     storage_path = None
     if supabase_storage.is_configured():
         try:
-            supabase_storage.upload_pdf(pdf_bytes, filename)
-            storage_path = f"supabase://{filename}"
+            key = supabase_storage.upload_pdf(pdf_bytes, filename)
+            storage_path = f"supabase://{key}"
         except Exception as e:
             print(f"[supabase_storage] Falha ao enviar '{filename}' para o bucket: {e}")
     else:
@@ -473,8 +473,8 @@ def generate_chemical_xlsx_report(
     storage_path = None
     if supabase_storage.is_configured():
         try:
-            supabase_storage.upload_pdf(xlsx_bytes, filename)
-            storage_path = f"supabase://{filename}"
+            key = supabase_storage.upload_pdf(xlsx_bytes, filename)
+            storage_path = f"supabase://{key}"
         except Exception as e:
             print(f"[supabase_storage] Falha ao enviar '{filename}' para o bucket: {e}")
     else:

@@ -1,4 +1,6 @@
 import os
+import re
+import unicodedata
 from supabase import create_client
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -18,14 +20,21 @@ def _get_client():
 def is_configured() -> bool:
     return bool(SUPABASE_URL and SUPABASE_SERVICE_KEY)
 
+def safe_storage_key(filename: str) -> str:
+    """Supabase Storage rejeita chaves com acentos/caracteres nao-ASCII
+    ("Invalid key"). Normaliza para ASCII mantendo o nome legivel."""
+    sem_acento = unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').decode('ascii')
+    return re.sub(r'[^A-Za-z0-9_.\-]', '_', sem_acento)
+
 def upload_pdf(pdf_bytes: bytes, filename: str) -> str:
     client = _get_client()
+    key = safe_storage_key(filename)
     client.storage.from_(BUCKET).upload(
-        path=filename,
+        path=key,
         file=pdf_bytes,
         file_options={"content-type": "application/pdf", "upsert": "true"},
     )
-    return filename
+    return key
 
 def get_signed_url(path: str, expires_in: int = 3600) -> str:
     client = _get_client()
