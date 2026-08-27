@@ -6,6 +6,7 @@ import {
   saveOfflineSheet, getPendingSheets, markSynced,
   saveOfflineCache, getOfflineCache
 } from '../offlineStorage'
+import EpiInput from '../components/EpiInput'
 
 export default function FieldSheetMobile() {
   const { user } = useAuth()
@@ -60,9 +61,8 @@ export default function FieldSheetMobile() {
       }
       try {
         const res = await api.get('/epis')
-        const opts = [...res.data.predefined, ...res.data.custom]
-        setEpiOptions(opts)
-        await saveOfflineCache('epis', opts)
+        setEpiOptions(res.data)
+        await saveOfflineCache('epis', res.data)
       } catch {
         const cached = await getOfflineCache('epis')
         if (cached) setEpiOptions(cached)
@@ -348,14 +348,14 @@ export default function FieldSheetMobile() {
 
           <div style={fieldStyle}>
             <label style={labelStyle}>EPI Utilizado <span style={{ color: 'red' }}>*</span></label>
-            <input list="epi-list-mobile" name="epi" style={inputStyle}
-              placeholder="Digite o EPI utilizado..."
+            <EpiInput
               value={form.epi}
-              onChange={e => setForm(f => ({ ...f, epi: e.target.value }))}
-              autoComplete="off" />
-            <datalist id="epi-list-mobile">
-              {epiOptions.map(o => <option key={o} value={o} />)}
-            </datalist>
+              onChange={val => setForm(f => ({ ...f, epi: val }))}
+              options={epiOptions}
+              setOptions={setEpiOptions}
+              placeholder="Digite o EPI utilizado..."
+              className=""
+              inputStyle={inputStyle} />
           </div>
 
           <div style={fieldStyle}>

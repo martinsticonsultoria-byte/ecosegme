@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import EpiInput from '../components/EpiInput';
 
 export default function FieldSheetForm() {
   const navigate = useNavigate();
@@ -19,11 +20,8 @@ export default function FieldSheetForm() {
   const [, setNextNumber] = useState(null);
   const [savedSheet, setSavedSheet] = useState(null);
   const [downloading, setDownloading] = useState(false);
-  const [epiCustom, setEpiCustom] = useState(false);
   const [epiOptions, setEpiOptions] = useState([]);
   const empInputRef = useRef(null);
-
-  const EPI_PREDEFINED = ['Protetor Auricular - Plug de Inserção','Protetor Auricular - Tipo Concha','Protetor Auricular - Semi-auricular','Capacete de Segurança','Óculos de Proteção','Luvas de Proteção','Abafador de Ruído','Máscara de Proteção Respiratória','Calçado de Segurança','Ausência de EPI'];
 
   const [form, setForm] = useState({
     company_id: prefilledCompanyId || '',
@@ -40,10 +38,7 @@ export default function FieldSheetForm() {
 
   useEffect(() => {
     api.get('/companies').then(res => setCompanies(res.data));
-    api.get('/epis').then(res => {
-      const opts = [...res.data.predefined, ...res.data.custom];
-      setEpiOptions(opts);
-    });
+    api.get('/epis').then(res => setEpiOptions(res.data));
     if (prefilledCompanyId) {
       api.get(`/employees?company_id=${prefilledCompanyId}`)
         .then(res => setEmployees(res.data));
@@ -108,7 +103,7 @@ export default function FieldSheetForm() {
       };
       Object.keys(payload).forEach(k => { if (payload[k] === '') payload[k] = null; });
       if (form.epi) api.post('/epis', { name: form.epi }).then(res => {
-        if (res.data.ok) setEpiOptions(prev => prev.includes(form.epi) ? prev : [...prev, form.epi]);
+        setEpiOptions(prev => prev.some(o => o.name === form.epi) ? prev : [...prev, { id: res.data.id, name: res.data.name }]);
       }).catch(() => {});
       const res = await api.post('/field-sheets', payload);
       setSavedSheet(res.data);
@@ -309,14 +304,12 @@ export default function FieldSheetForm() {
         <div className="section-title">Condições de Exposição</div>
         <div className="form-group" style={{ position: 'relative' }}>
           <label className="form-label">EPI Utilizado <span>*</span></label>
-          <input list="epi-list" name="epi" className="form-input"
-            placeholder="Digite o EPI utilizado..."
+          <EpiInput
             value={form.epi}
-            onChange={e => setForm(f => ({ ...f, epi: e.target.value }))}
-            autoComplete="off" />
-          <datalist id="epi-list">
-            {epiOptions.map(o => <option key={o} value={o} />)}
-          </datalist>
+            onChange={val => setForm(f => ({ ...f, epi: val }))}
+            options={epiOptions}
+            setOptions={setEpiOptions}
+            placeholder="Digite o EPI utilizado..." />
         </div>
         <div className="form-group">
           <label className="form-label">Atividade Desenvolvida <span>*</span></label>

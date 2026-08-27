@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { DeleteFieldSheetButton } from './CompanyDetail';
+import EpiInput from '../components/EpiInput';
 
 // ─── Visão de detalhe: tabela de fichas de uma empresa ───────────────────────
 function ConferenceDetail({ group, onBack, onReload }) {
@@ -28,7 +29,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
 
 
   useEffect(() => {
-    api.get('/epis').then(res => setEpiOptions([...res.data.predefined, ...res.data.custom]));
+    api.get('/epis').then(res => setEpiOptions(res.data));
   }, []);
 
   const StatusBadge = ({ status }) => {
@@ -192,7 +193,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
     setSaving(true);
     try {
       if (editForm.epi) api.post('/epis', { name: editForm.epi }).then(res => {
-        if (res.data.ok) setEpiOptions(prev => prev.includes(editForm.epi) ? prev : [...prev, editForm.epi]);
+        setEpiOptions(prev => prev.some(o => o.name === editForm.epi) ? prev : [...prev, { id: res.data.id, name: res.data.name }]);
       }).catch(() => {});
       await api.patch(`/field-sheets/${sheetId}/edit`, editForm);
       setEditingId(null);
@@ -496,8 +497,11 @@ function ConferenceDetail({ group, onBack, onReload }) {
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">EPI Utilizado</label>
-                            <input list="epi-list-conf" className="form-input" value={editForm.epi} onChange={e => setEditForm(f => ({ ...f, epi: e.target.value }))} autoComplete="off" />
-                            <datalist id="epi-list-conf">{epiOptions.map(o => <option key={o} value={o} />)}</datalist>
+                            <EpiInput
+                              value={editForm.epi}
+                              onChange={val => setEditForm(f => ({ ...f, epi: val }))}
+                              options={epiOptions}
+                              setOptions={setEpiOptions} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Pré Verificação [dB]</label>

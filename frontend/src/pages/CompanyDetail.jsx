@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import EpiInput from '../components/EpiInput';
 
 function NovaFichaDropdown({ companyId }) {
   const navigate = useNavigate();
@@ -222,7 +223,7 @@ export default function CompanyDetail() {
 
   const handleEditSheet = (sheet) => {
     if (!epiOptionsSheet.length) {
-      api.get('/epis').then(res => setEpiOptionsSheet([...res.data.predefined, ...res.data.custom])).catch(() => {});
+      api.get('/epis').then(res => setEpiOptionsSheet(res.data)).catch(() => {});
     }
     setEditSheetTarget(sheet);
     setEditSheetForm({
@@ -1076,8 +1077,11 @@ export default function CompanyDetail() {
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">EPI Utilizado</label>
-                <input list="epi-list-sheet" className="form-input" value={editSheetForm.epi} onChange={e => setEditSheetForm(f => ({ ...f, epi: e.target.value }))} autoComplete="off" />
-                <datalist id="epi-list-sheet">{epiOptionsSheet.map(o => <option key={o} value={o} />)}</datalist>
+                <EpiInput
+                  value={editSheetForm.epi}
+                  onChange={val => setEditSheetForm(f => ({ ...f, epi: val }))}
+                  options={epiOptionsSheet}
+                  setOptions={setEpiOptionsSheet} />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Pré Verificação [dB]</label>
