@@ -750,7 +750,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
     try {
       const res = await api.post(`/chemical-field-sheets/${modalSheet.id}/agents`, { agent_id: agent.id });
       setAgentsMap(m => ({ ...m, [modalSheet.id]: [...(m[modalSheet.id] || []), res.data] }));
-      setAgentValues(v => ({ ...v, [`${modalSheet.id}-${agent.id}`]: '' }));
+      setAgentValues(v => ({ ...v, [`${modalSheet.id}-${agent.id}`]: res.data.valor_encontrado || res.data.agent?.resultado_planilha || '' }));
     } catch (err) {
       showError(modalSheet.id, err.response?.data?.detail || 'Erro ao vincular agente');
     } finally { setAddingAgent(false); }
@@ -767,7 +767,7 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
         try {
           const res = await api.post(`/chemical-field-sheets/${modalSheet.id}/agents`, { agent_id: agent.id });
           setAgentsMap(m => ({ ...m, [modalSheet.id]: [...(m[modalSheet.id] || []), res.data] }));
-          setAgentValues(v => ({ ...v, [`${modalSheet.id}-${agent.id}`]: '' }));
+          setAgentValues(v => ({ ...v, [`${modalSheet.id}-${agent.id}`]: res.data.valor_encontrado || res.data.agent?.resultado_planilha || '' }));
         } catch (err) {
           showError(modalSheet.id, err.response?.data?.detail || `Erro ao vincular ${agent.nome}`);
         }
