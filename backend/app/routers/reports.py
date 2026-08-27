@@ -626,6 +626,22 @@ def list_consolidated(company_id: int, db: Session = Depends(get_db), _=Depends(
     ).order_by(ConsolidatedReport.generated_at.desc()).all()
     return [{"id": r.id, "filename": r.filename, "format": r.format, "tipo_analise": r.tipo_analise, "generated_at": r.generated_at} for r in recs]
 
+@router.get("/consolidated/url/{rec_id}")
+def get_consolidated_download_url(rec_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
+    rec = db.query(ConsolidatedReport).filter(ConsolidatedReport.id == rec_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    if rec.storage_path.startswith("supabase://"):
+        storage_path = rec.storage_path.removeprefix("supabase://")
+        try:
+            signed_url = supabase_storage.get_signed_url(storage_path)
+            return {"url": signed_url, "filename": rec.filename}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erro ao gerar link: {str(e)}")
+    if os.path.exists(rec.storage_path):
+        return {"url": f"/reports/consolidated/download/{rec_id}", "filename": rec.filename, "local": True}
+    raise HTTPException(status_code=404, detail="Arquivo não encontrado. Gere novamente.")
+
 @router.get("/consolidated/download/{rec_id}")
 def download_consolidated(rec_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
     rec = db.query(ConsolidatedReport).filter(ConsolidatedReport.id == rec_id).first()

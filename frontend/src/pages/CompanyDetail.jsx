@@ -809,11 +809,17 @@ export default function CompanyDetail() {
                       <td style={{ display: 'flex', gap: 6 }}>
                         <button className="btn btn-primary btn-sm" onClick={async () => {
                           try {
-                            const res = await api.get(`/reports/consolidated/download/${r.id}`, { responseType: 'blob' });
-                            const url = window.URL.createObjectURL(res.data);
-                            const a = document.createElement('a');
-                            a.href = url; a.download = r.filename; a.click();
-                            window.URL.revokeObjectURL(url);
+                            const urlRes = await api.get(`/reports/consolidated/url/${r.id}`);
+                            const { url, local } = urlRes.data;
+                            if (local) {
+                              const res = await api.get(url, { responseType: 'blob' });
+                              const blobUrl = window.URL.createObjectURL(res.data);
+                              const a = document.createElement('a');
+                              a.href = blobUrl; a.download = r.filename; a.click();
+                              window.URL.revokeObjectURL(blobUrl);
+                            } else {
+                              window.open(url, '_blank');
+                            }
                           } catch { alert('Erro ao baixar relatório.'); }
                         }}>Baixar</button>
                         <button className="btn btn-sm" style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
