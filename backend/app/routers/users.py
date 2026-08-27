@@ -63,6 +63,44 @@ def toggle_user(user_id: int, db: Session = Depends(get_db), current=Depends(req
     return user
 
 
+@router.delete("/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db), current=Depends(require_admin)):
+    from app.models.field_sheet import FieldSheet
+    from app.models.chemical_field_sheet import ChemicalFieldSheet
+    from app.models.generated_report import GeneratedReport
+    from app.models.consolidated_report import ConsolidatedReport
+    from app.models.sonus_upload import SonusUpload
+    from app.models.audit_log import AuditLog
+    from app.models.custom_epi import CustomEPI
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    if user.id == current.id:
+        raise HTTPException(status_code=400, detail="Você não pode excluir sua própria conta")
+
+    vinculos = [
+        (db.query(FieldSheet).filter(FieldSheet.created_by == user_id).count(), "ficha(s) de campo de Ruído"),
+        (db.query(ChemicalFieldSheet).filter(ChemicalFieldSheet.created_by == user_id).count(), "ficha(s) de campo Química(s)"),
+        (db.query(GeneratedReport).filter(GeneratedReport.generated_by == user_id).count(), "laudo(s) gerado(s)"),
+        (db.query(ConsolidatedReport).filter(ConsolidatedReport.generated_by == user_id).count(), "relatório(s) consolidado(s)"),
+        (db.query(SonusUpload).filter(SonusUpload.uploaded_by == user_id).count(), "upload(s) de SONUS"),
+        (db.query(AuditLog).filter(AuditLog.user_id == user_id).count(), "registro(s) de auditoria"),
+        (db.query(CustomEPI).filter(CustomEPI.created_by == user_id).count(), "EPI(s) personalizado(s)"),
+    ]
+    partes = [f"{qtd} {rotulo}" for qtd, rotulo in vinculos if qtd > 0]
+    if partes:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Não é possível excluir: este usuário possui {', '.join(partes)} vinculado(s) no sistema. "
+                   f"Use \"Desativar\" para bloquear o acesso sem perder o histórico."
+        )
+
+    db.delete(user)
+    db.commit()
+    return {"ok": True}
+
+
 @router.patch("/{user_id}/password")
 def reset_password(user_id: int, body: dict, db: Session = Depends(get_db), _=Depends(require_admin)):
     new_password = body.get("password", "")

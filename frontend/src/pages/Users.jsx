@@ -57,6 +57,16 @@ export default function Users() {
     load();
   };
 
+  const handleDelete = async (u) => {
+    if (!window.confirm(`Excluir definitivamente o usuário "${u.name}"? Essa ação não pode ser desfeita.`)) return;
+    try {
+      await api.delete(`/users/${u.id}`);
+      load();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Erro ao excluir usuário.');
+    }
+  };
+
   const handleResetPassword = async () => {
     if (!newPassword || newPassword.length < 6) { setError('Mínimo 6 caracteres'); return; }
     try {
@@ -182,10 +192,16 @@ export default function Users() {
                     Senha
                   </button>
                   {u.id !== me?.id && (
-                    <button className="btn btn-sm" onClick={() => handleToggle(u.id)}
-                      style={{ background: u.active ? '#fef2f2' : '#f0fdf4', color: u.active ? '#ef4444' : '#16a34a', border: `1px solid ${u.active ? '#fca5a5' : '#bbf7d0'}`, borderRadius: 999, padding: '4px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
-                      {u.active ? 'Desativar' : 'Ativar'}
-                    </button>
+                    <>
+                      <button className="btn btn-sm" onClick={() => handleToggle(u.id)}
+                        style={{ background: u.active ? '#fef2f2' : '#f0fdf4', color: u.active ? '#ef4444' : '#16a34a', border: `1px solid ${u.active ? '#fca5a5' : '#bbf7d0'}`, borderRadius: 999, padding: '4px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                        {u.active ? 'Desativar' : 'Ativar'}
+                      </button>
+                      <button className="btn btn-sm" onClick={() => handleDelete(u)}
+                        style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: 999, padding: '4px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                        Excluir
+                      </button>
+                    </>
                   )}
                 </td>
               </tr>
