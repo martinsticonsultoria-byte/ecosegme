@@ -173,7 +173,7 @@ export default function Users() {
               <th>E-mail</th>
               <th>Perfil</th>
               <th>Status</th>
-              <th>Ações</th>
+              <th style={{ textAlign: 'center' }}>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -187,14 +187,14 @@ export default function Users() {
                     {u.active ? 'Ativo' : 'Inativo'}
                   </span>
                 </td>
-                <td style={{ display: 'flex', gap: 8 }}>
+                <td style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
                   <button className="btn btn-secondary btn-sm" onClick={() => { setResetTarget(u.id); setError(''); }}>
                     Senha
                   </button>
                   {u.id !== me?.id && (
                     <>
                       <button className="btn btn-sm" onClick={() => handleToggle(u.id)}
-                        style={{ background: u.active ? '#fef2f2' : '#f0fdf4', color: u.active ? '#ef4444' : '#16a34a', border: `1px solid ${u.active ? '#fca5a5' : '#bbf7d0'}`, borderRadius: 999, padding: '4px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                        style={{ background: u.active ? '#f1f5f9' : '#f0fdf4', color: u.active ? '#475569' : '#16a34a', border: `1px solid ${u.active ? '#cbd5e1' : '#bbf7d0'}`, borderRadius: 999, padding: '4px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600, width: 96, textAlign: 'center' }}>
                         {u.active ? 'Desativar' : 'Ativar'}
                       </button>
                       <button className="btn btn-sm" onClick={() => handleDelete(u)}
