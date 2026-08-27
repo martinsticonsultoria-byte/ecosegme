@@ -152,10 +152,15 @@ def delete_sonus_upload(
     # junto (mesmo comportamento de excluir a ficha inteira).
     reports = db.query(GeneratedReport).filter(GeneratedReport.sonus_upload_id == upload.id).all()
     for report in reports:
-        if report.output_path:
+        if report.output_path and report.output_path.startswith("supabase://"):
             try:
-                supabase_storage.delete_file(report.output_path)
+                supabase_storage.delete_file(report.output_path.removeprefix("supabase://"))
             except Exception:
+                pass
+        elif report.output_path and os.path.exists(report.output_path):
+            try:
+                os.unlink(report.output_path)
+            except OSError:
                 pass
         db.delete(report)
 

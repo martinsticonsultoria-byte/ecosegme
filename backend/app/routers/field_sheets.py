@@ -290,19 +290,24 @@ def delete_field_sheet(sheet_id: int, db: Session = Depends(get_db), _=Depends(r
     try:
         reports = db.query(GeneratedReport).filter(GeneratedReport.field_sheet_id == sheet_id).all()
         for r in reports:
-            if r.output_path:
+            if r.output_path and r.output_path.startswith("supabase://"):
                 try:
-                    supabase_storage.delete_file(r.output_path)
+                    supabase_storage.delete_file(r.output_path.removeprefix("supabase://"))
                 except Exception:
+                    pass
+            elif r.output_path and os.path.exists(r.output_path):
+                try:
+                    os.unlink(r.output_path)
+                except OSError:
                     pass
             db.delete(r)
 
         sonuses = db.query(SonusUpload).filter(SonusUpload.field_sheet_id == sheet_id).all()
         for s in sonuses:
-            if s.storage_path:
+            if s.storage_path and os.path.exists(s.storage_path):
                 try:
-                    supabase_storage.delete_file(s.storage_path)
-                except Exception:
+                    os.unlink(s.storage_path)
+                except OSError:
                     pass
             db.delete(s)
 
