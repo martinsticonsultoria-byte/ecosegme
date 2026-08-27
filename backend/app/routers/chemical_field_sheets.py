@@ -281,24 +281,27 @@ def generate_chemical_pdf_report(
     first_num  = sorted_y[0].laudo_number if sheets_com_y else (sheets[0].laudo_number or 'SN')
     filename   = f"Relatório_Químico_{safe_name}_{first_num}.pdf"
 
-    storage_path = filename
+    storage_path = None
     if supabase_storage.is_configured():
         try:
             supabase_storage.upload_pdf(pdf_bytes, filename)
             storage_path = f"supabase://{filename}"
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[supabase_storage] Falha ao enviar '{filename}' para o bucket: {e}")
+    else:
+        print(f"[supabase_storage] Nao configurado (SUPABASE_URL/SUPABASE_SERVICE_KEY ausentes) — '{filename}' nao ficara disponivel para download posterior.")
 
-    rec = ConsolidatedReport(
-        company_id=company_id,
-        tipo_analise="Químico",
-        format="pdf",
-        filename=filename,
-        storage_path=storage_path,
-        generated_by=current_user.id,
-    )
-    db.add(rec)
-    db.commit()
+    if storage_path:
+        rec = ConsolidatedReport(
+            company_id=company_id,
+            tipo_analise="Químico",
+            format="pdf",
+            filename=filename,
+            storage_path=storage_path,
+            generated_by=current_user.id,
+        )
+        db.add(rec)
+        db.commit()
 
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
@@ -467,24 +470,27 @@ def generate_chemical_xlsx_report(
     safe_name = _re.sub(r'[\\/:*?"<>|\s]+', '_', company.razao_social or 'Empresa').strip('_')[:20]
     filename   = f"Relatório_Químico_{safe_name}_{datetime.now().strftime('%Y%m%d')}.xlsx"
 
-    storage_path = filename
+    storage_path = None
     if supabase_storage.is_configured():
         try:
             supabase_storage.upload_pdf(xlsx_bytes, filename)
             storage_path = f"supabase://{filename}"
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[supabase_storage] Falha ao enviar '{filename}' para o bucket: {e}")
+    else:
+        print(f"[supabase_storage] Nao configurado (SUPABASE_URL/SUPABASE_SERVICE_KEY ausentes) — '{filename}' nao ficara disponivel para download posterior.")
 
-    rec = ConsolidatedReport(
-        company_id=company_id,
-        tipo_analise="Químico",
-        format="xlsx",
-        filename=filename,
-        storage_path=storage_path,
-        generated_by=current_user.id,
-    )
-    db.add(rec)
-    db.commit()
+    if storage_path:
+        rec = ConsolidatedReport(
+            company_id=company_id,
+            tipo_analise="Químico",
+            format="xlsx",
+            filename=filename,
+            storage_path=storage_path,
+            generated_by=current_user.id,
+        )
+        db.add(rec)
+        db.commit()
 
     return StreamingResponse(
         io.BytesIO(xlsx_bytes),

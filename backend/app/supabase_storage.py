@@ -3,7 +3,7 @@ from supabase import create_client
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
-BUCKET = "laudos"
+BUCKET = os.environ.get("SUPABASE_BUCKET", "laudos")
 
 _client = None
 
