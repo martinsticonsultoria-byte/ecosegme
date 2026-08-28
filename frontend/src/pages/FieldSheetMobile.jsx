@@ -214,60 +214,53 @@ export default function FieldSheetMobile() {
     </div>
   )
 
-  const inputStyle = { width: '100%', padding: '12px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 15, boxSizing: 'border-box', background: 'white' }
-  const labelStyle = { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4 }
-  const fieldStyle = { marginBottom: 12 }
-  const sectionStyle = { background: 'white', borderRadius: 12, padding: '16px', marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }
-
   const ReadOnly = ({ label, value }) => (
-    <div style={fieldStyle}>
-      <label style={labelStyle}>{label}</label>
-      <input style={{ ...inputStyle, background: '#f8fafc', color: '#64748b' }} value={value || '—'} disabled />
+    <div className="form-group">
+      <label className="form-label">{label}</label>
+      <input className="form-input" value={value || '—'} disabled style={{ background: '#f8fafc', color: '#64748b' }} />
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f1f5f0', paddingBottom: 24 }}>
-      <div style={{ background: '#1a3d2b', color: 'white', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
+    <div className="page">
+      <div className="page-header">
         <div>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>Ficha de Campo</div>
-          <div style={{ fontSize: 12, opacity: 0.7 }}>EcoSegme Campo</div>
+          <h1 className="page-title">Ficha de Campo</h1>
+          <p className="page-subtitle">Preencha os dados da coleta de dosimetria</p>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, background: isOnline ? 'rgba(255,255,255,0.15)' : 'rgba(255,200,0,0.2)', padding: '4px 10px', borderRadius: 20 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: isOnline ? '#4ade80' : '#fbbf24', display: 'inline-block' }} />
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span className={`badge ${isOnline ? 'badge-green' : 'badge-blue'}`}>
             {isOnline ? 'Online' : 'Offline'}
-          </div>
+          </span>
           {pendingCount > 0 && (
-            <div style={{ fontSize: 11, background: 'rgba(251,191,36,0.25)', color: '#fde68a', padding: '2px 8px', borderRadius: 20 }}>
-              {pendingCount} pendente{pendingCount > 1 ? 's' : ''}
-            </div>
+            <span className="badge badge-blue">{pendingCount} pendente{pendingCount > 1 ? 's' : ''}</span>
           )}
+          <button className="btn btn-secondary" onClick={() => navigate(-1)}>Cancelar</button>
         </div>
       </div>
 
-      <div style={{ padding: '16px 16px 0' }}>
-        <div style={sectionStyle}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#1a3d2b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Funcionário</div>
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div className="section-title">Funcionário</div>
+        <div className="grid-2">
 
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Empresa <span style={{ color: 'red' }}>*</span></label>
-            <select name="company_id" style={inputStyle} value={form.company_id} onChange={handleCompanyChange}>
+          <div className="form-group">
+            <label className="form-label">Empresa <span>*</span></label>
+            <select name="company_id" className="form-input" value={form.company_id} onChange={handleCompanyChange}>
               <option value="">Selecione...</option>
               {companies.map(c => <option key={c.id} value={c.id}>{c.razao_social}</option>)}
             </select>
           </div>
 
-          <div style={{ ...fieldStyle, position: 'relative' }}>
-            <label style={labelStyle}>Funcionário <span style={{ color: 'red' }}>*</span></label>
+          <div className="form-group" style={{ position: 'relative' }}>
+            <label className="form-label">Funcionário <span>*</span></label>
             <input
               ref={empInputRef}
-              style={{ ...inputStyle, background: form.company_id ? 'white' : '#f8fafc' }}
+              className="form-input"
               value={employeeInput}
               onChange={handleEmployeeInputChange}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-              placeholder={form.company_id ? 'Digite o nome...' : 'Selecione a empresa primeiro'}
+              placeholder={form.company_id ? 'Digite o nome do funcionário...' : 'Selecione a empresa primeiro'}
               disabled={!form.company_id}
               autoComplete="off"
             />
@@ -276,7 +269,7 @@ export default function FieldSheetMobile() {
                 {filteredEmployees.map(e => (
                   <div key={e.id}
                     onMouseDown={() => handleSelectEmployee(e)}
-                    style={{ padding: '12px 14px', cursor: 'pointer', fontSize: 15, borderBottom: '1px solid #f1f5f9' }}
+                    style={{ padding: '10px 14px', cursor: 'pointer', fontSize: 14, borderBottom: '1px solid #f1f5f9' }}
                     onMouseEnter={ev => ev.currentTarget.style.background = '#f0fdf4'}
                     onMouseLeave={ev => ev.currentTarget.style.background = 'white'}
                   >
@@ -291,12 +284,12 @@ export default function FieldSheetMobile() {
           {selectedEmployee && (
             <>
               <ReadOnly label="Função" value={selectedEmployee.funcao} />
-              <div style={fieldStyle}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <label style={{ ...labelStyle, marginBottom: 0 }}>{matriculaMode === 'cpf' ? 'CPF' : 'Matrícula'}</label>
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label className="form-label" style={{ marginBottom: 0 }}>{matriculaMode === 'cpf' ? 'CPF' : 'Matrícula'}</label>
                   <MatriculaToggle mode={matriculaMode} onChange={setMatriculaMode} />
                 </div>
-                <input style={{ ...inputStyle, background: '#f8fafc', color: '#64748b' }} value={selectedEmployee.matricula || '—'} disabled />
+                <input className="form-input" value={selectedEmployee.matricula || '—'} disabled style={{ background: '#f8fafc', color: '#64748b' }} />
               </div>
               <ReadOnly label="Setor" value={selectedEmployee.setor} />
               <ReadOnly label="Local" value={selectedEmployee.local} />
@@ -304,37 +297,45 @@ export default function FieldSheetMobile() {
           )}
 
           {isNewEmployee && (
-            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '12px', marginBottom: 4 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#16a34a', marginBottom: 10 }}>Novo funcionário — dados opcionais</div>
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Função</label>
-                <input style={inputStyle} value={newEmpFields.funcao} onChange={e => setNewEmpFields(f => ({ ...f, funcao: e.target.value }))} placeholder="Ex: Operador de Máquina" />
-              </div>
-              <div style={fieldStyle}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <label style={{ ...labelStyle, marginBottom: 0 }}>{matriculaMode === 'cpf' ? 'CPF' : 'Matrícula'}</label>
-                  <MatriculaToggle mode={matriculaMode} onChange={setMatriculaMode} />
+            <div style={{ gridColumn: '1 / -1' }}>
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '14px 16px', marginBottom: 4 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#16a34a', marginBottom: 10 }}>
+                  Novo funcionário — preencha os dados adicionais (opcional)
                 </div>
-                <input style={inputStyle} value={newEmpFields.matricula} onChange={e => setNewEmpFields(f => ({ ...f, matricula: e.target.value }))} placeholder={matriculaMode === 'cpf' ? 'Ex: 123.456.789-00' : 'Ex: 12345'} />
-              </div>
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Setor</label>
-                <input style={inputStyle} value={newEmpFields.setor} onChange={e => setNewEmpFields(f => ({ ...f, setor: e.target.value }))} placeholder="Ex: Produção" />
-              </div>
-              <div>
-                <label style={labelStyle}>Local</label>
-                <input style={inputStyle} value={newEmpFields.local} onChange={e => setNewEmpFields(f => ({ ...f, local: e.target.value }))} placeholder="Ex: Linha 02" />
+                <div className="grid-2">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Função</label>
+                    <input className="form-input" value={newEmpFields.funcao} onChange={e => setNewEmpFields(f => ({ ...f, funcao: e.target.value }))} placeholder="Ex: Operador de Máquina" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <label className="form-label" style={{ marginBottom: 0 }}>{matriculaMode === 'cpf' ? 'CPF' : 'Matrícula'}</label>
+                      <MatriculaToggle mode={matriculaMode} onChange={setMatriculaMode} />
+                    </div>
+                    <input className="form-input" value={newEmpFields.matricula} onChange={e => setNewEmpFields(f => ({ ...f, matricula: e.target.value }))} placeholder={matriculaMode === 'cpf' ? 'Ex: 123.456.789-00' : 'Ex: 12345'} />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Setor</label>
+                    <input className="form-input" value={newEmpFields.setor} onChange={e => setNewEmpFields(f => ({ ...f, setor: e.target.value }))} placeholder="Ex: Produção" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Local</label>
+                    <input className="form-input" value={newEmpFields.local} onChange={e => setNewEmpFields(f => ({ ...f, local: e.target.value }))} placeholder="Ex: Linha 02" />
+                  </div>
+                </div>
               </div>
             </div>
           )}
+
         </div>
+      </div>
 
-        <div style={sectionStyle}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#1a3d2b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Identificação</div>
-
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Tipo de Análise</label>
-            <select name="tipo_analise" style={inputStyle} value={form.tipo_analise} onChange={e => {
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div className="section-title">Identificação</div>
+        <div className="grid-2">
+          <div className="form-group">
+            <label className="form-label">Tipo de Análise</label>
+            <select name="tipo_analise" className="form-input" value={form.tipo_analise} onChange={e => {
               if (e.target.value === 'Químico') {
                 navigate(form.company_id ? `/chemical-field-sheet/new?company_id=${form.company_id}` : '/chemical-field-sheet/new')
                 return
@@ -349,55 +350,47 @@ export default function FieldSheetMobile() {
             </select>
           </div>
 
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Nº Dosímetro <span style={{ color: 'red' }}>*</span></label>
-            <input type="number" name="dosimeter_number" style={inputStyle} value={form.dosimeter_number} onChange={handleChange} placeholder="Ex: 42" />
+          <div className="form-group">
+            <label className="form-label">Nº Dosímetro <span>*</span></label>
+            <input type="number" name="dosimeter_number" className="form-input" value={form.dosimeter_number} onChange={handleChange} placeholder="Ex: 42" />
           </div>
 
-          <div>
-            <label style={labelStyle}>Data de Coleta <span style={{ color: 'red' }}>*</span></label>
-            <input type="date" name="collection_date" style={inputStyle} value={form.collection_date} onChange={handleChange} />
-          </div>
-        </div>
-
-        <div style={sectionStyle}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#1a3d2b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Condições de Exposição</div>
-
-          <div style={fieldStyle}>
-            <label style={labelStyle}>EPI Utilizado <span style={{ color: 'red' }}>*</span></label>
-            <EpiInput
-              value={form.epi}
-              onChange={val => setForm(f => ({ ...f, epi: val }))}
-              options={epiOptions}
-              setOptions={setEpiOptions}
-              placeholder="Digite o EPI utilizado..."
-              className=""
-              inputStyle={inputStyle} />
-          </div>
-
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Atividade Desenvolvida <span style={{ color: 'red' }}>*</span></label>
-            <textarea name="activity" style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={form.activity} onChange={handleChange} placeholder="Descreva a atividade realizada durante a medição" />
-          </div>
-
-          <div>
-            <label style={labelStyle}>Máquinas/Equipamentos Geradores de Ruído <span style={{ color: 'red' }}>*</span></label>
-            <textarea name="machine_noise" style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={form.machine_noise} onChange={handleChange} placeholder="Liste as máquinas e equipamentos presentes" />
+          <div className="form-group">
+            <label className="form-label">Data de Coleta <span>*</span></label>
+            <input type="date" name="collection_date" className="form-input" value={form.collection_date} onChange={handleChange} />
           </div>
         </div>
+      </div>
 
-        {error && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '12px 16px', color: '#dc2626', fontSize: 14, marginBottom: 12 }}>
-            {error}
-          </div>
-        )}
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div className="section-title">Condições de Exposição</div>
+        <div className="form-group" style={{ position: 'relative' }}>
+          <label className="form-label">EPI Utilizado <span>*</span></label>
+          <EpiInput
+            value={form.epi}
+            onChange={val => setForm(f => ({ ...f, epi: val }))}
+            options={epiOptions}
+            setOptions={setEpiOptions}
+            placeholder="Digite o EPI utilizado..." />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Atividade Desenvolvida <span>*</span></label>
+          <textarea name="activity" className="form-input" value={form.activity} onChange={handleChange} placeholder="Descreva a atividade realizada durante a medição" />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Máquinas/Equipamentos Geradores de Ruído <span>*</span></label>
+          <textarea name="machine_noise" className="form-input" value={form.machine_noise} onChange={handleChange} placeholder="Liste as máquinas e equipamentos presentes" />
+        </div>
+      </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          style={{ width: '100%', padding: '16px 0', fontSize: 17, fontWeight: 700, background: loading ? '#94a3b8' : '#1a3d2b', color: 'white', border: 'none', borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer' }}
-        >
+      {error && <div className="alert alert-error">{error}</div>}
+
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={loading} style={{ padding: '12px 32px', fontSize: 15, flex: 1, justifyContent: 'center' }}>
           {loading ? 'Salvando...' : isOnline ? 'Salvar Ficha' : 'Salvar Offline'}
+        </button>
+        <button className="btn btn-secondary" onClick={() => navigate(-1)} style={{ flex: 1, justifyContent: 'center' }}>
+          Cancelar
         </button>
       </div>
     </div>

@@ -316,7 +316,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                 <th style={thStyle}>Data Coleta</th>
                 <th style={thStyle}>Funcionário</th>
                 <th style={thStyle}>Função</th>
-                <th style={thStyle}>Matrícula</th>
+                <th style={thStyle}>Matrícula/CPF</th>
                 <th style={thStyle}>Setor</th>
                 <th style={thStyle}>Local</th>
                 <th style={thStyle}>EPI</th>
