@@ -184,7 +184,7 @@
   <table>
     <tr>
       <td class="label">Colaborador (a):</td><td>{{ f.employee_nome or '—' }}</td>
-      <td class="label">Matrícula:</td><td>{{ f.matricula or '—' }}</td>
+      <td class="label">{{ f.matricula_label|default('Matrícula') }}:</td><td>{{ f.matricula or '—' }}</td>
     </tr>
     <tr>
       <td class="label">Cargo/Função:</td><td>{{ f.funcao or '—' }}</td>

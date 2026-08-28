@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import EpiInput from '../components/EpiInput';
+import MatriculaToggle from '../components/MatriculaToggle';
 
 export default function FieldSheetForm() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export default function FieldSheetForm() {
   const [savedSheet, setSavedSheet] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [epiOptions, setEpiOptions] = useState([]);
+  const [matriculaMode, setMatriculaMode] = useState('matricula');
   const empInputRef = useRef(null);
 
   const [form, setForm] = useState({
@@ -100,6 +102,7 @@ export default function FieldSheetForm() {
         employee_matricula: selectedEmployee ? null : (newEmpFields.matricula || null),
         employee_setor: selectedEmployee ? null : (newEmpFields.setor || null),
         employee_local: selectedEmployee ? null : (newEmpFields.local || null),
+        matricula_tipo: matriculaMode,
       };
       Object.keys(payload).forEach(k => { if (payload[k] === '') payload[k] = null; });
       if (form.epi) api.post('/epis', { name: form.epi }).then(res => {
@@ -163,7 +166,7 @@ export default function FieldSheetForm() {
           <button className="btn btn-primary" onClick={handleDownloadFicha} disabled={downloading} style={{ padding: '12px 28px' }}>
             {downloading ? 'Gerando PDF...' : 'Baixar Ficha PDF'}
           </button>
-          <button className="btn btn-primary" onClick={() => { setSavedSheet(null); setEmployeeInput(''); setSelectedEmployee(null); setNewEmpFields({ funcao: '', matricula: '', setor: '', local: '' }); setNextNumber(n => n + 1); }} style={{ padding: '12px 28px' }}>
+          <button className="btn btn-primary" onClick={() => { setSavedSheet(null); setEmployeeInput(''); setSelectedEmployee(null); setNewEmpFields({ funcao: '', matricula: '', setor: '', local: '' }); setMatriculaMode('matricula'); setNextNumber(n => n + 1); }} style={{ padding: '12px 28px' }}>
             + Nova Ficha
           </button>
         </div>
@@ -238,7 +241,13 @@ export default function FieldSheetForm() {
           {selectedEmployee && (
             <>
               <ReadOnly label="Função" value={selectedEmployee.funcao} />
-              <ReadOnly label="Matrícula" value={selectedEmployee.matricula} />
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label className="form-label" style={{ marginBottom: 0 }}>{matriculaMode === 'cpf' ? 'CPF' : 'Matrícula'}</label>
+                  <MatriculaToggle mode={matriculaMode} onChange={setMatriculaMode} />
+                </div>
+                <input className="form-input" value={selectedEmployee.matricula || '—'} disabled style={{ background: '#f8fafc', color: '#64748b' }} />
+              </div>
               <ReadOnly label="Setor" value={selectedEmployee.setor} />
               <ReadOnly label="Local" value={selectedEmployee.local} />
             </>
@@ -260,8 +269,11 @@ export default function FieldSheetForm() {
                     <input className="form-input" value={newEmpFields.funcao} onChange={e => setNewEmpFields(f => ({ ...f, funcao: e.target.value }))} placeholder="Ex: Operador de Máquina" />
                   </div>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Matrícula</label>
-                    <input className="form-input" value={newEmpFields.matricula} onChange={e => setNewEmpFields(f => ({ ...f, matricula: e.target.value }))} placeholder="Ex: 12345" />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <label className="form-label" style={{ marginBottom: 0 }}>{matriculaMode === 'cpf' ? 'CPF' : 'Matrícula'}</label>
+                      <MatriculaToggle mode={matriculaMode} onChange={setMatriculaMode} />
+                    </div>
+                    <input className="form-input" value={newEmpFields.matricula} onChange={e => setNewEmpFields(f => ({ ...f, matricula: e.target.value }))} placeholder={matriculaMode === 'cpf' ? 'Ex: 123.456.789-00' : 'Ex: 12345'} />
                   </div>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Setor</label>

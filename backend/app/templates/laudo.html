@@ -37,7 +37,7 @@
 
 <h2>Informações do Colaborador (a)</h2>
 <table>
-  <tr><td class="label">Colaborador (a):</td><td>{{ nome_funcionario }}</td><td class="label">Matrícula:</td><td>{{ matricula }}</td></tr>
+  <tr><td class="label">Colaborador (a):</td><td>{{ nome_funcionario }}</td><td class="label">{{ matricula_label|default('Matrícula') }}:</td><td>{{ matricula }}</td></tr>
   <tr><td class="label">Cargo/Função:</td><td>{{ funcao }}</td><td class="label">Setor:</td><td>{{ setor }}</td></tr>
   <tr><td class="label">Local da Coleta:</td><td colspan="3">{{ local }}</td></tr>
 </table>

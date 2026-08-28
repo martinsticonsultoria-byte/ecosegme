@@ -134,6 +134,7 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
         "epi", "activity", "machine_noise", "technician_name_2", "pos_verificacao_db",
         "laudo_number", "technician_name", "pre_verificacao_db", "dosimeter_number",
         "collection_date", "tipo_analise", "data_relatorio", "conclusao_texto",
+        "matricula_tipo",
     }
     for key, value in body.items():
         if key not in allowed:
@@ -254,6 +255,7 @@ def download_field_sheet_pdf(sheet_id: int, db: Session = Depends(get_db), _=Dep
         "endereco": company.endereco or "",
         "nome_funcionario": emp_nome,
         "matricula": emp_matricula,
+        "matricula_label": "CPF" if sheet.matricula_tipo == "cpf" else "Matrícula",
         "funcao": emp_funcao,
         "setor": emp_setor,
         "local": emp_local,

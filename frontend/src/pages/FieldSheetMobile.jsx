@@ -7,6 +7,7 @@ import {
   saveOfflineCache, getOfflineCache
 } from '../offlineStorage'
 import EpiInput from '../components/EpiInput'
+import MatriculaToggle from '../components/MatriculaToggle'
 
 export default function FieldSheetMobile() {
   const { user } = useAuth()
@@ -21,6 +22,7 @@ export default function FieldSheetMobile() {
   const [loading, setLoading] = useState(false)
   const [savedSheet, setSavedSheet] = useState(null)
   const [epiOptions, setEpiOptions] = useState([])
+  const [matriculaMode, setMatriculaMode] = useState('matricula')
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [pendingCount, setPendingCount] = useState(0)
   const empInputRef = useRef(null)
@@ -152,6 +154,7 @@ export default function FieldSheetMobile() {
       employee_matricula: selectedEmployee ? null : (newEmpFields.matricula || null),
       employee_setor: selectedEmployee ? null : (newEmpFields.setor || null),
       employee_local: selectedEmployee ? null : (newEmpFields.local || null),
+      matricula_tipo: matriculaMode,
     }
     if (!navigator.onLine) {
       await saveOfflineSheet(payload)
@@ -180,6 +183,7 @@ export default function FieldSheetMobile() {
     setEmployeeInput('')
     setSelectedEmployee(null)
     setNewEmpFields({ funcao: '', matricula: '', setor: '', local: '' })
+    setMatriculaMode('matricula')
     setForm(f => ({ ...f, dosimeter_number: '', epi: '', activity: '', machine_noise: '', pos_verificacao_db: '' }))
     setError('')
     getPendingSheets().then(p => setPendingCount(p.length))
@@ -244,7 +248,7 @@ export default function FieldSheetMobile() {
 
       <div style={{ padding: '16px 16px 0' }}>
         <div style={sectionStyle}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#1a3d2b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Identificação</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#1a3d2b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Funcionário</div>
 
           <div style={fieldStyle}>
             <label style={labelStyle}>Empresa <span style={{ color: 'red' }}>*</span></label>
@@ -287,7 +291,13 @@ export default function FieldSheetMobile() {
           {selectedEmployee && (
             <>
               <ReadOnly label="Função" value={selectedEmployee.funcao} />
-              <ReadOnly label="Matrícula" value={selectedEmployee.matricula} />
+              <div style={fieldStyle}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <label style={{ ...labelStyle, marginBottom: 0 }}>{matriculaMode === 'cpf' ? 'CPF' : 'Matrícula'}</label>
+                  <MatriculaToggle mode={matriculaMode} onChange={setMatriculaMode} />
+                </div>
+                <input style={{ ...inputStyle, background: '#f8fafc', color: '#64748b' }} value={selectedEmployee.matricula || '—'} disabled />
+              </div>
               <ReadOnly label="Setor" value={selectedEmployee.setor} />
               <ReadOnly label="Local" value={selectedEmployee.local} />
             </>
@@ -301,8 +311,11 @@ export default function FieldSheetMobile() {
                 <input style={inputStyle} value={newEmpFields.funcao} onChange={e => setNewEmpFields(f => ({ ...f, funcao: e.target.value }))} placeholder="Ex: Operador de Máquina" />
               </div>
               <div style={fieldStyle}>
-                <label style={labelStyle}>Matrícula</label>
-                <input style={inputStyle} value={newEmpFields.matricula} onChange={e => setNewEmpFields(f => ({ ...f, matricula: e.target.value }))} placeholder="Ex: 12345" />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <label style={{ ...labelStyle, marginBottom: 0 }}>{matriculaMode === 'cpf' ? 'CPF' : 'Matrícula'}</label>
+                  <MatriculaToggle mode={matriculaMode} onChange={setMatriculaMode} />
+                </div>
+                <input style={inputStyle} value={newEmpFields.matricula} onChange={e => setNewEmpFields(f => ({ ...f, matricula: e.target.value }))} placeholder={matriculaMode === 'cpf' ? 'Ex: 123.456.789-00' : 'Ex: 12345'} />
               </div>
               <div style={fieldStyle}>
                 <label style={labelStyle}>Setor</label>
@@ -314,6 +327,10 @@ export default function FieldSheetMobile() {
               </div>
             </div>
           )}
+        </div>
+
+        <div style={sectionStyle}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#1a3d2b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Identificação</div>
 
           <div style={fieldStyle}>
             <label style={labelStyle}>Tipo de Análise</label>

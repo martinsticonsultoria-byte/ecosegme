@@ -50,6 +50,7 @@ def generate_report(field_sheet_id: int, db: Session = Depends(get_db), current_
         "endereco": sheet.company.endereco or "",
         "nome_funcionario": emp_nome,
         "matricula": emp_matricula,
+        "matricula_label": "CPF" if sheet.matricula_tipo == "cpf" else "Matrícula",
         "funcao": emp_funcao,
         "setor": emp_setor,
         "local": emp_local,
@@ -327,6 +328,7 @@ def generate_bulk_report(
         ws["B3"] = company.endereco or ""
         ws["B6"] = emp_nome
         ws["B7"] = emp_funcao
+        ws["D7"] = ("CPF" if sheet.matricula_tipo == "cpf" else "Matrícula") + ":"
         ws["E7"] = emp_matricula
         ws["B8"] = emp_local
         ws["E8"] = emp_setor
@@ -470,6 +472,7 @@ def generate_bulk_pdf(
             "employee_nome": emp.nome if emp else (sheet.employee_name_text or ""),
             "funcao": emp.funcao if emp else "",
             "matricula": emp.matricula if emp else "",
+            "matricula_label": "CPF" if sheet.matricula_tipo == "cpf" else "Matrícula",
             "setor": emp.setor if emp else "",
             "local": emp.local if emp else "",
             "dosimeter_number": sheet.dosimeter_number,

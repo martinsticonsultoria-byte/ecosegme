@@ -18,6 +18,7 @@ class FieldSheet(Base):
     machine_noise = Column(Text, nullable=True)
     tipo_analise = Column(String(50), nullable=True)
     employee_name_text = Column(String(150), nullable=True)
+    matricula_tipo = Column(String(20), nullable=False, default='matricula')  # 'matricula' ou 'cpf'
     status = Column(String(20), nullable=False, default='pendente')
     technician_name = Column(String(150), nullable=False)
     technician_name_2 = Column(String(150), nullable=True)

@@ -43,7 +43,7 @@
 <table>
   <tr>
     <td class="label">Colaborador:</td><td>{{ nome_funcionario }}</td>
-    <td class="label">Matrícula:</td><td>{{ matricula }}</td>
+    <td class="label">{{ matricula_label|default('Matrícula') }}:</td><td>{{ matricula }}</td>
   </tr>
   <tr>
     <td class="label">Cargo/Função:</td><td>{{ funcao }}</td>

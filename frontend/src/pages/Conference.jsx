@@ -184,6 +184,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
       tipo_analise: sheet.tipo_analise || 'Ruído',
       funcao: sheet.employee_funcao || '',
       matricula: sheet.employee_matricula || '',
+      matricula_tipo: sheet.matricula_tipo || 'matricula',
       setor: sheet.employee_setor || '',
       local: sheet.employee_local || '',
     });
@@ -472,7 +473,7 @@ function ConferenceDetail({ group, onBack, onReload }) {
                             <input className="form-input" value={editForm.funcao} onChange={e => setEditForm(f => ({ ...f, funcao: e.target.value }))} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="form-label">Matrícula</label>
+                            <label className="form-label">{editForm.matricula_tipo === 'cpf' ? 'CPF' : 'Matrícula'}</label>
                             <input className="form-input" value={editForm.matricula} onChange={e => setEditForm(f => ({ ...f, matricula: e.target.value }))} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>

@@ -241,6 +241,7 @@ export default function CompanyDetail() {
       technician_name_2: sheet.technician_name_2 || '',
       funcao: sheet.employee_funcao || '',
       matricula: sheet.employee_matricula || '',
+      matricula_tipo: sheet.matricula_tipo || 'matricula',
       setor: sheet.employee_setor || '',
       local: sheet.employee_local || '',
       conclusao_texto: sheet.conclusao_texto || '',
@@ -1052,7 +1053,7 @@ export default function CompanyDetail() {
                 <input className="form-input" value={editSheetForm.funcao} onChange={e => setEditSheetForm(f => ({ ...f, funcao: e.target.value }))} />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Matrícula</label>
+                <label className="form-label">{editSheetForm.matricula_tipo === 'cpf' ? 'CPF' : 'Matrícula'}</label>
                 <input className="form-input" value={editSheetForm.matricula} onChange={e => setEditSheetForm(f => ({ ...f, matricula: e.target.value }))} />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>

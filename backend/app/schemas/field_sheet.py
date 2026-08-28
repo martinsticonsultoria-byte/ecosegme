@@ -10,6 +10,7 @@ class FieldSheetCreate(BaseModel):
     employee_matricula: Optional[str] = None
     employee_setor: Optional[str] = None
     employee_local: Optional[str] = None
+    matricula_tipo: Optional[str] = 'matricula'
     tipo_analise: Optional[str] = None
     dosimeter_number: int
     collection_date: date
@@ -46,6 +47,7 @@ class FieldSheetOut(BaseModel):
     employee_matricula: Optional[str] = None
     employee_setor: Optional[str] = None
     employee_local: Optional[str] = None
+    matricula_tipo: Optional[str] = 'matricula'
     epi: Optional[str] = None
     activity: Optional[str] = None
     machine_noise: Optional[str] = None
