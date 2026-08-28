@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
+import io
+import openpyxl
 from app.database import get_db
 from app.models.company import Company
 from app.schemas.company import CompanyCreate, CompanyOut
@@ -11,6 +13,89 @@ router = APIRouter(prefix="/companies", tags=["companies"])
 @router.get("", response_model=List[CompanyOut])
 def list_companies(db: Session = Depends(get_db), _=Depends(get_current_user)):
     return db.query(Company).order_by(Company.razao_social).all()
+
+@router.get("/bulk-template")
+def download_bulk_template(_=Depends(get_current_user)):
+    """Baixa planilha modelo para importação em massa de empresas."""
+    from fastapi.responses import StreamingResponse
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Empresas"
+    ws.append(["Razão Social", "CNPJ", "Endereço"])
+    ws.append(["Nome da Empresa Ltda", "00.000.000/0001-00", "Rua Exemplo, 123 - Manaus/AM"])
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=modelo_empresas.xlsx"}
+    )
+
+@router.post("/bulk-upload")
+async def bulk_upload_companies(file: UploadFile = File(...), db: Session = Depends(get_db), _=Depends(require_admin)):
+    """
+    Lê cabeçalhos da linha 1 e mapeia por nome (case-insensitive).
+    Colunas reconhecidas: Razão Social/Empresa/Nome, CNPJ, Endereço
+    """
+    content = await file.read()
+    try:
+        wb = openpyxl.load_workbook(io.BytesIO(content))
+        ws = wb.active
+    except Exception:
+        raise HTTPException(status_code=400, detail="Arquivo inválido. Use .xlsx")
+
+    headers = [str(c.value).strip().lower() if c.value else '' for c in next(ws.iter_rows(min_row=1, max_row=1))]
+
+    def col(names):
+        for n in names:
+            for i, h in enumerate(headers):
+                if n in h:
+                    return i
+        return None
+
+    idx_razao   = col(['razão social', 'razao social', 'empresa', 'nome'])
+    idx_cnpj    = col(['cnpj'])
+    idx_endereco= col(['endereço', 'endereco'])
+
+    if idx_razao is None:
+        raise HTTPException(status_code=400, detail="Planilha deve ter a coluna 'Razão Social' (ou 'Empresa')")
+
+    def cell(row, idx):
+        if idx is None or idx >= len(row) or row[idx] is None:
+            return ''
+        return str(row[idx]).strip()
+
+    created = 0
+    skipped = 0
+    errors = []
+
+    for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+        if not row or not any(row):
+            continue
+        razao_social = cell(row, idx_razao)
+        cnpj = cell(row, idx_cnpj) or None
+        endereco = cell(row, idx_endereco) or None
+
+        if not razao_social or razao_social.lower() in ('none', 'nan', ''):
+            skipped += 1
+            continue
+
+        existing = None
+        if cnpj:
+            existing = db.query(Company).filter(Company.cnpj == cnpj).first()
+        if not existing:
+            existing = db.query(Company).filter(Company.razao_social == razao_social).first()
+        if existing:
+            skipped += 1
+            errors.append(f"Linha {i}: empresa '{razao_social}' já cadastrada — ignorada")
+            continue
+
+        db.add(Company(razao_social=razao_social, cnpj=cnpj, endereco=endereco))
+        created += 1
+
+    db.commit()
+    return {"criados": created, "ignorados": skipped, "erros": errors}
 
 @router.post("", response_model=CompanyOut)
 def create_company(data: CompanyCreate, db: Session = Depends(get_db), _=Depends(require_admin)):

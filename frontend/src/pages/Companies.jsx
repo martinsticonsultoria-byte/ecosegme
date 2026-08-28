@@ -12,6 +12,10 @@ export default function Companies() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [loadError, setLoadError] = useState(false);
+  const [bulkFile, setBulkFile] = useState(null);
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [bulkResult, setBulkResult] = useState(null);
+  const [bulkError, setBulkError] = useState('');
 
   const load = () => {
     setLoading(true);
@@ -38,6 +42,21 @@ export default function Companies() {
     return d.length === 0 || d.length === 14;
   };
 
+  const handleBulkUpload = async () => {
+    if (!bulkFile) return;
+    setBulkUploading(true); setBulkResult(null); setBulkError('');
+    try {
+      const fd = new FormData();
+      fd.append('file', bulkFile);
+      const res = await api.post('/companies/bulk-upload', fd);
+      setBulkResult(res.data);
+      setBulkFile(null);
+      load();
+    } catch (err) {
+      setBulkError(err.response?.data?.detail || 'Erro ao importar planilha');
+    } finally { setBulkUploading(false); }
+  };
+
   const handleSubmit = async () => {
     if (!form.razao_social.trim()) { setError('Razão social obrigatória'); return; }
     if (!validateCnpj(form.cnpj)) { setError('CNPJ inválido — use o formato 00.000.000/0000-00'); return; }
@@ -62,6 +81,36 @@ export default function Companies() {
         <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setError(''); }}>
           {showForm ? 'Cancelar' : '+ Nova Empresa'}
         </button>
+      </div>
+
+      <div className="card" style={{ marginBottom: 20, padding: '14px 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>Importar empresas em lote (.xlsx)</div>
+          <button className="btn btn-secondary btn-sm" onClick={async () => {
+            const res = await api.get('/companies/bulk-template', { responseType: 'blob' });
+            const url = window.URL.createObjectURL(res.data);
+            const a = document.createElement('a'); a.href = url; a.download = 'modelo_empresas.xlsx'; a.click();
+            window.URL.revokeObjectURL(url);
+          }}>Baixar Modelo</button>
+        </div>
+        <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 10 }}>
+          Colunas: <strong>Razão Social | CNPJ | Endereço</strong>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input type="file" accept=".xlsx" className="form-input" style={{ padding: '6px 12px', cursor: 'pointer', flex: 1 }}
+            value=""
+            onChange={e => { setBulkFile(e.target.files[0]); setBulkResult(null); setBulkError(''); }} />
+          <button className="btn btn-primary" onClick={handleBulkUpload} disabled={bulkUploading || !bulkFile}>
+            {bulkUploading ? 'Importando...' : 'Importar'}
+          </button>
+        </div>
+        {bulkResult && (
+          <div className="alert alert-success" style={{ marginTop: 10, marginBottom: 0 }}>
+            {bulkResult.criados} criada(s), {bulkResult.ignorados} ignorada(s)
+            {bulkResult.erros?.length > 0 && <div style={{ marginTop: 4, color: '#854d0e' }}>{bulkResult.erros.join(' | ')}</div>}
+          </div>
+        )}
+        {bulkError && <div className="alert alert-error" style={{ marginTop: 10, marginBottom: 0 }}>{bulkError}</div>}
       </div>
 
       {showForm && (
