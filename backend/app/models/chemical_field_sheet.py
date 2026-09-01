@@ -11,6 +11,67 @@ _CONCLUSAO_PADRAO = (
     "Ocupacionais - ABHO e Ministério do Trabalho e Emprego."
 )
 
+_OBJETIVO_PADRAO = (
+    "A avaliação de agentes químicos no ambiente de trabalho tem como objetivo identificar "
+    "e avaliar os riscos associados à exposição a substâncias químicas no local de trabalho, "
+    "visando à prevenção de doenças ocupacionais e à promoção da saúde e segurança dos "
+    "trabalhadores.\n\n"
+    "Os agentes químicos presentes no ambiente de trabalho podem incluir substâncias tóxicas, "
+    "irritantes, corrosivas, inflamáveis, cancerígenas, entre outras. A exposição a esses "
+    "agentes pode ocorrer por inalação, contato dérmico ou ingestão, e pode levar a uma série "
+    "de efeitos adversos à saúde, como irritação das vias respiratórias, danos ao sistema "
+    "nervoso, câncer, entre outros.\n\n"
+    "Este trabalho visa atender, principalmente, às recomendações do Programa de Gerenciamento "
+    "de Riscos - PGR e a Norma Regulamentadora N.15 - Atividades e Operações Insalubres da "
+    "Portaria 3.214 do Ministério do Trabalho.\n\n"
+    "Em resumo, o objetivo da avaliação de agentes químicos no ambiente de trabalho é garantir "
+    "a saúde e segurança dos trabalhadores, identificando os riscos relacionados à exposição a "
+    "substâncias químicas e implementando medidas de controle eficazes para prevenir doenças "
+    "ocupacionais."
+)
+
+_ABREVIACOES_PADRAO = "\n".join([
+    "ACGIH: American Conference of Governmental Industrial Hygienists",
+    "Card: Cardíaco",
+    "COHb-emia: Carboxihemoglobinemia",
+    "Compr: Comprometimento",
+    "Convul: Convulsão",
+    "Dan: Dano",
+    "Efe: Efeitos",
+    "Form: Formação",
+    "Fun: Função",
+    "GI: Gastrointestinal",
+    "Hb: Hemoglobina",
+    "Inib: Inibição",
+    "Irr: Irritação",
+    "MeHb-emia: Metahemoglobinemia",
+    "Pulm: Pulmonar",
+    "Repro: Reprodutivo",
+    "Resp: Respiratório",
+    "Sens: Sensibilização",
+    "SNC: Sistema Nervoso Central",
+    "SNP: Sistema Nervoso Periférico",
+    "TRI: Trato Respiratório inferior",
+    "N.C: Não Cadastrado",
+    "TRS: Trato respiratório superior",
+])
+
+_NOTAS_PADRAO = (
+    "Foram utilizados os dados fornecidos pelo interessado. O resultado de cada parâmetro está "
+    "em função do volume de ar amostrado. Equipamento Utilizado na Coleta: Bomba Gravimétrica. "
+    "Os resultados são válidos exclusivamente para a amostra analisada. Códigos retirados da "
+    "\"Tabela 24: Agentes Nocivos e Atividades - Aposentadoria Especial\" do eSocial "
+    "Versão S-1.0 de 2021."
+)
+
+_REFERENCIAS_PADRAO = "\n".join([
+    "Valores Limites de Exposição TLV-TWA da American Conference of Governmental Industrial Hygienists - ACGIH.",
+    "Norma Regulamentadora - NR 15.",
+    "Ministério do Trabalho e Emprego - MTE.",
+    "Nacional Institute for Occupational Safety and Health - NIOSH (Instituto Nacional de Segurança e Saúde Ocupacional).",
+    "OSHA - Occupational Safety and Health Administration.",
+])
+
 
 class ChemicalFieldSheet(Base):
     __tablename__ = "chemical_field_sheets"
@@ -58,6 +119,12 @@ class ChemicalFieldSheet(Base):
 
     # Conclusão — pré-preenchida; editável pelo admin na Conferência
     conclusao_texto     = Column(Text, default=_CONCLUSAO_PADRAO)
+
+    # Textos institucionais — pré-preenchidos; editáveis pelo admin na Conferência
+    objetivo_texto      = Column(Text, default=_OBJETIVO_PADRAO)
+    abreviacoes_texto   = Column(Text, default=_ABREVIACOES_PADRAO)
+    notas_texto         = Column(Text, default=_NOTAS_PADRAO)
+    referencias_texto   = Column(Text, default=_REFERENCIAS_PADRAO)
 
     created_by          = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at          = Column(DateTime(timezone=True), server_default=func.now())

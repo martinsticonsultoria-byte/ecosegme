@@ -822,6 +822,10 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
       tipo_amostrador: sheet.tipo_amostrador || '',
       situacao_ambiente: sheet.situacao_ambiente || '',
       observacoes: sheet.observacoes || '',
+      objetivo_texto: sheet.objetivo_texto || '',
+      abreviacoes_texto: sheet.abreviacoes_texto || '',
+      notas_texto: sheet.notas_texto || '',
+      referencias_texto: sheet.referencias_texto || '',
     });
   };
 
@@ -1247,6 +1251,30 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                           <textarea className="form-input" rows={3} value={editForm.conclusao_texto}
                             onChange={e => setEditForm(f => ({ ...f, conclusao_texto: e.target.value }))}
                             placeholder="Deixe em branco para usar o texto automático gerado pelo sistema." />
+                        </div>
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                          <label className="form-label">Objetivo <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional — separe os parágrafos com uma linha em branco)</span></label>
+                          <textarea className="form-input" rows={6} value={editForm.objetivo_texto}
+                            onChange={e => setEditForm(f => ({ ...f, objetivo_texto: e.target.value }))}
+                            placeholder="Deixe em branco para usar o texto padrão do relatório." />
+                        </div>
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                          <label className="form-label">Abreviações <span style={{ fontWeight: 400, color: '#94a3b8' }}>(uma por linha, formato Termo: significado)</span></label>
+                          <textarea className="form-input" rows={6} value={editForm.abreviacoes_texto}
+                            onChange={e => setEditForm(f => ({ ...f, abreviacoes_texto: e.target.value }))}
+                            placeholder="Deixe em branco para usar a lista padrão do relatório." />
+                        </div>
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                          <label className="form-label">Notas <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional — substitui o texto padrão no PDF)</span></label>
+                          <textarea className="form-input" rows={3} value={editForm.notas_texto}
+                            onChange={e => setEditForm(f => ({ ...f, notas_texto: e.target.value }))}
+                            placeholder="Deixe em branco para usar o texto padrão do relatório." />
+                        </div>
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                          <label className="form-label">Referências <span style={{ fontWeight: 400, color: '#94a3b8' }}>(uma por linha)</span></label>
+                          <textarea className="form-input" rows={5} value={editForm.referencias_texto}
+                            onChange={e => setEditForm(f => ({ ...f, referencias_texto: e.target.value }))}
+                            placeholder="Deixe em branco para usar as referências padrão do relatório." />
                         </div>
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button className="btn btn-primary btn-sm" onClick={() => handleSaveEdit(sheet.id)} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</button>

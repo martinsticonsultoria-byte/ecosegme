@@ -30,7 +30,12 @@
   .label { font-weight: bold; white-space: nowrap; width: 1%; background: #f0faf6; }
   h1 { text-align: center; font-size: 10pt; background: #1f9c74; color: white; padding: 3px; border: 1px solid #167a5a; margin: 3px 0; }
   h2 { text-align: center; font-size: 8.5pt; background: #1f9c74; color: white; padding: 2px; border: 1px solid #167a5a; margin: 6px 0 0 0; }
-  p { font-size: 8pt; margin: 4px 0; text-align: justify; }
+  p { font-size: 8pt; margin: 4px 0; text-align: justify; line-height: 1.5; }
+
+  /* Blocos de texto corrido (Objetivo, Notas, Observacoes, Referencias,
+     Conclusao) — nunca aplicar em tabelas de dados/resultados nem na capa. */
+  td.texto { text-align: justify; line-height: 1.5; }
+  td.texto-sm { font-size: 7.5pt; }
 
   /* Abreviações */
   .abrev { table-layout: fixed; }
@@ -121,13 +126,26 @@
 
   <h1>Relatório de Monitoramento de Agentes Químicos</h1>
 
+  {# Objetivo e Abreviações valem para o relatório inteiro, mas são gravados por
+     ficha. Usa o primeiro valor preenchido entre as fichas do lote — assim editar
+     em qualquer ficha surte efeito, em vez de só na primeira. #}
+  {% set _ns = namespace(objetivo='', abrev='') %}
+  {% for _f in fichas %}
+    {% if not _ns.objetivo and _f.objetivo_texto %}{% set _ns.objetivo = _f.objetivo_texto %}{% endif %}
+    {% if not _ns.abrev and _f.abreviacoes_texto %}{% set _ns.abrev = _f.abreviacoes_texto %}{% endif %}
+  {% endfor %}
+  {% set _objetivo = _ns.objetivo or 'A avaliação de agentes químicos no ambiente de trabalho tem como objetivo identificar e avaliar os riscos associados à exposição a substâncias químicas no local de trabalho, visando à prevenção de doenças ocupacionais e à promoção da saúde e segurança dos trabalhadores.\n\nOs agentes químicos presentes no ambiente de trabalho podem incluir substâncias tóxicas, irritantes, corrosivas, inflamáveis, cancerígenas, entre outras. A exposição a esses agentes pode ocorrer por inalação, contato dérmico ou ingestão, e pode levar a uma série de efeitos adversos à saúde, como irritação das vias respiratórias, danos ao sistema nervoso, câncer, entre outros.\n\nEste trabalho visa atender, principalmente, às recomendações do Programa de Gerenciamento de Riscos - PGR e a Norma Regulamentadora N.15 - Atividades e Operações Insalubres da Portaria 3.214 do Ministério do Trabalho.\n\nEm resumo, o objetivo da avaliação de agentes químicos no ambiente de trabalho é garantir a saúde e segurança dos trabalhadores, identificando os riscos relacionados à exposição a substâncias químicas e implementando medidas de controle eficazes para prevenir doenças ocupacionais.' %}
+
   <h2>1. Objetivo</h2>
-  <table><tr><td style="line-height:1.6; padding:5px 8px;">
-    <p>A avaliação de agentes químicos no ambiente de trabalho tem como objetivo identificar e avaliar os riscos associados à exposição a substâncias químicas no local de trabalho, visando à prevenção de doenças ocupacionais e à promoção da saúde e segurança dos trabalhadores.</p>
-    <p>Os agentes químicos presentes no ambiente de trabalho podem incluir substâncias tóxicas, irritantes, corrosivas, inflamáveis, cancerígenas, entre outras. A exposição a esses agentes pode ocorrer por inalação, contato dérmico ou ingestão, e pode levar a uma série de efeitos adversos à saúde, como irritação das vias respiratórias, danos ao sistema nervoso, câncer, entre outros.</p>
-    <p>Este trabalho visa atender, principalmente, às recomendações do Programa de Gerenciamento de Riscos - PGR e a Norma Regulamentadora N.15 - Atividades e Operações Insalubres da Portaria 3.214 do Ministério do Trabalho.</p>
-    <p>Em resumo, o objetivo da avaliação de agentes químicos no ambiente de trabalho é garantir a saúde e segurança dos trabalhadores, identificando os riscos relacionados à exposição a substâncias químicas e implementando medidas de controle eficazes para prevenir doenças ocupacionais.</p>
+  <table><tr><td class="texto" style="padding:5px 8px;">
+    {% for _par in _objetivo.replace('\r\n', '\n').split('\n\n') %}
+      {% if _par.strip() %}<p>{{ _par.strip() }}</p>{% endif %}
+    {% endfor %}
   </td></tr></table>
+
+  {% set _abrev_default = 'ACGIH: American Conference of Governmental Industrial Hygienists\nCard: Cardíaco\nCOHb-emia: Carboxihemoglobinemia\nCompr: Comprometimento\nConvul: Convulsão\nDan: Dano\nEfe: Efeitos\nForm: Formação\nFun: Função\nGI: Gastrointestinal\nHb: Hemoglobina\nInib: Inibição\nIrr: Irritação\nMeHb-emia: Metahemoglobinemia\nPulm: Pulmonar\nRepro: Reprodutivo\nResp: Respiratório\nSens: Sensibilização\nSNC: Sistema Nervoso Central\nSNP: Sistema Nervoso Periférico\nTRI: Trato Respiratório inferior\nN.C: Não Cadastrado\nTRS: Trato respiratório superior' %}
+  {% set _abrev_raw = _ns.abrev or _abrev_default %}
+  {% set _abrev_linhas = _abrev_raw.replace('\r\n', '\n').split('\n') | map('trim') | select | list %}
 
   <h2>Abreviações</h2>
   <table class="abrev">
@@ -138,42 +156,17 @@
       <col style="width:8.333%"><col style="width:8.333%"><col style="width:8.333%">
     </colgroup>
     <tbody>
+      {% for _linha in _abrev_linhas | batch(4) %}
       <tr>
-        <td colspan="3"><strong>ACGIH:</strong> American Conference of Governmental Industrial Hygienists</td>
-        <td colspan="3"><strong>Card:</strong> Cardíaco</td>
-        <td colspan="3"><strong>COHb-emia:</strong> Carboxihemoglobinemia</td>
-        <td colspan="3"><strong>Compr:</strong> Comprometimento</td>
-      </tr>
-      <tr>
-        <td colspan="3"><strong>Convul:</strong> Convulsão</td>
-        <td colspan="3"><strong>Dan:</strong> Dano</td>
-        <td colspan="3"><strong>Efe:</strong> Efeitos</td>
-        <td colspan="3"><strong>Form:</strong> Formação</td>
-      </tr>
-      <tr>
-        <td colspan="3"><strong>Fun:</strong> Função</td>
-        <td colspan="3"><strong>GI:</strong> Gastrointestinal</td>
-        <td colspan="3"><strong>Hb:</strong> Hemoglobina</td>
-        <td colspan="3"><strong>Inib:</strong> Inibição</td>
-      </tr>
-      <tr>
-        <td colspan="3"><strong>Irr:</strong> Irritação</td>
-        <td colspan="3"><strong>MeHb-emia:</strong> Metahemoglobinemia</td>
-        <td colspan="3"><strong>Pulm:</strong> Pulmonar</td>
-        <td colspan="3"><strong>Repro:</strong> Reprodutivo</td>
-      </tr>
-      <tr>
-        <td colspan="3"><strong>Resp:</strong> Respiratório</td>
-        <td colspan="3"><strong>Sens:</strong> Sensibilização</td>
-        <td colspan="3"><strong>SNC:</strong> Sistema Nervoso Central</td>
-        <td colspan="3"><strong>SNP:</strong> Sistema Nervoso Periférico</td>
-      </tr>
-      <tr>
-        <td colspan="3"><strong>TRI:</strong> Trato Respiratório inferior</td>
-        <td colspan="3"><strong>N.C:</strong> Não Cadastrado</td>
-        <td colspan="3"><strong>TRS:</strong> Trato respiratório superior</td>
+        {% for _item in _linha %}
+        {% set _p = _item.split(':', 1) %}
+        <td colspan="3"><strong>{{ _p[0].strip() }}:</strong> {{ _p[1].strip() if _p | length > 1 else '' }}</td>
+        {% endfor %}
+        {% for _vazio in range(4 - (_linha | length)) %}
         <td colspan="3"></td>
+        {% endfor %}
       </tr>
+      {% endfor %}
     </tbody>
   </table>
 </div>
@@ -290,27 +283,24 @@
   <h2>Notas</h2>
   <table>
     <tr>
-      <td style="font-size:7.5pt; text-align:justify; line-height:1.5;">
-        Foram utilizados os dados fornecidos pelo interessado. O resultado de cada parâmetro está em função do volume de ar amostrado. Equipamento Utilizado na Coleta: Bomba Gravimétrica. Os resultados são válidos exclusivamente para a amostra analisada. Códigos retirados da "Tabela 24: Agentes Nocivos e Atividades - Aposentadoria Especial" do eSocial Versão S-1.0 de 2021.
+      <td class="texto texto-sm">
+        {{ f.notas_texto or 'Foram utilizados os dados fornecidos pelo interessado. O resultado de cada parâmetro está em função do volume de ar amostrado. Equipamento Utilizado na Coleta: Bomba Gravimétrica. Os resultados são válidos exclusivamente para a amostra analisada. Códigos retirados da "Tabela 24: Agentes Nocivos e Atividades - Aposentadoria Especial" do eSocial Versão S-1.0 de 2021.' }}
       </td>
     </tr>
   </table>
 
   {% if f.observacoes %}
   <h2>Observações</h2>
-  <table><tr><td style="text-align:justify;">{{ f.observacoes }}</td></tr></table>
+  <table><tr><td class="texto">{{ f.observacoes }}</td></tr></table>
   {% endif %}
 
   <div style="page-break-inside:avoid; break-inside:avoid;">
     <h2>Referências</h2>
     <table>
       <tr>
-        <td style="font-size:7.5pt; text-align:justify; line-height:1.5;">
-          Valores Limites de Exposição TLV-TWA da American Conference of Governmental Industrial Hygienists - ACGIH.<br/>
-          Norma Regulamentadora - NR 15.<br/>
-          Ministério do Trabalho e Emprego - MTE.<br/>
-          Nacional Institute for Occupational Safety and Health - NIOSH (Instituto Nacional de Segurança e Saúde Ocupacional).<br/>
-          OSHA - Occupational Safety and Health Administration.
+        {% set _refs_raw = f.referencias_texto or 'Valores Limites de Exposição TLV-TWA da American Conference of Governmental Industrial Hygienists - ACGIH.\nNorma Regulamentadora - NR 15.\nMinistério do Trabalho e Emprego - MTE.\nNacional Institute for Occupational Safety and Health - NIOSH (Instituto Nacional de Segurança e Saúde Ocupacional).\nOSHA - Occupational Safety and Health Administration.' %}
+        <td class="texto texto-sm">
+          {% for _ref in _refs_raw.replace('\r\n', '\n').split('\n') %}{% if _ref.strip() %}{{ _ref.strip() }}<br/>{% endif %}{% endfor %}
         </td>
       </tr>
     </table>
@@ -319,7 +309,7 @@
   <h2>Conclusão</h2>
   <table>
     <tr>
-      <td style="text-align:justify; line-height:1.5;">
+      <td class="texto">
         {% if f.conclusao_texto %}
           {{ f.conclusao_texto }}
         {% else %}

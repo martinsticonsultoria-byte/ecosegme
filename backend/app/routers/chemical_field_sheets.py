@@ -110,12 +110,19 @@ def create_chemical_field_sheet(
             db.flush()
             employee_id = new_emp.id
 
-    from app.models.chemical_field_sheet import _CONCLUSAO_PADRAO
+    from app.models.chemical_field_sheet import (
+        _CONCLUSAO_PADRAO, _OBJETIVO_PADRAO, _ABREVIACOES_PADRAO,
+        _NOTAS_PADRAO, _REFERENCIAS_PADRAO,
+    )
     sheet = ChemicalFieldSheet(
         **{k: v for k, v in data.dict().items() if k != "employee_id"},
         employee_id=employee_id,
         created_by=current_user.id,
         conclusao_texto=_CONCLUSAO_PADRAO,
+        objetivo_texto=_OBJETIVO_PADRAO,
+        abreviacoes_texto=_ABREVIACOES_PADRAO,
+        notas_texto=_NOTAS_PADRAO,
+        referencias_texto=_REFERENCIAS_PADRAO,
     )
     db.add(sheet)
     db.commit()
@@ -209,6 +216,10 @@ def generate_chemical_pdf_report(
             "volume_calculado":   sheet.volume_calculado if sheet.volume_calculado is not None else "—",
             "observacoes":        sheet.observacoes or "",
             "conclusao_texto":    sheet.conclusao_texto or "",
+            "objetivo_texto":     sheet.objetivo_texto or "",
+            "abreviacoes_texto":  sheet.abreviacoes_texto or "",
+            "notas_texto":        sheet.notas_texto or "",
+            "referencias_texto":  sheet.referencias_texto or "",
             "signature_date_ext": sig_date_ext,
             "agents":             agents_data,
         })

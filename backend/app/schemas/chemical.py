@@ -129,6 +129,10 @@ class ChemicalFieldSheetUpdate(BaseModel):
     laudo_number:        Optional[str]   = None
     laudo_y:             Optional[int]   = None
     conclusao_texto:     Optional[str]   = None
+    objetivo_texto:      Optional[str]   = None
+    abreviacoes_texto:   Optional[str]   = None
+    notas_texto:         Optional[str]   = None
+    referencias_texto:   Optional[str]   = None
     signature_date:      Optional[date]  = None
     data_relatorio:      Optional[date]  = None
 
@@ -163,6 +167,10 @@ class ChemicalFieldSheetOut(BaseModel):
     data_relatorio:      Optional[date]  = None
     signature_date:      Optional[date]  = None
     conclusao_texto:     Optional[str]   = None
+    objetivo_texto:      Optional[str]   = None
+    abreviacoes_texto:   Optional[str]   = None
+    notas_texto:         Optional[str]   = None
+    referencias_texto:   Optional[str]   = None
     agents:              List[ChemicalSheetAgentOut] = []
     created_at:          datetime
 
