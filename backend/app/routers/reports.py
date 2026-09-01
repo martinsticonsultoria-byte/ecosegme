@@ -511,7 +511,7 @@ def generate_bulk_pdf(
     with open(os.path.join(img_dir, "capa_fundo.png.png"), "rb") as f:
         capa_fundo_b64 = base64.b64encode(f.read()).decode()
     with open(tmpl_path, "r", encoding="utf-8") as f:
-        tmpl = Template(f.read())
+        tmpl = Template(f.read(), autoescape=True)
 
     laudo_numbers = sorted([s.laudo_number for s in sheets])
 

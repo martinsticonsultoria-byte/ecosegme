@@ -262,7 +262,10 @@ def generate_chemical_pdf_report(
     with open(logo_path,  "rb") as f: logo_b64       = base64.b64encode(f.read()).decode()
     with open(assin_path, "rb") as f: assinatura_b64 = base64.b64encode(f.read()).decode()
     with open(fundo_path, "rb") as f: capa_fundo_b64 = base64.b64encode(f.read()).decode()
-    with open(tmpl_path,  "r", encoding="utf-8") as f: tmpl = Template(f.read())
+    # autoescape: os textos editáveis pelo admin (objetivo, notas, conclusão...) e os
+    # digitados em campo entram como conteúdo, não marcação. Sem isso, um "< 5 ppm"
+    # — notação corriqueira aqui — é lido como início de tag e engole o texto seguinte.
+    with open(tmpl_path,  "r", encoding="utf-8") as f: tmpl = Template(f.read(), autoescape=True)
 
     html = tmpl.render(
         razao_social=company.razao_social,

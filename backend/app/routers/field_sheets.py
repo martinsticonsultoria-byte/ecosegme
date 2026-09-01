@@ -273,7 +273,7 @@ def download_field_sheet_pdf(sheet_id: int, db: Session = Depends(get_db), _=Dep
     }
 
     with open(FICHA_TEMPLATE, "r", encoding="utf-8") as f:
-        tmpl = Template(f.read())
+        tmpl = Template(f.read(), autoescape=True)
     html = tmpl.render(**data)
 
     tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)

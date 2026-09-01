@@ -22,7 +22,7 @@ def generate_laudo(data: dict) -> tuple:
     os.makedirs(storage_dir, exist_ok=True)
     with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
         template_str = f.read()
-    template = Template(template_str)
+    template = Template(template_str, autoescape=True)
     sig_date = data.get('signature_date', '')
     if sig_date:
         try:
