@@ -180,6 +180,8 @@ function ConferenceDetail({ group, onBack, onReload }) {
       collection_date: sheet.collection_date || '',
       data_relatorio: sheet.data_relatorio || '',
       conclusao_texto: sheet.conclusao_texto || '',
+      equipamentos_texto: sheet.equipamentos_texto || '',
+      config_dosimetro_texto: sheet.config_dosimetro_texto || '',
       dosimeter_number: sheet.dosimeter_number || '',
       tipo_analise: sheet.tipo_analise || 'Ruído',
       funcao: sheet.employee_funcao || '',
@@ -522,6 +524,20 @@ function ConferenceDetail({ group, onBack, onReload }) {
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Máquinas/Equipamentos</label>
                             <textarea className="form-input" rows={2} value={editForm.machine_noise} onChange={e => setEditForm(f => ({ ...f, machine_noise: e.target.value }))} />
+                          </div>
+                        </div>
+
+                        <div style={{ marginBottom: 12 }}>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Equipamentos Utilizados <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional — substitui o texto padrão no PDF)</span></label>
+                            <textarea className="form-input" rows={2} value={editForm.equipamentos_texto} onChange={e => setEditForm(f => ({ ...f, equipamentos_texto: e.target.value }))} placeholder="Deixe em branco para usar o texto padrão." />
+                          </div>
+                        </div>
+
+                        <div style={{ marginBottom: 12 }}>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Configuração do Dosímetro <span style={{ fontWeight: 400, color: '#94a3b8' }}>(opcional — substitui o texto padrão no PDF)</span></label>
+                            <textarea className="form-input" rows={2} value={editForm.config_dosimetro_texto} onChange={e => setEditForm(f => ({ ...f, config_dosimetro_texto: e.target.value }))} placeholder="Deixe em branco para usar o texto padrão." />
                           </div>
                         </div>
 

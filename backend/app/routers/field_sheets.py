@@ -134,6 +134,7 @@ def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _
         "epi", "activity", "machine_noise", "technician_name_2", "pos_verificacao_db",
         "laudo_number", "technician_name", "pre_verificacao_db", "dosimeter_number",
         "collection_date", "tipo_analise", "data_relatorio", "conclusao_texto",
+        "equipamentos_texto", "config_dosimetro_texto",
         "matricula_tipo",
     }
     for key, value in body.items():

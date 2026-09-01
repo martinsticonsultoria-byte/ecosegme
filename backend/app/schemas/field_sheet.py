@@ -22,6 +22,8 @@ class FieldSheetCreate(BaseModel):
     signature_date: Optional[date] = None
     data_relatorio: Optional[date] = None
     conclusao_texto: Optional[str] = None
+    equipamentos_texto: Optional[str] = None
+    config_dosimetro_texto: Optional[str] = None
     turno: Optional[str] = None
     codigo_esocial: Optional[str] = None
     pre_verificacao_db: Optional[str] = None
@@ -55,6 +57,8 @@ class FieldSheetOut(BaseModel):
     pos_verificacao_db: Optional[str] = None
     data_relatorio: Optional[date] = None
     conclusao_texto: Optional[str] = None
+    equipamentos_texto: Optional[str] = None
+    config_dosimetro_texto: Optional[str] = None
     has_sonus: Optional[bool] = False
     sonus_parsed_name: Optional[str] = None
     sonus_name_mismatch: Optional[bool] = None

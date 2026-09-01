@@ -17,6 +17,13 @@
   h2 { text-align: center; font-size: 8.5pt; background: #1f9c74; color: white; padding: 2px; border: 1px solid #167a5a; margin: 6px 0 0 0; }
   p { font-size: 8pt; margin: 2px 0; }
 
+  /* Blocos de texto corrido (parágrafos e células de texto longo) */
+  .texto { text-align: justify; line-height: 1.5; }
+  /* Preserva espaçamento múltiplo usado como separador visual. Aplicar só em
+     células cuja expressão Jinja esteja inline no td, senão a indentação do
+     template vaza como espaço em branco no PDF. */
+  .texto-pre { white-space: pre-wrap; }
+
 
   /* Resumo */
   .resumo th { background: #c6efce; text-align: center; font-weight: bold; font-size: 8pt; }
@@ -205,19 +212,19 @@
 
   <h2>Descrição das Condições de Exposição:</h2>
   <table>
-    <tr><td style="border-bottom:none;"><strong>Atividade Desenvolvida:</strong> {{ f.activity or '—' }}</td></tr>
-    <tr><td style="border-top:none; border-bottom:none;"><strong>Máquinas/equipamentos geradores de ruído:</strong> {{ f.machine_noise or 'Ausência de equipamentos ruidosos.' }}</td></tr>
-    <tr><td style="border-top:none;"><strong>Uso de Equipamento de Proteção Individual (EPI):</strong> {{ f.epi or '—' }}</td></tr>
+    <tr><td class="texto" style="border-bottom:none;"><strong>Atividade Desenvolvida:</strong> {{ f.activity or '—' }}</td></tr>
+    <tr><td class="texto" style="border-top:none; border-bottom:none;"><strong>Máquinas/equipamentos geradores de ruído:</strong> {{ f.machine_noise or 'Ausência de equipamentos ruidosos.' }}</td></tr>
+    <tr><td class="texto" style="border-top:none;"><strong>Uso de Equipamento de Proteção Individual (EPI):</strong> {{ f.epi or '—' }}</td></tr>
   </table>
 
   <h2>Equipamentos Utilizados:</h2>
   <table>
-    <tr><td>Dosímetro acústico de ruído da marca CRIFFER, modelo SONUS 2, calibrado com um calibrador acústico da marca Instrutherm, modelo QC-10.</td></tr>
+    <tr><td class="texto">{{ f.equipamentos_texto or 'Dosímetro acústico de ruído da marca CRIFFER, modelo SONUS 2, calibrado com um calibrador acústico da marca Instrutherm, modelo QC-10.' }}</td></tr>
   </table>
 
   <h2>Configuração do Dosímetro:</h2>
   <table>
-    <tr><td>Ponderação de Tempo: Slow &nbsp; Ponderação de Frequência: A &nbsp; Nível de Limiar: 80 dB &nbsp; Nível de Critério: 85 dB. &nbsp; Incremento de duplicação de dose (q) = 05. &nbsp; Este equipamento não capta ruído inferiores a 40 dB.</td></tr>
+    <tr><td class="texto texto-pre">{{ f.config_dosimetro_texto or 'Ponderação de Tempo: Slow   Ponderação de Frequência: A   Nível de Limiar: 80 dB   Nível de Critério: 85 dB.   Incremento de duplicação de dose (q) = 05.   Este equipamento não capta ruído inferiores a 40 dB.' }}</td></tr>
   </table>
 
   <h2>Registro de Calibração de Campo:</h2>
@@ -272,7 +279,7 @@
 
   <h2>Conclusão:</h2>
   <table>
-    <tr><td style="text-align:justify;">
+    <tr><td class="texto">
       {% if f.conclusao_texto %}
         {{ f.conclusao_texto }}
       {% elif f.ne_val is not none %}

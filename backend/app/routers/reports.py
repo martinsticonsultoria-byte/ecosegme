@@ -494,6 +494,8 @@ def generate_bulk_pdf(
             "signature_date": _fmt_sig_date(sheet.signature_date),
             "signature_date_ext": sig_date_ext,
             "conclusao_texto": sheet.conclusao_texto or None,
+            "equipamentos_texto": sheet.equipamentos_texto or None,
+            "config_dosimetro_texto": sheet.config_dosimetro_texto or None,
             "has_laudo": sheet.id in generated_ids,
         })
 

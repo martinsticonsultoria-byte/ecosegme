@@ -3,6 +3,19 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
 
+_EQUIPAMENTOS_PADRAO = (
+    "Dosímetro acústico de ruído da marca CRIFFER, modelo SONUS 2, calibrado com "
+    "um calibrador acústico da marca Instrutherm, modelo QC-10."
+)
+
+_CONFIG_DOSIMETRO_PADRAO = (
+    "Ponderação de Tempo: Slow   Ponderação de Frequência: A   "
+    "Nível de Limiar: 80 dB   Nível de Critério: 85 dB.   "
+    "Incremento de duplicação de dose (q) = 05.   "
+    "Este equipamento não capta ruído inferiores a 40 dB."
+)
+
+
 class FieldSheet(Base):
     __tablename__ = "field_sheets"
     __table_args__ = ()
@@ -25,6 +38,8 @@ class FieldSheet(Base):
     signature_date = Column(Date, nullable=True)
     data_relatorio = Column(Date, nullable=True)
     conclusao_texto = Column(Text, nullable=True)
+    equipamentos_texto = Column(Text, nullable=True, default=_EQUIPAMENTOS_PADRAO)
+    config_dosimetro_texto = Column(Text, nullable=True, default=_CONFIG_DOSIMETRO_PADRAO)
     turno = Column(String(50), nullable=True)
     codigo_esocial = Column(String(50), nullable=True)
     pre_verificacao_db = Column(String(20), nullable=True)
