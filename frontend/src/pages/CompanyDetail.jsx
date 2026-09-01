@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import EpiInput from '../components/EpiInput';
+import CatalogInput from '../components/CatalogInput';
 
 function NovaFichaDropdown({ companyId }) {
   const navigate = useNavigate();
@@ -143,6 +144,13 @@ export default function CompanyDetail() {
   const [editChemTarget, setEditChemTarget] = useState(null);
   const [editChemForm, setEditChemForm] = useState({});
   const [savingChem, setSavingChem] = useState(false);
+  const [amostradorNumeroOptions, setAmostradorNumeroOptions] = useState([]);
+  const [amostradorTipoOptions, setAmostradorTipoOptions] = useState([]);
+
+  useEffect(() => {
+    api.get('/amostradores?categoria=numero').then(r => setAmostradorNumeroOptions(r.data)).catch(() => {});
+    api.get('/amostradores?categoria=tipo').then(r => setAmostradorTipoOptions(r.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const safe = (promise, fallback) => promise.then(r => r.data).catch(() => fallback);
@@ -931,11 +939,15 @@ export default function CompanyDetail() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Nº Amostrador</label>
-                <input className="form-input" value={editChemForm.numero_amostrador} onChange={e => setEditChemForm(f => ({ ...f, numero_amostrador: e.target.value }))} />
+                <CatalogInput categoria="numero" value={editChemForm.numero_amostrador || ''}
+                  onChange={v => setEditChemForm(f => ({ ...f, numero_amostrador: v }))}
+                  options={amostradorNumeroOptions} setOptions={setAmostradorNumeroOptions} />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Tipo de Amostrador</label>
-                <input className="form-input" value={editChemForm.tipo_amostrador} onChange={e => setEditChemForm(f => ({ ...f, tipo_amostrador: e.target.value }))} />
+                <CatalogInput categoria="tipo" value={editChemForm.tipo_amostrador || ''}
+                  onChange={v => setEditChemForm(f => ({ ...f, tipo_amostrador: v }))}
+                  options={amostradorTipoOptions} setOptions={setAmostradorTipoOptions} />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Jornada de Trabalho</label>

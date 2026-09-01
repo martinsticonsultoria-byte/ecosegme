@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { DeleteFieldSheetButton } from './CompanyDetail';
 import EpiInput from '../components/EpiInput';
+import CatalogInput from '../components/CatalogInput';
 
 // ─── Visão de detalhe: tabela de fichas de uma empresa ───────────────────────
 function ConferenceDetail({ group, onBack, onReload }) {
@@ -645,6 +646,12 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [amostradorNumeroOptions, setAmostradorNumeroOptions] = useState([]);
+  const [amostradorTipoOptions, setAmostradorTipoOptions] = useState([]);
+  useEffect(() => {
+    api.get('/amostradores?categoria=numero').then(r => setAmostradorNumeroOptions(r.data)).catch(() => {});
+    api.get('/amostradores?categoria=tipo').then(r => setAmostradorTipoOptions(r.data)).catch(() => {});
+  }, []);
   const [approving, setApproving] = useState({});
   const [errors, setErrors] = useState({});
   const errorTimeoutRefs = useRef({});
@@ -1226,13 +1233,15 @@ function ChemicalConferenceDetail({ group, onBack, onReload }) {
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 12 }}>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Nº do Amostrador</label>
-                            <input className="form-input" value={editForm.numero_amostrador}
-                              onChange={e => setEditForm(f => ({ ...f, numero_amostrador: e.target.value }))} />
+                            <CatalogInput categoria="numero" value={editForm.numero_amostrador || ''}
+                              onChange={v => setEditForm(f => ({ ...f, numero_amostrador: v }))}
+                              options={amostradorNumeroOptions} setOptions={setAmostradorNumeroOptions} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Tipo de Amostrador</label>
-                            <input className="form-input" value={editForm.tipo_amostrador}
-                              onChange={e => setEditForm(f => ({ ...f, tipo_amostrador: e.target.value }))} />
+                            <CatalogInput categoria="tipo" value={editForm.tipo_amostrador || ''}
+                              onChange={v => setEditForm(f => ({ ...f, tipo_amostrador: v }))}
+                              options={amostradorTipoOptions} setOptions={setAmostradorTipoOptions} />
                           </div>
                           <div className="form-group" style={{ marginBottom: 0, gridColumn: 'span 2' }}>
                             <label className="form-label">Situação do Ambiente</label>

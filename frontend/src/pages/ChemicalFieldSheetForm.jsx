@@ -6,14 +6,9 @@ import {
   saveOfflineSheet, getPendingSheets, markSynced,
   saveOfflineCache, getOfflineCache
 } from '../offlineStorage';
+import CatalogInput from '../components/CatalogInput';
 
 const OFFLINE_TIPO = 'quimico';
-
-const TIPO_AMOSTRADOR_OPTIONS = [
-  'Tubo de Carvão Ativado',
-  'K7',
-  'Tubo de Sílica Gel',
-];
 
 export default function ChemicalFieldSheetForm() {
   const navigate = useNavigate();
@@ -49,6 +44,8 @@ export default function ChemicalFieldSheetForm() {
   const [loading, setLoading] = useState(false);
   const [savedSheet, setSavedSheet] = useState(null);
   const [matriculaMode, setMatriculaMode] = useState('matricula');
+  const [numeroOptions, setNumeroOptions] = useState([]);
+  const [tipoOptions, setTipoOptions] = useState([]);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingCount, setPendingCount] = useState(0);
 
@@ -106,6 +103,20 @@ export default function ChemicalFieldSheetForm() {
           setCompany(c || null);
         }
       }
+    });
+    api.get('/amostradores?categoria=numero').then(res => {
+      setNumeroOptions(res.data);
+      saveOfflineCache('amostradores_numero', res.data);
+    }).catch(async () => {
+      const cached = await getOfflineCache('amostradores_numero');
+      if (cached) setNumeroOptions(cached);
+    });
+    api.get('/amostradores?categoria=tipo').then(res => {
+      setTipoOptions(res.data);
+      saveOfflineCache('amostradores_tipo', res.data);
+    }).catch(async () => {
+      const cached = await getOfflineCache('amostradores_tipo');
+      if (cached) setTipoOptions(cached);
     });
     if (prefilledCompanyId) {
       api.get(`/employees?company_id=${prefilledCompanyId}`).then(res => {
@@ -207,6 +218,16 @@ export default function ChemicalFieldSheetForm() {
     try {
       const res = await api.post('/chemical-field-sheets', payload);
       setSavedSheet({ ...res.data, offline: false });
+      if (form.numero_amostrador) {
+        api.post('/amostradores', { categoria: 'numero', valor: form.numero_amostrador }).then(r => {
+          if (r.data?.id) setNumeroOptions(prev => prev.some(o => o.id === r.data.id) ? prev : [...prev, { id: r.data.id, valor: r.data.valor }]);
+        }).catch(() => {});
+      }
+      if (form.tipo_amostrador) {
+        api.post('/amostradores', { categoria: 'tipo', valor: form.tipo_amostrador }).then(r => {
+          if (r.data?.id) setTipoOptions(prev => prev.some(o => o.id === r.data.id) ? prev : [...prev, { id: r.data.id, valor: r.data.valor }]);
+        }).catch(() => {});
+      }
     } catch (err) {
       const detail = err.response?.data?.detail;
       if (Array.isArray(detail)) setError(detail.map(e => e.msg).join(', '));
@@ -430,15 +451,26 @@ export default function ChemicalFieldSheetForm() {
 
           <div className="form-group">
             <label className="form-label">Nº do Amostrador <span>*</span></label>
-            <input name="numero_amostrador" className="form-input" value={form.numero_amostrador}
-              onChange={handleChange} placeholder="Ex: AM-001" />
+            <CatalogInput
+              categoria="numero"
+              value={form.numero_amostrador}
+              onChange={v => setForm(f => ({ ...f, numero_amostrador: v }))}
+              options={numeroOptions}
+              setOptions={setNumeroOptions}
+              placeholder="Ex: AM-001"
+            />
           </div>
 
           <div className="form-group">
             <label className="form-label">Tipo de Amostrador <span>*</span></label>
-            <select name="tipo_amostrador" className="form-input" value={form.tipo_amostrador} onChange={handleChange}>
-              {TIPO_AMOSTRADOR_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-            </select>
+            <CatalogInput
+              categoria="tipo"
+              value={form.tipo_amostrador}
+              onChange={v => setForm(f => ({ ...f, tipo_amostrador: v }))}
+              options={tipoOptions}
+              setOptions={setTipoOptions}
+              placeholder="Ex: Tubo de Carvão Ativado"
+            />
           </div>
 
           <div className="form-group">

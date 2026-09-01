@@ -7,6 +7,7 @@ from app.models.generated_report import GeneratedReport
 from app.models.audit_log import AuditLog
 from app.models.consolidated_report import ConsolidatedReport
 from app.models.custom_epi import CustomEPI
+from app.models.amostrador_catalogo import AmostradorCatalogo
 # Feature Químico
 from app.models.chemical_agent import ChemicalAgent
 from app.models.chemical_field_sheet import ChemicalFieldSheet
