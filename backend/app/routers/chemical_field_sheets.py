@@ -30,14 +30,20 @@ router = APIRouter(prefix="/chemical-field-sheets", tags=["chemical-field-sheets
 def _calcular_resultado(valor: str, agent: ChemicalAgent) -> str:
     """Determina resultado_status a partir do valor medido e limites do agente.
     Prioridade: NR-15 → ACGIH TWA. Ignora valores não-numéricos como '-' e '—'.
+
+    "< X" (abaixo do limite de quantificação) compara X com o limite: como o
+    valor real é necessariamente menor que X, se X já está dentro do limite,
+    o resultado real também está. "> X" é tratado como acima do limite sem
+    comparação, já que o valor real pode superar o limite por uma margem
+    desconhecida.
     """
     if not valor or not valor.strip():
         return "pendente"
     v = valor.strip()
-    if v.startswith("<"):
-        return "nao_detectado"
     if v.startswith(">"):
         return "acima_limite"
+    if v.startswith("<"):
+        v = v[1:].strip()
     try:
         num = float(v.replace(",", "."))
         # Tenta NR-15 primeiro; se inválido/traço, tenta ACGIH TWA
