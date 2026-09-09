@@ -238,6 +238,33 @@ def import_chemical_agents(
             db.flush()
             inserted += 1
 
+    db.flush()
+
+    # Passo 3: retroalimenta vínculos ficha-agente que ficaram sem Valor
+    # Encontrado porque foram criados antes do resultado_planilha existir na
+    # linha da planilha (ou antes de virar coluna reconhecida) — sem isso,
+    # o agente fica "pendente" pra sempre, mesmo já tendo dado na planilha.
+    # Só preenche quem está vazio: nunca sobrescreve valor editado manualmente.
+    from app.models.chemical_sheet_agent import ChemicalSheetAgent
+    from app.routers.chemical_field_sheets import _calcular_resultado
+
+    backfilled = 0
+    vinculos = (
+        db.query(ChemicalSheetAgent)
+        .filter(
+            (ChemicalSheetAgent.valor_encontrado.is_(None))
+            | (ChemicalSheetAgent.valor_encontrado == "")
+        )
+        .all()
+    )
+    for sa in vinculos:
+        agent = db.query(ChemicalAgent).filter(ChemicalAgent.id == sa.agent_id).first()
+        if agent and agent.resultado_planilha:
+            sa.valor_encontrado = agent.resultado_planilha
+            sa.resultado_status = _calcular_resultado(agent.resultado_planilha, agent)
+            backfilled += 1
+    db.flush()
+
     db.commit()
     return {
         "message": "Importação concluída",
@@ -245,5 +272,6 @@ def import_chemical_agents(
         "updated": updated,
         "merged": merged,
         "cleaned": cleaned,
+        "backfilled": backfilled,
         "total": inserted + updated,
     }
