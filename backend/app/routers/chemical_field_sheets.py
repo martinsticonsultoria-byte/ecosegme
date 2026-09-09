@@ -36,6 +36,8 @@ def _calcular_resultado(valor: str, agent: ChemicalAgent) -> str:
     v = valor.strip()
     if v.startswith("<"):
         return "nao_detectado"
+    if v.startswith(">"):
+        return "acima_limite"
     try:
         num = float(v.replace(",", "."))
         # Tenta NR-15 primeiro; se inválido/traço, tenta ACGIH TWA
