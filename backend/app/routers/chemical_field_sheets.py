@@ -147,6 +147,7 @@ def generate_chemical_pdf_report(
 ):
     """Gera relatório PDF das fichas químicas de uma empresa (com capa e fichas individuais)."""
     import os, io, math, tempfile, re as _re, base64
+    from pathlib import Path
     from fastapi.responses import StreamingResponse
     from datetime import datetime
     from jinja2 import Template
@@ -169,6 +170,12 @@ def generate_chemical_pdf_report(
 
     if not sheets:
         raise HTTPException(status_code=404, detail="Nenhuma ficha química encontrada para esta empresa")
+
+    if len(sheets) > 40:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Lote de {len(sheets)} fichas excede o máximo de 40 por PDF. Gere em lotes menores."
+        )
 
     sem_numero = [s for s in sheets if not s.laudo_number]
     if sem_numero:
@@ -267,8 +274,12 @@ def generate_chemical_pdf_report(
     fundo_path = os.path.join(tmpl_dir, "images", "capa_fundo_químico.png")
     tmpl_path  = os.path.join(tmpl_dir, "relatorio_quimico_pdf.html")
 
-    with open(logo_path,  "rb") as f: logo_b64       = base64.b64encode(f.read()).decode()
-    with open(assin_path, "rb") as f: assinatura_b64 = base64.b64encode(f.read()).decode()
+    # logo/assinatura viram file:// em vez de base64: no PDF em lote elas são
+    # renderizadas 1x por ficha, e base64 inline nesse loop chegava a inflar o
+    # HTML em dezenas de MB, estourando a RAM do WeasyPrint. A capa (1x por
+    # PDF) não tem esse problema e continua em base64.
+    logo_url       = Path(logo_path).resolve().as_uri()
+    assinatura_url = Path(assin_path).resolve().as_uri()
     with open(fundo_path, "rb") as f: capa_fundo_b64 = base64.b64encode(f.read()).decode()
     # autoescape: os textos editáveis pelo admin (objetivo, notas, conclusão...) e os
     # digitados em campo entram como conteúdo, não marcação. Sem isso, um "< 5 ppm"
@@ -283,8 +294,8 @@ def generate_chemical_pdf_report(
         year=year,
         laudo_min=laudo_min,
         laudo_max=laudo_max,
-        logo_b64=logo_b64,
-        assinatura_b64=assinatura_b64,
+        logo_url=logo_url,
+        assinatura_url=assinatura_url,
         capa_fundo_b64=capa_fundo_b64,
         empresa_font_size=empresa_font_size,
         endereco_font_size=endereco_font_size,

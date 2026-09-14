@@ -419,6 +419,12 @@ def generate_bulk_pdf(
     if not sheets:
         raise HTTPException(status_code=404, detail="Nenhuma ficha encontrada para esse grupo")
 
+    if len(sheets) > 40:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Lote de {len(sheets)} fichas excede o máximo de 40 por PDF. Gere em lotes menores."
+        )
+
     sem_numero = [s for s in sheets if not s.laudo_number]
     if sem_numero:
         raise HTTPException(
@@ -500,14 +506,19 @@ def generate_bulk_pdf(
         })
 
     import base64
+    from pathlib import Path
     tmpl_path = os.path.join(os.path.dirname(__file__), "../templates/relatorio_pdf.html")
     logo_path = os.path.join(os.path.dirname(__file__), "../templates/logo.png")
     assinatura_path = os.path.join(os.path.dirname(__file__), "../templates/relatório_assinatura.png")
     img_dir = os.path.join(os.path.dirname(__file__), "../templates/images")
-    with open(logo_path, "rb") as f:
-        logo_b64 = base64.b64encode(f.read()).decode()
-    with open(assinatura_path, "rb") as f:
-        assinatura_b64 = base64.b64encode(f.read()).decode()
+    # logo/assinatura viram file:// em vez de base64: no PDF em lote elas são
+    # renderizadas 1x por ficha, e base64 inline nesse loop chegava a inflar o
+    # HTML em dezenas de MB (ex.: 22MB num lote de 60), estourando a RAM do
+    # WeasyPrint. file:// é só uma referência curta — a imagem é lida do disco
+    # sob demanda, sem duplicar o conteúdo no HTML. A capa (1x por PDF) não
+    # tem esse problema e continua em base64.
+    logo_url = Path(logo_path).resolve().as_uri()
+    assinatura_url = Path(assinatura_path).resolve().as_uri()
     with open(os.path.join(img_dir, "capa_fundo.png.png"), "rb") as f:
         capa_fundo_b64 = base64.b64encode(f.read()).decode()
     with open(tmpl_path, "r", encoding="utf-8") as f:
@@ -557,8 +568,8 @@ def generate_bulk_pdf(
         laudo_numbers=laudo_numbers,
         laudo_min=laudo_min,
         laudo_max=laudo_max,
-        logo_b64=logo_b64,
-        assinatura_b64=assinatura_b64,
+        logo_url=logo_url,
+        assinatura_url=assinatura_url,
         capa_fundo_b64=capa_fundo_b64,
         empresa_font_size=empresa_font_size,
         endereco_font_size=endereco_font_size,
