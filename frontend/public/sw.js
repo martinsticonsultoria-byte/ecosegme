@@ -20,7 +20,12 @@ self.addEventListener('fetch', e => {
     e.respondWith(
       fetch(e.request)
         .then(r => {
-          caches.open(CACHE).then(c => c.put(e.request, r.clone()))
+          // clone tem que acontecer aqui, antes de devolver r pro chamador —
+          // se esperar o caches.open() (assíncrono) resolver primeiro, o
+          // corpo da resposta original já pode ter sido lido em outro lugar,
+          // e o clone() nesse ponto falha com "Response body is already used"
+          const copy = r.clone()
+          caches.open(CACHE).then(c => c.put(e.request, copy))
           return r
         })
         .catch(() => caches.match(e.request))

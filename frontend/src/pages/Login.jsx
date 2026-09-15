@@ -31,8 +31,14 @@ export default function Login() {
         localStorage.removeItem('saved_email');
       }
       navigate(u?.role === 'admin_staff' ? '/companies' : '/field-sheet/new');
-    } catch {
-      setError('Email ou senha incorretos');
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError('Email ou senha incorretos');
+      } else if (err.response) {
+        setError(`Erro no servidor (${err.response.status}). Tente novamente em instantes.`);
+      } else {
+        setError('Não foi possível conectar ao servidor. Verifique sua conexão ou tente novamente em instantes.');
+      }
     } finally {
       setLoading(false);
     }
