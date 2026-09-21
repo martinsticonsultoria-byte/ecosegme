@@ -392,11 +392,16 @@ def generate_bulk_pdf(
     company_id: int,
     tipo_analise: str,
     field_sheet_ids: Optional[List[int]] = Query(None),
+    replace_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     import io, tempfile, math
     from fastapi.responses import StreamingResponse
+    old_rec = None
+    if replace_id is not None:
+        from app.consolidated_cleanup import validate_replace_target
+        old_rec = validate_replace_target(db, replace_id, company_id, tipo_analise)
     from datetime import datetime
     from jinja2 import Template
     from weasyprint import HTML
@@ -609,10 +614,14 @@ def generate_bulk_pdf(
             format="pdf",
             filename=filename,
             storage_path=storage_path,
+            sheet_ids=[s.id for s in sheets],
             generated_by=current_user.id,
         )
         db.add(rec)
         db.commit()
+        if old_rec is not None:
+            from app.consolidated_cleanup import remove_consolidated
+            remove_consolidated(db, old_rec)
 
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
@@ -625,19 +634,8 @@ def delete_consolidated(rec_id: int, db: Session = Depends(get_db), _=Depends(ge
     rec = db.query(ConsolidatedReport).filter(ConsolidatedReport.id == rec_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail="Relatório não encontrado")
-    if rec.storage_path.startswith("supabase://"):
-        storage_path = rec.storage_path.removeprefix("supabase://")
-        try:
-            supabase_storage.delete_file(storage_path)
-        except Exception:
-            pass
-    elif os.path.exists(rec.storage_path):
-        try:
-            os.unlink(rec.storage_path)
-        except OSError:
-            pass
-    db.delete(rec)
-    db.commit()
+    from app.consolidated_cleanup import remove_consolidated
+    remove_consolidated(db, rec)
     return {"ok": True}
 
 
@@ -646,7 +644,7 @@ def list_consolidated(company_id: int, db: Session = Depends(get_db), _=Depends(
     recs = db.query(ConsolidatedReport).filter(
         ConsolidatedReport.company_id == company_id
     ).order_by(ConsolidatedReport.generated_at.desc()).all()
-    return [{"id": r.id, "filename": r.filename, "format": r.format, "tipo_analise": r.tipo_analise, "generated_at": r.generated_at} for r in recs]
+    return [{"id": r.id, "filename": r.filename, "format": r.format, "tipo_analise": r.tipo_analise, "generated_at": r.generated_at, "sheet_ids": r.sheet_ids} for r in recs]
 
 @router.get("/consolidated/url/{rec_id}")
 def get_consolidated_download_url(rec_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):

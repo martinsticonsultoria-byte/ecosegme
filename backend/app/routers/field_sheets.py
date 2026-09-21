@@ -2,7 +2,7 @@ import os
 import tempfile
 import logging
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 logger = logging.getLogger(__name__)
 from fastapi.responses import FileResponse
@@ -87,11 +87,11 @@ def create_field_sheet(data: FieldSheetCreate, db: Session = Depends(get_db), cu
     return sheet
 
 @router.patch("/{sheet_id}/edit")
-def edit_field_sheet(sheet_id: int, body: dict, db: Session = Depends(get_db), _=Depends(get_current_user)):
+def edit_field_sheet(sheet_id: int, body: dict, allow_approved: bool = Query(False), db: Session = Depends(get_db), _=Depends(get_current_user)):
     sheet = db.query(FieldSheet).filter(FieldSheet.id == sheet_id).first()
     if not sheet:
         raise HTTPException(status_code=404, detail="Ficha não encontrada")
-    if sheet.status == "aprovada":
+    if sheet.status == "aprovada" and not allow_approved:
         raise HTTPException(status_code=400, detail="Não é possível editar uma ficha já aprovada")
 
     novo_xxx = body.get("laudo_number")

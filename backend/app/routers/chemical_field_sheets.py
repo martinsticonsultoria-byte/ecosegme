@@ -142,10 +142,15 @@ def create_chemical_field_sheet(
 def generate_chemical_pdf_report(
     company_id: int,
     field_sheet_ids: Optional[List[int]] = Query(None),
+    replace_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Gera relatório PDF das fichas químicas de uma empresa (com capa e fichas individuais)."""
+    old_rec = None
+    if replace_id is not None:
+        from app.consolidated_cleanup import validate_replace_target
+        old_rec = validate_replace_target(db, replace_id, company_id, "Químico")
     import os, io, math, tempfile, re as _re, base64
     from pathlib import Path
     from fastapi.responses import StreamingResponse
@@ -331,10 +336,14 @@ def generate_chemical_pdf_report(
             format="pdf",
             filename=filename,
             storage_path=storage_path,
+            sheet_ids=[s.id for s in sheets],
             generated_by=current_user.id,
         )
         db.add(rec)
         db.commit()
+        if old_rec is not None:
+            from app.consolidated_cleanup import remove_consolidated
+            remove_consolidated(db, old_rec)
 
     return StreamingResponse(
         io.BytesIO(pdf_bytes),

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import EpiInput from '../components/EpiInput';
 import CatalogInput from '../components/CatalogInput';
+import EditReportModal from '../components/EditReportModal';
 
 function NovaFichaDropdown({ companyId }) {
   const navigate = useNavigate();
@@ -119,6 +120,7 @@ export default function CompanyDetail() {
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [showRelModal, setShowRelModal] = useState(false);
+  const [editReportTarget, setEditReportTarget] = useState(null);
   const [relFichas, setRelFichas] = useState([]);
   const [relFichasSel, setRelFichasSel] = useState([]);
   const [relCarregando, setRelCarregando] = useState(false);
@@ -832,6 +834,9 @@ export default function CompanyDetail() {
                             }
                           } catch { alert('Erro ao baixar relatório.'); }
                         }}>Baixar</button>
+                        {r.format === 'pdf' && Array.isArray(r.sheet_ids) && r.sheet_ids.length > 0 && (
+                          <button className="btn btn-secondary btn-sm" onClick={() => setEditReportTarget(r)}>Editar</button>
+                        )}
                         <button className="btn btn-sm" style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
                           onClick={async () => {
                             if (!window.confirm(`Excluir o relatório "${r.filename}"? Você poderá gerá-lo novamente.`)) return;
@@ -1128,6 +1133,15 @@ export default function CompanyDetail() {
             </div>
           </div>
         </div>
+      )}
+
+      {editReportTarget && (
+        <EditReportModal
+          report={editReportTarget}
+          companyId={id}
+          onClose={() => setEditReportTarget(null)}
+          onSaved={(list) => { if (list) setConsolidated(list); }}
+        />
       )}
 
       {showRelModal && (

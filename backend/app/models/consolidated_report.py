@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -12,6 +12,7 @@ class ConsolidatedReport(Base):
     format = Column(String(10), nullable=False)  # "pdf" ou "xlsx"
     filename = Column(String(255), nullable=False)
     storage_path = Column(String(500), nullable=False)
+    sheet_ids = Column(JSON, nullable=True)  # ids das fichas que compõem o PDF
     generated_by = Column(Integer, ForeignKey("users.id"), nullable=False)
     generated_at = Column(DateTime(timezone=True), server_default=func.now())
 
