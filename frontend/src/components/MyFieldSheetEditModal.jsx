@@ -12,6 +12,12 @@ function errMsg(err, fallback) {
 
 function ruidoForm(sheet) {
   return {
+    employee_name_text: sheet.employee_nome || '',
+    funcao: sheet.employee_funcao || '',
+    matricula: sheet.employee_matricula || '',
+    matricula_tipo: sheet.matricula_tipo || 'matricula',
+    setor: sheet.employee_setor || '',
+    local: sheet.employee_local || '',
     dosimeter_number: sheet.dosimeter_number ?? '',
     collection_date: sheet.collection_date || '',
     epi: sheet.epi || '',
@@ -23,8 +29,7 @@ function ruidoForm(sheet) {
 function quimicoForm(sheet) {
   return {
     employee_id: sheet.employee_id || null,
-    employee_nome: sheet.employee_nome || '',
-    employee_name_text: sheet.employee_id ? '' : (sheet.employee_nome || ''),
+    employee_name_text: sheet.employee_nome || '',
     funcao: sheet.funcao || '',
     matricula: sheet.matricula || '',
     matricula_tipo: sheet.matricula_tipo || 'matricula',
@@ -70,21 +75,20 @@ export default function MyFieldSheetEditModal({ sheet, tipo, onClose, onSaved })
       if (isQuimico) {
         const payload = {};
         Object.keys(form).forEach(k => {
-          if (k === 'employee_id' || k === 'employee_nome') return;
+          if (k === 'employee_id') return;
           if (form[k] !== initForm[k]) payload[k] = form[k] === '' ? null : form[k];
         });
         if (Object.keys(payload).length > 0) {
           await api.patch(`/chemical-field-sheets/${sheet.id}`, payload);
         }
       } else {
-        const payload = {
-          dosimeter_number: form.dosimeter_number,
-          collection_date: form.collection_date,
-          epi: form.epi,
-          activity: form.activity,
-          machine_noise: form.machine_noise,
-        };
-        await api.patch(`/field-sheets/${sheet.id}/edit`, payload);
+        const payload = {};
+        Object.keys(form).forEach(k => {
+          if (form[k] !== initForm[k]) payload[k] = form[k] === '' ? null : form[k];
+        });
+        if (Object.keys(payload).length > 0) {
+          await api.patch(`/field-sheets/${sheet.id}/edit`, payload);
+        }
       }
       onSaved();
       onClose();

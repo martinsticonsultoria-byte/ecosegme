@@ -643,21 +643,32 @@ def update_chemical_field_sheet(
         }
         update_data = {k: v for k, v in update_data.items() if k in campos_tecnico}
 
-    # employee_name_text não é coluna do modelo — tratar separadamente
+    # employee_name_text não é coluna do modelo — tratar separadamente.
+    # Correção de nome (ex: técnico confundiu o funcionário na coleta): se já
+    # existe outro funcionário cadastrado com o nome novo, vincula a ele
+    # (evita duplicar cadastro); senão, corrige o nome do que já estava
+    # vinculado — o nome errado não deve sobrar como funcionário "fantasma".
     if "employee_name_text" in update_data:
         name = update_data.pop("employee_name_text")
         if name and name.strip():
-            existing = db.query(Employee).filter(
-                Employee.company_id == sheet.company_id,
-                Employee.nome == name.strip(),
-            ).first()
-            if existing:
-                sheet.employee_id = existing.id
-            else:
-                new_emp = Employee(company_id=sheet.company_id, nome=name.strip())
-                db.add(new_emp)
-                db.flush()
-                sheet.employee_id = new_emp.id
+            name = name.strip()
+            nome_atual = sheet.employee.nome if sheet.employee else sheet.employee_name_text
+            if name != nome_atual:
+                existing = db.query(Employee).filter(
+                    Employee.company_id == sheet.company_id,
+                    Employee.nome == name,
+                    Employee.id != (sheet.employee_id or -1),
+                ).first()
+                if existing:
+                    sheet.employee_id = existing.id
+                    sheet.employee_name_text = None
+                elif sheet.employee_id:
+                    sheet.employee.nome = name
+                else:
+                    new_emp = Employee(company_id=sheet.company_id, nome=name)
+                    db.add(new_emp)
+                    db.flush()
+                    sheet.employee_id = new_emp.id
 
     for field, value in update_data.items():
         # Só colunas mapeadas e com valor não-nulo

@@ -149,7 +149,7 @@ def edit_field_sheet(sheet_id: int, body: dict, allow_approved: bool = Query(Fal
         "matricula_tipo",
     }
     if not is_admin:
-        allowed = {"epi", "activity", "machine_noise", "dosimeter_number", "collection_date"}
+        allowed = {"epi", "activity", "machine_noise", "dosimeter_number", "collection_date", "matricula_tipo"}
     for key, value in body.items():
         if key not in allowed:
             continue
@@ -161,7 +161,38 @@ def edit_field_sheet(sheet_id: int, body: dict, allow_approved: bool = Query(Fal
             value = int(value)
         setattr(sheet, key, value)
 
-    # Atualiza campos do funcionário se enviados
+    # Correção do nome do funcionário — o caso comum é o técnico ter digitado
+    # o nome errado na coleta (confundiu o funcionário) e agora corrige antes
+    # da aprovação. Nesse caso o nome antigo deve DEIXAR DE APARECER, não
+    # sobrar um funcionário "fantasma" com o nome errado. Por isso: se já
+    # existe outro funcionário cadastrado com o nome novo, vincula a ele
+    # (evita duplicar cadastro); senão, corrige o nome do que já estava
+    # vinculado a esta ficha (mutação in-place — mesma lógica de
+    # funcao/matricula/setor/local logo abaixo).
+    novo_nome = body.get("employee_name_text")
+    if novo_nome and str(novo_nome).strip():
+        novo_nome = str(novo_nome).strip()
+        nome_atual = sheet.employee.nome if sheet.employee else sheet.employee_name_text
+        if novo_nome != nome_atual:
+            from app.models.employee import Employee
+            existing_emp = db.query(Employee).filter(
+                Employee.company_id == sheet.company_id,
+                Employee.nome == novo_nome,
+                Employee.id != (sheet.employee_id or -1),
+            ).first()
+            if existing_emp:
+                sheet.employee_id = existing_emp.id
+            elif sheet.employee_id:
+                sheet.employee.nome = novo_nome
+            else:
+                new_emp = Employee(company_id=sheet.company_id, nome=novo_nome)
+                db.add(new_emp)
+                db.flush()
+                sheet.employee_id = new_emp.id
+            sheet.employee_name_text = None
+
+    # Atualiza campos do funcionário vinculado (função/matrícula/setor/local)
+    # se enviados — em cima do vínculo já atualizado acima, se houve troca de nome.
     emp_fields = {"funcao", "matricula", "setor", "local"}
     emp_updates = {k: (v if v != "" else None) for k, v in body.items() if k in emp_fields}
     if emp_updates and sheet.employee_id:

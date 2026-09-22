@@ -5,19 +5,11 @@ export default function QuimicoTecnicoEditFields({ form, setForm, matriculaTipo,
   return (
     <>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 12 }}>
-        {!form.employee_id && (
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Nome do Funcionário</label>
-            <input className="form-input" value={form.employee_name_text || ''}
-              onChange={e => setForm(f => ({ ...f, employee_name_text: e.target.value }))} />
-          </div>
-        )}
-        {form.employee_id && (
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Nome do Funcionário</label>
-            <div style={{ color: '#666', fontWeight: 500, fontSize: 13, padding: '8px 0' }}>{form.employee_nome}</div>
-          </div>
-        )}
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label className="form-label">Nome do Funcionário</label>
+          <input className="form-input" value={form.employee_name_text || ''}
+            onChange={e => setForm(f => ({ ...f, employee_name_text: e.target.value }))} />
+        </div>
         <div className="form-group" style={{ marginBottom: 0 }}>
           <label className="form-label">Função</label>
           <input className="form-input" value={form.funcao || ''}
