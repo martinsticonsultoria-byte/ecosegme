@@ -26,7 +26,7 @@ FICHA_TEMPLATE = os.path.join(os.path.dirname(__file__), "../templates/ficha_cam
 router = APIRouter(prefix="/field-sheets", tags=["field-sheets"])
 
 @router.get("", response_model=List[FieldSheetOut])
-def list_field_sheets(company_id: int = None, tipo_analise: str = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def list_field_sheets(company_id: int = None, tipo_analise: str = None, mine: bool = Query(False), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     from sqlalchemy import or_
     q = db.query(FieldSheet)
     if company_id:
@@ -36,6 +36,8 @@ def list_field_sheets(company_id: int = None, tipo_analise: str = None, db: Sess
             q = q.filter(or_(FieldSheet.tipo_analise == tipo_analise, FieldSheet.tipo_analise.is_(None)))
         else:
             q = q.filter(FieldSheet.tipo_analise == tipo_analise)
+    if mine:
+        q = q.filter(FieldSheet.created_by == current_user.id)
     return q.order_by(FieldSheet.created_at.desc()).all()
 
 @router.get("/pending", response_model=List[FieldSheetOut])
@@ -87,10 +89,19 @@ def create_field_sheet(data: FieldSheetCreate, db: Session = Depends(get_db), cu
     return sheet
 
 @router.patch("/{sheet_id}/edit")
-def edit_field_sheet(sheet_id: int, body: dict, allow_approved: bool = Query(False), db: Session = Depends(get_db), _=Depends(get_current_user)):
+def edit_field_sheet(sheet_id: int, body: dict, allow_approved: bool = Query(False), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     sheet = db.query(FieldSheet).filter(FieldSheet.id == sheet_id).first()
     if not sheet:
         raise HTTPException(status_code=404, detail="Ficha não encontrada")
+
+    from app.models.user import UserRole
+    is_admin = current_user.role == UserRole.admin_staff
+    if not is_admin:
+        if sheet.created_by != current_user.id:
+            raise HTTPException(status_code=403, detail="Você só pode editar fichas criadas por você")
+        if allow_approved:
+            raise HTTPException(status_code=403, detail="Você não pode forçar edição de ficha aprovada")
+
     if sheet.status == "aprovada" and not allow_approved:
         raise HTTPException(status_code=400, detail="Não é possível editar uma ficha já aprovada")
 
@@ -137,6 +148,8 @@ def edit_field_sheet(sheet_id: int, body: dict, allow_approved: bool = Query(Fal
         "equipamentos_texto", "config_dosimetro_texto",
         "matricula_tipo",
     }
+    if not is_admin:
+        allowed = {"epi", "activity", "machine_noise", "dosimeter_number", "collection_date"}
     for key, value in body.items():
         if key not in allowed:
             continue

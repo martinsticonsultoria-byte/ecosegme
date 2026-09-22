@@ -83,14 +83,17 @@ def _get_sheet_or_404(sheet_id: int, db: Session) -> ChemicalFieldSheet:
 def list_chemical_field_sheets(
     company_id: Optional[int] = None,
     status: Optional[str] = None,
+    mine: bool = Query(False),
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     q = db.query(ChemicalFieldSheet)
     if company_id:
         q = q.filter(ChemicalFieldSheet.company_id == company_id)
     if status:
         q = q.filter(ChemicalFieldSheet.status == status)
+    if mine:
+        q = q.filter(ChemicalFieldSheet.created_by == current_user.id)
     return q.order_by(ChemicalFieldSheet.created_at.desc()).all()
 
 
@@ -556,9 +559,18 @@ def update_chemical_field_sheet(
     data: ChemicalFieldSheetUpdate,
     confirm_group: bool = Query(False, description="Confirma inclusão no grupo de laudo existente"),
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     sheet = _get_sheet_or_404(sheet_id, db)
+
+    from app.models.user import UserRole
+    is_admin = current_user.role == UserRole.admin_staff
+    if not is_admin:
+        if sheet.created_by != current_user.id:
+            raise HTTPException(status_code=403, detail="Você só pode editar fichas criadas por você")
+        if sheet.status == "aprovado":
+            raise HTTPException(status_code=400, detail="Não é possível editar uma ficha já aprovada")
+
     update_data = data.dict(exclude_unset=True)
 
     novo_xxx = update_data.get("laudo_number")
@@ -622,6 +634,14 @@ def update_chemical_field_sheet(
                         ),
                     },
                 )
+
+    if not is_admin:
+        campos_tecnico = {
+            "employee_name_text", "funcao", "matricula", "matricula_tipo", "setor", "local",
+            "numero_ficha_campo", "collection_date", "numero_amostrador", "tipo_amostrador",
+            "technician_name", "situacao_ambiente", "jornada_trabalho", "observacoes",
+        }
+        update_data = {k: v for k, v in update_data.items() if k in campos_tecnico}
 
     # employee_name_text não é coluna do modelo — tratar separadamente
     if "employee_name_text" in update_data:

@@ -62,6 +62,7 @@ class FieldSheetOut(BaseModel):
     has_sonus: Optional[bool] = False
     sonus_parsed_name: Optional[str] = None
     sonus_name_mismatch: Optional[bool] = None
+    created_by: Optional[int] = None
     created_at: datetime
 
     class Config:

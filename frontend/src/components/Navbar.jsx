@@ -116,6 +116,8 @@ export default function Navbar() {
               )}
             </div>
 
+            <NavItem to="/my-sheets">Minhas Fichas</NavItem>
+
             {user?.role === 'admin_staff' && (
               <>
                 <NavItem to="/conference">Conferência</NavItem>
@@ -162,6 +164,9 @@ export default function Navbar() {
           </div>
           <div onClick={() => { navigate('/chemical-field-sheet/new'); setMenuOpen(false); }} style={mobileItemStyle(location.pathname === '/chemical-field-sheet/new')}>
             Ficha de Campo — Químico
+          </div>
+          <div onClick={() => { navigate('/my-sheets'); setMenuOpen(false); }} style={mobileItemStyle(location.pathname === '/my-sheets')}>
+            Minhas Fichas
           </div>
           {user?.role === 'admin_staff' && (
             <>

@@ -172,6 +172,7 @@ class ChemicalFieldSheetOut(BaseModel):
     notas_texto:         Optional[str]   = None
     referencias_texto:   Optional[str]   = None
     agents:              List[ChemicalSheetAgentOut] = []
+    created_by:          Optional[int] = None
     created_at:          datetime
 
     class Config:
