@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import CompanySelect from '../components/CompanySelect'
 import EpiInput from '../components/EpiInput';
 import MatriculaToggle from '../components/MatriculaToggle';
 
@@ -196,10 +197,7 @@ export default function FieldSheetForm() {
 
           <div className="form-group">
             <label className="form-label">Empresa <span>*</span></label>
-            <select name="company_id" className="form-input" value={form.company_id} onChange={handleCompanyChange}>
-              <option value="">Selecione...</option>
-              {companies.map(c => <option key={c.id} value={c.id}>{c.razao_social}</option>)}
-            </select>
+            <CompanySelect companies={companies} value={form.company_id} onChange={handleCompanyChange} />
           </div>
 
           {/* Campo funcionário com autocomplete */}

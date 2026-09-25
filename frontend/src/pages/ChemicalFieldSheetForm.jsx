@@ -7,6 +7,7 @@ import {
   saveOfflineCache, getOfflineCache
 } from '../offlineStorage';
 import CatalogInput from '../components/CatalogInput';
+import CompanySelect from '../components/CompanySelect'
 
 const OFFLINE_TIPO = 'quimico';
 
@@ -334,10 +335,7 @@ export default function ChemicalFieldSheetForm() {
           {!prefilledCompanyId && (
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
               <label className="form-label">Empresa <span>*</span></label>
-              <select className="form-input" value={selectedCompanyId} onChange={handleCompanyChange}>
-                <option value="">Selecione a empresa...</option>
-                {companies.map(c => <option key={c.id} value={c.id}>{c.razao_social}</option>)}
-              </select>
+              <CompanySelect companies={companies} value={selectedCompanyId} onChange={handleCompanyChange} placeholder="Selecione a empresa..." />
             </div>
           )}
 

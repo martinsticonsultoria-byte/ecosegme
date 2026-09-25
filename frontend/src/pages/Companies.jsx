@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { SearchIcon } from '../components/CompanySelect';
 
 export default function Companies() {
   const navigate = useNavigate();
@@ -144,13 +145,18 @@ export default function Companies() {
       )}
 
       <div className="card" style={{ marginBottom: 16, padding: '12px 16px' }}>
-        <input
-          className="form-input"
-          placeholder="Buscar empresa..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ maxWidth: 360 }}
-        />
+        <div style={{ position: 'relative', maxWidth: 360 }}>
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', display: 'flex', pointerEvents: 'none' }}>
+            <SearchIcon />
+          </span>
+          <input
+            className="form-input"
+            placeholder="Buscar empresa..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ paddingLeft: 38, fontSize: 16 }}
+          />
+        </div>
       </div>
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>

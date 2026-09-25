@@ -8,6 +8,7 @@ import {
 } from '../offlineStorage'
 import EpiInput from '../components/EpiInput'
 import MatriculaToggle from '../components/MatriculaToggle'
+import CompanySelect from '../components/CompanySelect'
 
 export default function FieldSheetMobile() {
   const { user } = useAuth()
@@ -245,10 +246,7 @@ export default function FieldSheetMobile() {
 
           <div className="form-group">
             <label className="form-label">Empresa <span>*</span></label>
-            <select name="company_id" className="form-input" value={form.company_id} onChange={handleCompanyChange}>
-              <option value="">Selecione...</option>
-              {companies.map(c => <option key={c.id} value={c.id}>{c.razao_social}</option>)}
-            </select>
+            <CompanySelect companies={companies} value={form.company_id} onChange={handleCompanyChange} />
           </div>
 
           <div className="form-group" style={{ position: 'relative' }}>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
+import CompanySelect from '../components/CompanySelect'
 
 export default function Reports() {
   const [companies, setCompanies] = useState([]);
@@ -51,10 +52,7 @@ export default function Reports() {
 
       <div className="card" style={{ marginBottom: 24 }}>
         <div className="section-title">Filtrar por Empresa</div>
-        <select className="form-input" style={{ maxWidth: 400 }} value={selectedCompany} onChange={handleCompanyChange}>
-          <option value="">Selecione uma empresa...</option>
-          {companies.map(c => <option key={c.id} value={c.id}>{c.razao_social}</option>)}
-        </select>
+        <CompanySelect companies={companies} value={selectedCompany} onChange={handleCompanyChange} placeholder="Selecione uma empresa..." allowClear style={{ maxWidth: 400 }} />
       </div>
 
       {loading && (
