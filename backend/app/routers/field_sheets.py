@@ -19,16 +19,32 @@ from app.models.sonus_upload import SonusUpload
 from app.models.audit_log import AuditLog
 from app.schemas.field_sheet import FieldSheetCreate, FieldSheetOut
 from app.core.deps import get_current_user, require_admin
-from app.models.user import User
+from app.models.user import User, UserRole
 
 FICHA_TEMPLATE = os.path.join(os.path.dirname(__file__), "../templates/ficha_campo.html")
 
 router = APIRouter(prefix="/field-sheets", tags=["field-sheets"])
 
+def _attach_sonus_cache(db: Session, sheets: List[FieldSheet]):
+    """Pré-carrega em lote os SonusUpload das fichas e popula o cache transiente
+    usado pelas properties has_sonus/sonus_parsed_name/sonus_name_mismatch, evitando
+    1+ query por ficha ao serializar a lista."""
+    if not sheets:
+        return sheets
+    uploads = {
+        u.field_sheet_id: u
+        for u in db.query(SonusUpload).filter(SonusUpload.field_sheet_id.in_([s.id for s in sheets])).all()
+    }
+    for s in sheets:
+        setattr(s, FieldSheet._sonus_cache_attr, uploads.get(s.id))
+    return sheets
+
+
 @router.get("", response_model=List[FieldSheetOut])
 def list_field_sheets(company_id: int = None, tipo_analise: str = None, mine: bool = Query(False), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     from sqlalchemy import or_
-    q = db.query(FieldSheet)
+    from sqlalchemy.orm import joinedload
+    q = db.query(FieldSheet).options(joinedload(FieldSheet.company), joinedload(FieldSheet.employee))
     if company_id:
         q = q.filter(FieldSheet.company_id == company_id)
     if tipo_analise:
@@ -36,18 +52,22 @@ def list_field_sheets(company_id: int = None, tipo_analise: str = None, mine: bo
             q = q.filter(or_(FieldSheet.tipo_analise == tipo_analise, FieldSheet.tipo_analise.is_(None)))
         else:
             q = q.filter(FieldSheet.tipo_analise == tipo_analise)
-    if mine:
+    if current_user.role != UserRole.admin_staff or mine:
         q = q.filter(FieldSheet.created_by == current_user.id)
-    return q.order_by(FieldSheet.created_at.desc()).all()
+    sheets = q.order_by(FieldSheet.created_at.desc()).all()
+    return _attach_sonus_cache(db, sheets)
 
 @router.get("/pending", response_model=List[FieldSheetOut])
-def list_pending_field_sheets(db: Session = Depends(get_db), _=Depends(get_current_user)):
+def list_pending_field_sheets(db: Session = Depends(get_db), _=Depends(require_admin)):
     from app.models.generated_report import GeneratedReport
+    from sqlalchemy.orm import joinedload
     subquery = db.query(GeneratedReport.field_sheet_id)
-    sheets = db.query(FieldSheet).filter(
+    sheets = db.query(FieldSheet).options(
+        joinedload(FieldSheet.company), joinedload(FieldSheet.employee)
+    ).filter(
         FieldSheet.id.notin_(subquery)
     ).order_by(FieldSheet.laudo_number.asc()).all()
-    return sheets
+    return _attach_sonus_cache(db, sheets)
 
 
 @router.post("", response_model=FieldSheetOut)
@@ -211,7 +231,7 @@ def edit_field_sheet(sheet_id: int, body: dict, allow_approved: bool = Query(Fal
     return {"ok": True}
 
 @router.patch("/{sheet_id}/status")
-def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=Depends(get_current_user)):
+def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=Depends(require_admin)):
     from app.models.sonus_upload import SonusUpload
     sheet = db.query(FieldSheet).filter(FieldSheet.id == sheet_id).first()
     if not sheet:
@@ -278,10 +298,12 @@ def update_status(sheet_id: int, body: dict, db: Session = Depends(get_db), _=De
     return {"id": sheet.id, "status": sheet.status, "laudo_y": sheet.laudo_y}
 
 @router.get("/{sheet_id}/pdf")
-def download_field_sheet_pdf(sheet_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
+def download_field_sheet_pdf(sheet_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     sheet = db.query(FieldSheet).filter(FieldSheet.id == sheet_id).first()
     if not sheet:
         raise HTTPException(status_code=404, detail="Ficha não encontrada")
+    if current_user.role != UserRole.admin_staff and sheet.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Você só pode acessar fichas criadas por você")
 
     company = sheet.company
     employee = sheet.employee
@@ -369,8 +391,10 @@ def delete_field_sheet(sheet_id: int, db: Session = Depends(get_db), _=Depends(r
         raise HTTPException(status_code=409, detail="Não foi possível excluir a ficha pois existem registros vinculados.")
 
 @router.get("/{sheet_id}", response_model=FieldSheetOut)
-def get_field_sheet(sheet_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
+def get_field_sheet(sheet_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     sheet = db.query(FieldSheet).filter(FieldSheet.id == sheet_id).first()
     if not sheet:
         raise HTTPException(status_code=404, detail="Ficha nao encontrada")
+    if current_user.role != UserRole.admin_staff and sheet.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Você só pode acessar fichas criadas por você")
     return sheet

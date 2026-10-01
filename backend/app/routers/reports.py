@@ -7,7 +7,7 @@ from app.database import get_db
 from app.models.field_sheet import FieldSheet
 from app.models.sonus_upload import SonusUpload
 from app.models.generated_report import GeneratedReport
-from app.core.deps import get_current_user
+from app.core.deps import get_current_user, require_admin
 from app.models.user import User
 from app.pdf_generator import generate_laudo
 from app.models.audit_log import AuditLog
@@ -25,7 +25,7 @@ def _fmt_sig_date(d):
     return f"Manaus, {d.day:02d} de {_MESES_PT[d.month-1]} de {d.year}."
 
 @router.post("/generate/{field_sheet_id}")
-def generate_report(field_sheet_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def generate_report(field_sheet_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     existing = db.query(GeneratedReport).filter(GeneratedReport.field_sheet_id == field_sheet_id).first()
     if existing:
         raise HTTPException(status_code=400, detail="Laudo ja gerado para esta ficha. Laudos sao imutaveis.")
@@ -183,7 +183,7 @@ def generate_bulk_report(
     company_id: int,
     tipo_analise: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_admin)
 ):
     import openpyxl
     import io
@@ -192,9 +192,12 @@ def generate_bulk_report(
     from app.models.sonus_upload import SonusUpload
 
     from sqlalchemy import or_
+    from sqlalchemy.orm import joinedload
     tipo_filter = or_(FieldSheet.tipo_analise == tipo_analise, FieldSheet.tipo_analise.is_(None)) \
         if tipo_analise == "Ruído" else FieldSheet.tipo_analise == tipo_analise
-    sheets = db.query(FieldSheet).filter(
+    sheets = db.query(FieldSheet).options(
+        joinedload(FieldSheet.employee), joinedload(FieldSheet.company)
+    ).filter(
         FieldSheet.company_id == company_id,
         tipo_filter
     ).order_by(FieldSheet.laudo_number, FieldSheet.laudo_y).all()
@@ -394,7 +397,7 @@ def generate_bulk_pdf(
     field_sheet_ids: Optional[List[int]] = Query(None),
     replace_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_admin)
 ):
     import io, tempfile, math
     from fastapi.responses import StreamingResponse
@@ -407,16 +410,21 @@ def generate_bulk_pdf(
     from weasyprint import HTML
     from app.models.sonus_upload import SonusUpload
     from sqlalchemy import or_
+    from sqlalchemy.orm import joinedload
 
     tipo_filter = or_(FieldSheet.tipo_analise == tipo_analise, FieldSheet.tipo_analise.is_(None)) \
         if tipo_analise == "Ruído" else FieldSheet.tipo_analise == tipo_analise
     if field_sheet_ids:
-        sheets = db.query(FieldSheet).filter(
+        sheets = db.query(FieldSheet).options(
+            joinedload(FieldSheet.employee), joinedload(FieldSheet.company)
+        ).filter(
             FieldSheet.id.in_(field_sheet_ids),
             FieldSheet.company_id == company_id
         ).order_by(FieldSheet.laudo_number, FieldSheet.laudo_y).all()
     else:
-        sheets = db.query(FieldSheet).filter(
+        sheets = db.query(FieldSheet).options(
+            joinedload(FieldSheet.employee), joinedload(FieldSheet.company)
+        ).filter(
             FieldSheet.company_id == company_id,
             tipo_filter
         ).order_by(FieldSheet.laudo_number, FieldSheet.laudo_y).all()

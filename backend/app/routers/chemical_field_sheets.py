@@ -18,7 +18,7 @@ from app.schemas.chemical import (
     clean_esocial,
 )
 from app.core.deps import get_current_user, require_admin
-from app.models.user import User
+from app.models.user import User, UserRole
 
 router = APIRouter(prefix="/chemical-field-sheets", tags=["chemical-field-sheets"])
 
@@ -69,7 +69,12 @@ def _calcular_resultado(valor: str, agent: ChemicalAgent) -> str:
 
 
 def _get_sheet_or_404(sheet_id: int, db: Session) -> ChemicalFieldSheet:
-    sheet = db.query(ChemicalFieldSheet).filter(ChemicalFieldSheet.id == sheet_id).first()
+    from sqlalchemy.orm import joinedload, selectinload
+    sheet = db.query(ChemicalFieldSheet).options(
+        joinedload(ChemicalFieldSheet.company),
+        joinedload(ChemicalFieldSheet.employee),
+        selectinload(ChemicalFieldSheet.agents).joinedload(ChemicalSheetAgent.agent),
+    ).filter(ChemicalFieldSheet.id == sheet_id).first()
     if not sheet:
         raise HTTPException(status_code=404, detail="Ficha química não encontrada")
     return sheet
@@ -87,12 +92,17 @@ def list_chemical_field_sheets(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    q = db.query(ChemicalFieldSheet)
+    from sqlalchemy.orm import joinedload, selectinload
+    q = db.query(ChemicalFieldSheet).options(
+        joinedload(ChemicalFieldSheet.company),
+        joinedload(ChemicalFieldSheet.employee),
+        selectinload(ChemicalFieldSheet.agents).joinedload(ChemicalSheetAgent.agent),
+    )
     if company_id:
         q = q.filter(ChemicalFieldSheet.company_id == company_id)
     if status:
         q = q.filter(ChemicalFieldSheet.status == status)
-    if mine:
+    if current_user.role != UserRole.admin_staff or mine:
         q = q.filter(ChemicalFieldSheet.created_by == current_user.id)
     return q.order_by(ChemicalFieldSheet.created_at.desc()).all()
 
@@ -147,7 +157,7 @@ def generate_chemical_pdf_report(
     field_sheet_ids: Optional[List[int]] = Query(None),
     replace_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     """Gera relatório PDF das fichas químicas de uma empresa (com capa e fichas individuais)."""
     old_rec = None
@@ -171,7 +181,12 @@ def generate_chemical_pdf_report(
     if not company:
         raise HTTPException(status_code=404, detail="Empresa não encontrada")
 
-    q = db.query(ChemicalFieldSheet).filter(ChemicalFieldSheet.company_id == company_id)
+    from sqlalchemy.orm import joinedload, selectinload
+    q = db.query(ChemicalFieldSheet).filter(ChemicalFieldSheet.company_id == company_id).options(
+        joinedload(ChemicalFieldSheet.employee),
+        joinedload(ChemicalFieldSheet.creator),
+        selectinload(ChemicalFieldSheet.agents).joinedload(ChemicalSheetAgent.agent),
+    )
     if field_sheet_ids:
         q = q.filter(ChemicalFieldSheet.id.in_(field_sheet_ids))
     sheets = q.order_by(ChemicalFieldSheet.laudo_number, ChemicalFieldSheet.laudo_y).all()
@@ -359,7 +374,7 @@ def generate_chemical_pdf_report(
 def generate_chemical_xlsx_report(
     company_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     """Gera relatório XLSX consolidado das fichas químicas de uma empresa."""
     import io, re as _re
@@ -376,9 +391,14 @@ def generate_chemical_xlsx_report(
     if not company:
         raise HTTPException(status_code=404, detail="Empresa não encontrada")
 
+    from sqlalchemy.orm import joinedload, selectinload
     sheets = (
         db.query(ChemicalFieldSheet)
         .filter(ChemicalFieldSheet.company_id == company_id)
+        .options(
+            joinedload(ChemicalFieldSheet.employee),
+            selectinload(ChemicalFieldSheet.agents).joinedload(ChemicalSheetAgent.agent),
+        )
         .order_by(ChemicalFieldSheet.laudo_number, ChemicalFieldSheet.collection_date)
         .all()
     )
@@ -548,9 +568,12 @@ def generate_chemical_xlsx_report(
 def get_chemical_field_sheet(
     sheet_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    return _get_sheet_or_404(sheet_id, db)
+    sheet = _get_sheet_or_404(sheet_id, db)
+    if current_user.role != UserRole.admin_staff and sheet.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Você só pode acessar fichas criadas por você")
+    return sheet
 
 
 @router.patch("/{sheet_id}", response_model=ChemicalFieldSheetOut)
@@ -749,7 +772,7 @@ def delete_chemical_field_sheet(
 def list_sheet_agents(
     sheet_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_admin),
 ):
     _get_sheet_or_404(sheet_id, db)
     return (
@@ -765,7 +788,7 @@ def add_sheet_agent(
     sheet_id: int,
     data: ChemicalSheetAgentCreate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_admin),
 ):
     _get_sheet_or_404(sheet_id, db)
     agent = db.query(ChemicalAgent).filter(ChemicalAgent.id == data.agent_id).first()
@@ -793,7 +816,7 @@ def update_sheet_agent(
     agent_id: int,
     data: ChemicalSheetAgentUpdate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_admin),
 ):
     sa = (
         db.query(ChemicalSheetAgent)
@@ -828,7 +851,7 @@ def remove_sheet_agent(
     sheet_id: int,
     agent_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_admin),
 ):
     sa = (
         db.query(ChemicalSheetAgent)

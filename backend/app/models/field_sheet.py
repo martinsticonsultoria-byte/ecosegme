@@ -74,33 +74,33 @@ class FieldSheet(Base):
     def employee_local(self):
         return self.employee.local if self.employee else None
 
-    @property
-    def has_sonus(self):
-        from app.models.sonus_upload import SonusUpload
-        from sqlalchemy.orm import object_session
-        session = object_session(self)
-        if session is None:
-            return False
-        return session.query(SonusUpload).filter(SonusUpload.field_sheet_id == self.id).first() is not None
+    _sonus_cache_attr = "_sonus_upload_cache"  # nome do atributo transiente usado pelo router p/ cache em lote
 
-    @property
-    def sonus_parsed_name(self):
+    def _get_sonus_upload(self):
+        """Usa o cache pré-carregado em lote pelo router (ver list_field_sheets/
+        list_pending_field_sheets) quando disponível; senão cai pra uma query
+        individual (fallback pra endpoints que retornam 1 ficha só)."""
+        if hasattr(self, self.__class__._sonus_cache_attr):
+            return getattr(self, self.__class__._sonus_cache_attr)
         from app.models.sonus_upload import SonusUpload
         from sqlalchemy.orm import object_session
         session = object_session(self)
         if session is None:
             return None
-        upload = session.query(SonusUpload).filter(SonusUpload.field_sheet_id == self.id).first()
+        return session.query(SonusUpload).filter(SonusUpload.field_sheet_id == self.id).first()
+
+    @property
+    def has_sonus(self):
+        return self._get_sonus_upload() is not None
+
+    @property
+    def sonus_parsed_name(self):
+        upload = self._get_sonus_upload()
         return upload.parsed_employee_name if upload else None
 
     @property
     def sonus_name_mismatch(self):
-        from app.models.sonus_upload import SonusUpload
-        from sqlalchemy.orm import object_session
-        session = object_session(self)
-        if session is None:
-            return False
-        upload = session.query(SonusUpload).filter(SonusUpload.field_sheet_id == self.id).first()
+        upload = self._get_sonus_upload()
         if not upload or not upload.parsed_employee_name:
             return False
         emp_nome = self.employee.nome if self.employee else self.employee_name_text

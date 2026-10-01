@@ -250,10 +250,12 @@ def import_chemical_agents(
     from app.models.chemical_sheet_agent import ChemicalSheetAgent
     from app.routers.chemical_field_sheets import _calcular_resultado
 
+    from sqlalchemy.orm import joinedload
+
     backfilled = 0
     recalculado = 0
-    for sa in db.query(ChemicalSheetAgent).all():
-        agent = db.query(ChemicalAgent).filter(ChemicalAgent.id == sa.agent_id).first()
+    for sa in db.query(ChemicalSheetAgent).options(joinedload(ChemicalSheetAgent.agent)).all():
+        agent = sa.agent
         if not agent:
             continue
         if not sa.valor_encontrado and agent.resultado_planilha:
