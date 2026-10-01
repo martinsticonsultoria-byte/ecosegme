@@ -43,6 +43,12 @@ jobs:
           echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-17
+          # O runner do GitHub já vem com um postgresql-client mais antigo
+          # pré-instalado e na frente no PATH — apt install não muda isso.
+          # Chamamos os binários da 17 pelo caminho completo pra não correr
+          # o risco de usar a versão errada (o Supabase roda Postgres 17 e
+          # pg_dump recusa fazer dump de um servidor mais novo que ele).
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
 
       - name: Gerar e criptografar o backup
         env:
@@ -52,6 +58,7 @@ jobs:
           set -euo pipefail
           test -n "$DATABASE_URL" || { echo "::error::Secret DATABASE_URL não configurado"; exit 1; }
           test -n "$BACKUP_PASSPHRASE" || { echo "::error::Secret BACKUP_PASSPHRASE não configurado"; exit 1; }
+          pg_dump --version
           STAMP=$(date -u +%Y%m%d_%H%M%S)
           pg_dump "$DATABASE_URL" --schema=public --format=custom --no-owner --no-privileges --file="ecosegme_${STAMP}.dump"
           pg_restore --list "ecosegme_${STAMP}.dump" > lista.txt
