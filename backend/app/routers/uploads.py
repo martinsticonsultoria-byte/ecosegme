@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.sonus_upload import SonusUpload
 from app.models.field_sheet import FieldSheet
-from app.core.deps import get_current_user
+from app.core.deps import require_admin
 from app.models.user import User
 from app.parser import extract_sonus_data, names_match, name_similarity
 
@@ -34,7 +34,7 @@ def upload_sonus(
     field_sheet_id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_admin)
 ):
     sheet = db.query(FieldSheet).filter(FieldSheet.id == field_sheet_id).first()
     if not sheet:
@@ -131,7 +131,7 @@ def upload_sonus(
 def delete_sonus_upload(
     field_sheet_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user)
+    _: User = Depends(require_admin)
 ):
     from app.models.generated_report import GeneratedReport
     from app import supabase_storage
@@ -178,7 +178,7 @@ def delete_sonus_upload(
 def get_sonus_upload(
     field_sheet_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user)
+    _: User = Depends(require_admin)
 ):
     upload = db.query(SonusUpload).filter(
         SonusUpload.field_sheet_id == field_sheet_id

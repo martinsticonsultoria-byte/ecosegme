@@ -115,7 +115,7 @@ def generate_report(field_sheet_id: int, db: Session = Depends(get_db), current_
     return {"id": report.id, "filename": filename, "sha256": sha256, "generated_at": report.generated_at, "download_url": f"/reports/download/{report.id}"}
 
 @router.get("/download/{report_id}")
-def download_report(report_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
+def download_report(report_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):
     report = db.query(GeneratedReport).filter(GeneratedReport.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Laudo nao encontrado")
@@ -137,7 +137,7 @@ def download_report(report_id: int, db: Session = Depends(get_db), _=Depends(get
     raise HTTPException(status_code=404, detail="Arquivo do laudo nao encontrado. Gere novamente.")
 
 @router.delete("/{report_id}")
-def delete_report(report_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
+def delete_report(report_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):
     report = db.query(GeneratedReport).filter(GeneratedReport.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Laudo não encontrado")
@@ -163,7 +163,7 @@ def delete_report(report_id: int, db: Session = Depends(get_db), _=Depends(get_c
 
 
 @router.get("/url/{report_id}")
-def get_download_url(report_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
+def get_download_url(report_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):
     report = db.query(GeneratedReport).filter(GeneratedReport.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Laudo nao encontrado")
