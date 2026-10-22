@@ -153,13 +153,15 @@ ALERT_MESSAGE = (
 # (o frontend só exibe o que a API devolve).
 ALERT_STEPS = [
     f"Acesse {FLY_DASHBOARD_URL} e entre com a conta do Fly.io da Ecosegme.",
-    "Clique no aplicativo do sistema (nome: ecosegme-backend).",
-    "Abra a opção de tamanho do servidor (Machines / Scale) e escolha o próximo nível de memória "
-    "(por exemplo, de 1 GB para 2 GB).",
-    f"Confira o valor mensal em {FLY_CALCULATOR_URL} antes de confirmar.",
-    "Confirme a alteração. O sistema reinicia sozinho em cerca de 1 minuto; evite fazer isso no meio da "
-    "geração de um relatório.",
-    "Pronto: o limite de fichas por relatório aumenta automaticamente e este aviso some após o reinício.",
+    "Clique no aplicativo do sistema (ecosegme-backend), na organização ecosegme-21.",
+    "No menu da esquerda, clique em Machines e depois na máquina que aparece na lista.",
+    "No canto superior direito da página da máquina, clique no ícone Scale machine (seta subindo).",
+    "Mantenha Shared e 4 CPUs, escolha a memória maior (por exemplo, de 1 GB para 2 GB) e clique em Scale Machine. "
+    f"Antes de confirmar, confira o valor mensal em {FLY_CALCULATOR_URL}.",
+    "O sistema reinicia sozinho em cerca de 1 minuto; evite fazer isso no meio da geração de um relatório. "
+    "O limite de fichas por relatório aumenta automaticamente e este aviso some após o reinício.",
+    "Importante: avise o responsável técnico para atualizar o valor de memory no arquivo fly.toml do repositório. "
+    "Se isso não for feito, o próximo deploy volta o servidor para o tamanho antigo.",
     "Se não encontrar a opção ou tiver dúvida, envie este aviso ao responsável técnico do sistema.",
 ]
 

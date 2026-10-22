@@ -38,7 +38,22 @@ Cada vCPU `shared` tem direito a ~6,25% de uso contínuo; acima disso consome um
 - Por padrão o `fly deploy` pode criar **2 máquinas** (alta disponibilidade), dobrando o custo. Após o primeiro deploy, conferir com `fly status` e, se houver 2, rodar `fly scale count 1`.
 - Redirecionar o `VITE_API_URL` do Vercel só depois de testar o endereço `*.fly.dev`.
 
+## Quando o aviso aparecer: como subir de plano
+Caminho conferido no painel do Fly.io em 22/10/2026 (não precisa de linha de comando):
+
+1. Entrar em https://fly.io/dashboard com a conta da Ecosegme.
+2. Abrir o app `ecosegme-backend` (organização `ecosegme-21`).
+3. Menu da esquerda → **Machines** → clicar na máquina da lista.
+4. No canto superior direito da página da máquina, clicar no ícone **Scale machine** (seta subindo). Abre a janela "Scale Machine" com Shared/Performance, número de CPUs e memória.
+5. Manter Shared e 4 CPUs, escolher a memória maior (ex.: 2 GB) e clicar em **Scale Machine**. Conferir o preço antes em https://fly.io/calculator (região São Paulo).
+6. A máquina reinicia (cerca de 1 minuto). O limite de fichas por PDF se recalcula sozinho e o aviso some.
+7. **Atualizar o `fly.toml` do repositório** (`memory = "2gb"`, na seção `[[vm]]`) e commitar. Sem isso, o próximo `flyctl deploy` devolve a máquina ao tamanho do arquivo (1 GB).
+
+Alternativa por linha de comando: `flyctl scale memory 2048 -a ecosegme-backend`.
+
+O botão **Edit App Scale**, citado no aviso do próprio Fly na aba Machines, serve para mudar a **quantidade** de máquinas, não o tamanho. O app roda com 1 máquina de propósito: duas dobrariam o custo, e a contrapartida é uma indisponibilidade de cerca de 1 minuto a cada deploy ou reinício.
+
 ## Limitações conhecidas
 - O pico de memória do aviso é "desde o último reinício".
 - Arquivos PDF do SONUS enviados ficam no disco local do servidor, apagado a cada reinício (pendência anterior, independente de capacidade).
-- Os passos do aviso (painel do Fly.io) precisam ser validados na conta real da Ecosegme: a documentação do Fly.io só descreve a mudança de tamanho via linha de comando (`fly scale memory`).
+- A janela "Scale Machine" foi vista no painel, mas a troca de memória ainda não foi executada de verdade; conferir na primeira vez que for necessário.
