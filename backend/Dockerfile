@@ -3,7 +3,9 @@
 # mesmas dependências de sistema, mesmo comando de start (migração +
 # servidor). Ver fly.toml (mesmo diretório) para a configuração do deploy.
 
-FROM python:3.12-slim
+# Fixado em Debian 12 (bookworm): em "python:3.12-slim" puro o Debian 13 renomeou
+# libgdk-pixbuf2.0-0 e o apt-get quebrava. Bookworm mantém os nomes do build.sh.
+FROM python:3.12-slim-bookworm
 
 # Dependências de sistema do WeasyPrint (geração de PDF) — mesma lista do
 # backend/build.sh usado no Render — mais gcc/libpq-dev, que o build do
@@ -19,6 +21,7 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     shared-mime-info \
     fonts-liberation \
     gcc \
+    libc6-dev \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
