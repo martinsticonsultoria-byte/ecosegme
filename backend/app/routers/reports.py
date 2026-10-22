@@ -13,6 +13,7 @@ from app.pdf_generator import generate_laudo
 from app.models.audit_log import AuditLog
 from app.models.consolidated_report import ConsolidatedReport
 from app import supabase_storage
+from app.core.capacity import pdf_slot, check_batch_size
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -397,7 +398,8 @@ def generate_bulk_pdf(
     field_sheet_ids: Optional[List[int]] = Query(None),
     replace_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin),
+    _slot=Depends(pdf_slot),
 ):
     import io, tempfile, math
     from fastapi.responses import StreamingResponse
@@ -432,11 +434,7 @@ def generate_bulk_pdf(
     if not sheets:
         raise HTTPException(status_code=404, detail="Nenhuma ficha encontrada para esse grupo")
 
-    if len(sheets) > 40:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Lote de {len(sheets)} fichas excede o máximo de 40 por PDF. Gere em lotes menores."
-        )
+    check_batch_size(len(sheets))
 
     sem_numero = [s for s in sheets if not s.laudo_number]
     if sem_numero:

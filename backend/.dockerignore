@@ -1,0 +1,11 @@
+# Não precisa ir pra dentro da imagem de produção.
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+test_capa_preview.py
+capa_preview.html
+data/
+.env
+.env.local
+.git

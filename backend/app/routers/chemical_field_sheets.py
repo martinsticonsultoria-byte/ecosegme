@@ -18,6 +18,7 @@ from app.schemas.chemical import (
     clean_esocial,
 )
 from app.core.deps import get_current_user, require_admin
+from app.core.capacity import pdf_slot, check_batch_size
 from app.models.user import User, UserRole
 
 router = APIRouter(prefix="/chemical-field-sheets", tags=["chemical-field-sheets"])
@@ -158,6 +159,7 @@ def generate_chemical_pdf_report(
     replace_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
+    _slot=Depends(pdf_slot),
 ):
     """Gera relatório PDF das fichas químicas de uma empresa (com capa e fichas individuais)."""
     old_rec = None
@@ -194,11 +196,7 @@ def generate_chemical_pdf_report(
     if not sheets:
         raise HTTPException(status_code=404, detail="Nenhuma ficha química encontrada para esta empresa")
 
-    if len(sheets) > 40:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Lote de {len(sheets)} fichas excede o máximo de 40 por PDF. Gere em lotes menores."
-        )
+    check_batch_size(len(sheets))
 
     sem_numero = [s for s in sheets if not s.laudo_number]
     if sem_numero:

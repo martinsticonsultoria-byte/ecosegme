@@ -1,0 +1,47 @@
+# Configuração de deploy do backend no Fly.io.
+#
+# app: PRECISA ser um nome único em todo o Fly.io (não só na sua conta).
+# "ecosegme-backend" pode já estar em uso por outra conta — se o
+# `fly launch`/`fly apps create` recusar, troque por algo como
+# "ecosegme-backend-ecoseg" e ajuste aqui antes de rodar `fly deploy`.
+#
+# primary_region = gru (São Paulo) — mesma região do banco no Supabase
+# (aws-1-sa-east-1 = AWS São Paulo), para as consultas ao banco não
+# cruzarem o oceano a cada chamada.
+app = "ecosegme-backend"
+primary_region = "gru"
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Máquina sempre ligada — sem "spin down" por inatividade (era o
+  # problema do plano free do Render: ~50s de atraso no primeiro acesso
+  # depois de um tempo parado).
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-4x"
+  memory = "1gb"
+
+[checks]
+  [checks.health]
+    port = 8080
+    type = "http"
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "20s"
+    path = "/health"
+
+# Variáveis SEM dado sensível — podem ficar aqui, versionadas no git.
+# As sensíveis (DATABASE_URL, SECRET_KEY, SUPABASE_URL,
+# SUPABASE_SERVICE_KEY) vão por `fly secrets set`, nunca aqui.
+[env]
+  ALGORITHM = "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES = "480"
+  ALLOWED_ORIGINS = "https://ecosegme-se6m.vercel.app"
+  SUPABASE_BUCKET = "laudos"
+  STORAGE_DIR = "/tmp/laudos"

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
+import CapacityBanner from './components/CapacityBanner';
 import Login from './pages/Login';
 import Companies from './pages/Companies';
 import CompanyDetail from './pages/CompanyDetail';
@@ -19,6 +20,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Navbar />
+        <CapacityBanner />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/companies" element={<PrivateRoute adminOnly><Companies /></PrivateRoute>} />

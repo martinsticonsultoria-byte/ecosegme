@@ -8,6 +8,7 @@ from slowapi.errors import RateLimitExceeded
 from app.routers import auth, companies, employees, field_sheets, uploads, reports, setup, users, epis, amostradores, chemical_agents, chemical_field_sheets
 from app.config import settings
 from app.core.limiter import limiter
+from app.core.deps import require_admin
 
 app = FastAPI(
     title="EcoSegme API",
@@ -49,6 +50,12 @@ app.include_router(epis.router)
 app.include_router(amostradores.router)
 app.include_router(chemical_agents.router)
 app.include_router(chemical_field_sheets.router)
+
+@app.get("/system/usage")
+def system_usage(db=Depends(get_db), _=Depends(require_admin)):
+    """Consumo do servidor para o aviso de capacidade (só admin)."""
+    from app.core.capacity import get_usage
+    return get_usage(db)
 
 @app.get("/health")
 def health():

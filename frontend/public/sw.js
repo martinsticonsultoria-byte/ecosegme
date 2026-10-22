@@ -14,7 +14,8 @@ self.addEventListener('activate', e => {
 })
 
 self.addEventListener('fetch', e => {
-  const isAPI = e.request.url.includes('onrender.com')
+  // API em produção: Render (legado) ou Fly.io. Sem isso o cache offline da API não funciona no host novo.
+  const isAPI = e.request.url.includes('onrender.com') || e.request.url.includes('fly.dev')
 
   if (isAPI) {
     e.respondWith(
